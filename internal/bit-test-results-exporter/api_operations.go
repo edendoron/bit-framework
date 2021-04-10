@@ -17,12 +17,12 @@ import (
 	"net/http"
 )
 
-func indexerMock(request Bandwidth) ApiResponse {
+func indexerMockPostBandwidth(request Bandwidth) ApiResponse {
 	input, err := json.MarshalIndent(request, "", " ")
 	if err != nil {
 		return ApiResponse{Code: 404, Message: "Bad request"}
 	}
-	err = ioutil.WriteFile("../../storage/test.json", input, 0644)
+	err = ioutil.WriteFile("storage/test.json", input, 0644)
 	if err != nil {
 		log.Println(err)
 		return ApiResponse{Code: 404, Message: "Corrupt file"}
@@ -30,8 +30,61 @@ func indexerMock(request Bandwidth) ApiResponse {
 	return ApiResponse{Code: 200, Message: "Bandwidth updateddd!"}
 }
 
+func indexerMockGetBandwidth() ApiResponse {
+	content, err := ioutil.ReadFile("storage/test.json")
+	if err != nil {
+		return ApiResponse{Code: 404, Message: "Corrupt file"}
+	}
+	return ApiResponse{Code: 404, Message: string(content)}
+}
+
+func validateBandwidth(response Bandwidth) bool {
+	v := validator.New()
+	err := v.Struct(response)
+	if err != nil {
+		for _, e := range err.(validator.ValidationErrors) {
+			fmt.Println(e.Error())
+		}
+		return false
+	}
+	return true
+}
+
 func GetBandwidth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	dataFromIndexer := indexerMockGetBandwidth()
+	apiResp := dataFromIndexer.Message
+	fmt.Println(apiResp)
+	response := Bandwidth{}
+	err := json.Unmarshal([]byte(apiResp), &response)
+
+	// validate that data from indexer is ok
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		err = json.NewEncoder(w).Encode(&dataFromIndexer)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// validate that data from the indexer is of type Bandwidth
+	if !validateBandwidth(response) {
+		w.WriteHeader(http.StatusNotFound)
+		err = json.NewEncoder(w).Encode(&dataFromIndexer)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Fatalln(err)
+		}
+		return
+	}
+
+	// return Bandwidth response to the user
+	err = json.NewEncoder(w).Encode(&response)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Fatalln(err)
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -41,19 +94,26 @@ func PostBandwidth(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Fatalln(err)
 	}
-	v := validator.New()
-	err = v.Struct(request)
-	if err != nil {
-		for _, e := range err.(validator.ValidationErrors) {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, e.Error())
-			return
+
+	// validate that data from the user is of type Bandwidth
+	if !validateBandwidth(request) {
+		badRequest := ApiResponse{Code: 404, Message: "Bad request"}
+		w.WriteHeader(http.StatusBadRequest)
+		err = json.NewEncoder(w).Encode(&badRequest)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Fatalln(err)
 		}
+		return
 	}
-	err = json.NewEncoder(w).Encode(indexerMock(request))
+
+	// return ApiResponse response to the user
+	err = json.NewEncoder(w).Encode(indexerMockPostBandwidth(request))
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Fatalln(err)
 	}
 	w.WriteHeader(http.StatusOK)

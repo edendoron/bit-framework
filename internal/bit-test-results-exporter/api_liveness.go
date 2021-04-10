@@ -10,13 +10,19 @@ package swagger
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 )
 
+// TODO: change the response values
 func GetPing(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
 	response := PongBody{Timestamp: time.Now(), Version: "1/00", Host: "Eden", Ready: true, ApiVersion: "alpha"}
-	json.NewEncoder(w).Encode(&response)
+	err := json.NewEncoder(w).Encode(&response)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		log.Fatalln(err)
+	}
+	w.WriteHeader(http.StatusOK)
 }

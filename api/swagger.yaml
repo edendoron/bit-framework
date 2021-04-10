@@ -1,0 +1,454 @@
+openapi: 3.0.0
+info:
+  title: bit-test-results-exporter
+  description: This protocol defines the API for **test-results-exporter** service
+    in the **BIT** functionality.
+  contact:
+    name: BINA SW Architect
+  version: 1.0.1
+  x-audience: company-internal
+servers:
+- url: "https://{host}:{port}/{basePath}"
+  description: Secured production server
+  variables:
+    host:
+      default: localhost
+    port:
+      default: "3000"
+    basePath:
+      default: api
+- url: "http://{host}:{port}/{basePath}"
+  description: Production server
+  variables:
+    host:
+      default: localhost
+    port:
+      default: "3000"
+    basePath:
+      default: api
+tags:
+- name: Liveness
+  description: Liveness and readyness probes
+- name: Operations
+  description: Functional behaviour of the microservice
+paths:
+  /ping:
+    get:
+      tags:
+      - Liveness
+      summary: Heart beat
+      description: Heart beat probe
+      operationId: GetPing
+      responses:
+        "200":
+          description: Pong OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PongBody'
+              examples:
+                example-1:
+                  value:
+                    timestamp: {}
+                    version: 1.2.4-rc5677
+                    host: my-server-3
+                    ready: true
+                    apiVersion: 1.0.0
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /report/raw:
+    post:
+      tags:
+      - Operations
+      summary: Report results of performed BIT tests
+      description: Report results of performed BIT tests
+      operationId: PostReport
+      requestBody:
+        description: Array of reported tests result
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportBody'
+            examples:
+              example-single:
+                value:
+                  reports:
+                  - testId: 101
+                    reportPriority: 11
+                    timestamp: {}
+                    tagSet:
+                    - key: zone
+                      value: north
+                    fieldSet:
+                    - key: TemperatureCelsius
+                      value: "-40.8"
+              example-multiple:
+                value:
+                  reports:
+                  - testId: 101
+                    reportPriority: 11
+                    timestamp: {}
+                    tagSet:
+                    - key: versions
+                      value: external clients
+                    fieldSet:
+                    - key: ICD-1
+                      value: 1.2.3.4-rc5678
+                    - key: ICD-2
+                      value: 3.2.3.4-rc5678
+                    - key: ICD-3
+                      value: 3.2.3.4-rc5678
+                  - testId: 1045
+                    reportPriority: 200
+                    timestamp: {}
+                    tagSet:
+                    - key: zone
+                      value: north
+                    - key: hostname
+                      value: server02
+                    fieldSet:
+                    - key: TemperatureCelsius
+                      value: "-40.8"
+                    - key: volts
+                      value: "7.1"
+        required: true
+      responses:
+        "200":
+          description: Done OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /qos/bandwidth:
+    get:
+      tags:
+      - Operations
+      summary: Get current bandwidth
+      description: Get current bandwidth
+      operationId: GetBandwidth
+      responses:
+        "200":
+          description: Valid bandwidth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bandwidth'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags:
+      - Operations
+      summary: Set current bandwidth
+      description: Set current bandwidth
+      operationId: PostBandwidth
+      requestBody:
+        description: New bandwidth to set
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Bandwidth'
+        required: true
+      responses:
+        "200":
+          description: Done OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+components:
+  schemas:
+    PongBody:
+      required:
+      - apiVersion
+      - host
+      - ready
+      - timestamp
+      - version
+      properties:
+        timestamp:
+          type: string
+          description: Current UTC date-time (RFC3339)
+          format: date-time
+        version:
+          type: string
+          description: Service version
+        host:
+          type: string
+          description: Host that running this service
+        ready:
+          type: boolean
+          description: true if operational
+        apiVersion:
+          type: string
+          description: API version
+      example:
+        apiVersion: apiVersion
+        ready: true
+        host: host
+        version: version
+        timestamp: {}
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+      example:
+        code: 0
+        message: message
+      x-examples:
+        example-1:
+          code: 0
+          message: string
+    ReportBody:
+      required:
+      - reports
+      properties:
+        reports:
+          maxItems: 50
+          minItems: 0
+          uniqueItems: true
+          type: array
+          description: Multiple tests reports set
+          items:
+            $ref: '#/components/schemas/TestReport'
+      example:
+        reports:
+        - tagSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          reportPriority: 11
+          fieldSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          testId: 101
+          timestamp: {}
+        - tagSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          reportPriority: 11
+          fieldSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          testId: 101
+          timestamp: {}
+        - tagSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          reportPriority: 11
+          fieldSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          testId: 101
+          timestamp: {}
+        - tagSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          reportPriority: 11
+          fieldSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          testId: 101
+          timestamp: {}
+        - tagSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          reportPriority: 11
+          fieldSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          testId: 101
+          timestamp: {}
+    TestReport:
+      required:
+      - testId
+      - timestamp
+      properties:
+        testId:
+          type: number
+          description: The unique ID of the performed test
+          format: uint64
+          example: 101
+        reportPriority:
+          type: number
+          description: "The report priority [0 - lowest]"
+          format: uint32
+          example: 11
+        timestamp:
+          type: string
+          description: UTC date-time (RFC3339) when the test was performed
+          format: date-time
+        tagSet:
+          maxItems: 30
+          minItems: 0
+          uniqueItems: true
+          type: array
+          description: "set of Tags, e.g.: hostname=server02, ip=10.1.1.1, zone=north,\
+            \ etc."
+          items:
+            $ref: '#/components/schemas/KeyValue'
+        fieldSet:
+          maxItems: 30
+          minItems: 0
+          uniqueItems: true
+          type: array
+          description: "set of Fields, e.g.: temperature=24.5, volts=7.1, etc."
+          items:
+            $ref: '#/components/schemas/KeyValue'
+      example:
+        tagSet:
+        - value: value
+          key: key
+        - value: value
+          key: key
+        - value: value
+          key: key
+        - value: value
+          key: key
+        - value: value
+          key: key
+        reportPriority: 11
+        fieldSet:
+        - value: value
+          key: key
+        - value: value
+          key: key
+        - value: value
+          key: key
+        - value: value
+          key: key
+        - value: value
+          key: key
+        testId: 101
+        timestamp: {}
+    KeyValue:
+      required:
+      - key
+      - value
+      properties:
+        key:
+          type: string
+          description: key
+        value:
+          type: string
+          description: value
+      example:
+        value: value
+        key: key
+    Bandwidth:
+      type: object
+      properties:
+        size:
+          type: number
+          description: "Upper limit value, 0 or negative means unlimited"
+          format: float
+          example: 1.3
+        unitsPerSecond:
+          type: string
+          description: "KiB/MiB/GiB/TiB/K/M/G/T, 1_KiB = 1024, 1_K = 1000"
+          example: KiB
+      example:
+        size: 1.3
+        unitsPerSecond: KiB

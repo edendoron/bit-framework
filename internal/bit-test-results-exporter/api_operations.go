@@ -22,12 +22,12 @@ func indexerMock(request Bandwidth) ApiResponse {
 	if err != nil {
 		return ApiResponse{Code: 404, Message: "Bad request"}
 	}
-	err = ioutil.WriteFile("../storage/test.json", input, 0644)
+	err = ioutil.WriteFile("../../storage/test.json", input, 0644)
 	if err != nil {
 		log.Println(err)
 		return ApiResponse{Code: 404, Message: "Corrupt file"}
 	}
-	return ApiResponse{Code: 200, Message: "Bandwidth updated!"}
+	return ApiResponse{Code: 200, Message: "Bandwidth updateddd!"}
 }
 
 func GetBandwidth(w http.ResponseWriter, r *http.Request) {
@@ -47,10 +47,11 @@ func PostBandwidth(w http.ResponseWriter, r *http.Request) {
 	err = v.Struct(request)
 	if err != nil {
 		for _, e := range err.(validator.ValidationErrors) {
-			fmt.Println(e)
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, e.Error())
+			return
 		}
 	}
-
 	err = json.NewEncoder(w).Encode(indexerMock(request))
 	if err != nil {
 		log.Fatalln(err)

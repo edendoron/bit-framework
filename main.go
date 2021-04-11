@@ -15,6 +15,13 @@ import (
 )
 
 func main() {
+
+	//logger := log.New(os.Stdout, "api ", log.LstdFlags|log.Lshortfile)
+	//
+	//router := sw.NewRouter()
+	//
+	//srv := server.NewServer(router, ":8080")
+
 	log.Printf("Server started")
 
 	router := sw.NewRouter()

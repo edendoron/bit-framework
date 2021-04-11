@@ -10,5 +10,5 @@ package swagger
 
 type ReportBody struct {
 	// Multiple tests reports set
-	Reports []TestReport `json:"reports"`
+	Reports []TestReport `json:"reports" validate:"required"`
 }

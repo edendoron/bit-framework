@@ -10,14 +10,54 @@ package swagger
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-playground/validator"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
-func indexerMockPostBandwidth(request Bandwidth) ApiResponse {
+func indexerMockPostReport(request ReportBody) ApiResponse {
+	reportFile := ReportBody{}
+	//f, err := os.OpenFile("notes.txt", os.O_RDWR|os.O_CREATE, 0755)
+
+	content, err := ioutil.ReadFile("storage/testReport.json")
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			input, e := json.MarshalIndent(request, "", " ")
+			if e != nil {
+				return ApiResponse{Code: 404, Message: "Internal server error"}
+			}
+			e = ioutil.WriteFile("storage/testReport.json", input, 0644)
+			if e != nil {
+				return ApiResponse{Code: 404, Message: "Internal server error"}
+			}
+			return ApiResponse{Code: 200, Message: "Report posted!"}
+		}
+		return ApiResponse{Code: 404, Message: "Corrupt file"}
+	}
+	// converting existing data to ReportBody type
+	err = json.Unmarshal(content, &reportFile)
+	if err != nil || !validateType(reportFile) {
+		return ApiResponse{Code: 404, Message: "Internal server error"}
+	}
+	// append new report
+	reportFile.Reports = append(reportFile.Reports, request.Reports...)
+	// Marshal it and write back to file
+	input, err := json.MarshalIndent(reportFile, "", " ")
+	if err != nil {
+		return ApiResponse{Code: 404, Message: "Internal server error"}
+	}
+	err = ioutil.WriteFile("storage/testReport.json", input, 0644)
+	if err != nil {
+		return ApiResponse{Code: 404, Message: "Internal server error"}
+	}
+	return ApiResponse{Code: 200, Message: "Report posted!"}
+}
+
+func writeBandwidth(request Bandwidth) ApiResponse {
 	input, err := json.MarshalIndent(request, "", " ")
 	if err != nil {
 		return ApiResponse{Code: 404, Message: "Bad request"}
@@ -27,18 +67,18 @@ func indexerMockPostBandwidth(request Bandwidth) ApiResponse {
 		log.Println(err)
 		return ApiResponse{Code: 404, Message: "Corrupt file"}
 	}
-	return ApiResponse{Code: 200, Message: "Bandwidth updateddd!"}
+	return ApiResponse{Code: 200, Message: "Bandwidth updated!"}
 }
 
-func indexerMockGetBandwidth() ApiResponse {
+func readBandwidth() ApiResponse {
 	content, err := ioutil.ReadFile("storage/test.json")
 	if err != nil {
 		return ApiResponse{Code: 404, Message: "Corrupt file"}
 	}
-	return ApiResponse{Code: 404, Message: string(content)}
+	return ApiResponse{Code: 200, Message: string(content)}
 }
 
-func validateBandwidth(response Bandwidth) bool {
+func validateType(response interface{}) bool {
 	v := validator.New()
 	err := v.Struct(response)
 	if err != nil {
@@ -52,11 +92,17 @@ func validateBandwidth(response Bandwidth) bool {
 
 func GetBandwidth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	dataFromIndexer := indexerMockGetBandwidth()
-	apiResp := dataFromIndexer.Message
-	fmt.Println(apiResp)
+	dataFromIndexer := readBandwidth()
+	if dataFromIndexer.Code != 200 {
+		w.WriteHeader(http.StatusNotFound)
+		err := json.NewEncoder(w).Encode(&dataFromIndexer)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
 	response := Bandwidth{}
-	err := json.Unmarshal([]byte(apiResp), &response)
+	err := json.Unmarshal([]byte(dataFromIndexer.Message), &response)
 
 	// validate that data from indexer is ok
 	if err != nil {
@@ -69,9 +115,9 @@ func GetBandwidth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate that data from the indexer is of type Bandwidth
-	if !validateBandwidth(response) {
+	if !validateType(response) {
 		w.WriteHeader(http.StatusNotFound)
-		err = json.NewEncoder(w).Encode(&dataFromIndexer)
+		err = json.NewEncoder(w).Encode(ApiResponse{Code: 404, Message: "Error reading file"})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Fatalln(err)
@@ -93,13 +139,9 @@ func PostBandwidth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 	err := json.NewDecoder(r.Body).Decode(&request)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Fatalln(err)
-	}
 
 	// validate that data from the user is of type Bandwidth
-	if !validateBandwidth(request) {
+	if err != nil || !validateType(request) {
 		badRequest := ApiResponse{Code: 404, Message: "Bad request"}
 		w.WriteHeader(http.StatusBadRequest)
 		err = json.NewEncoder(w).Encode(&badRequest)
@@ -111,7 +153,7 @@ func PostBandwidth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// return ApiResponse response to the user
-	err = json.NewEncoder(w).Encode(indexerMockPostBandwidth(request))
+	err = json.NewEncoder(w).Encode(writeBandwidth(request))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Fatalln(err)
@@ -120,6 +162,29 @@ func PostBandwidth(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostReport(w http.ResponseWriter, r *http.Request) {
+	var request ReportBody
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	err := json.NewDecoder(r.Body).Decode(&request)
+
+	// validate that data from the user is of type Bandwidth
+	if err != nil || !validateType(request) {
+		fmt.Println(err)
+		badRequest := ApiResponse{Code: 404, Message: "Bad request"}
+		w.WriteHeader(http.StatusBadRequest)
+		err = json.NewEncoder(w).Encode(&badRequest)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Fatalln(err)
+		}
+		return
+	}
+
+	// return ApiResponse response to the user
+	err = json.NewEncoder(w).Encode(indexerMockPostReport(request))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Fatalln(err)
+	}
 	w.WriteHeader(http.StatusOK)
 }

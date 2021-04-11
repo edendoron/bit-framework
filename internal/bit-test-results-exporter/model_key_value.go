@@ -10,7 +10,7 @@ package swagger
 
 type KeyValue struct {
 	// key
-	Key string `json:"key"`
+	Key string `json:"key" validate:"required"`
 	// value
-	Value string `json:"value"`
+	Value string `json:"value" validate:"required"`
 }

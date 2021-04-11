@@ -9,11 +9,11 @@
 package bitIndexer
 
 import (
+	. "../apiResponseHandlers"
 	. "../models"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 )
@@ -22,61 +22,43 @@ func PostReport(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	reports, request := ReportBody{}, ReportBody{}
 
-	json.NewDecoder(r.Body).Decode(&request)
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		ErrorHandler(w, "Internal server error", err)
+	}
 
 	content, err := ioutil.ReadFile("storage/testReport.json")
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			input, e := json.MarshalIndent(request, "", " ")
 			if e != nil {
-				errorHandler(w, "Bad request", e)
+				ErrorHandler(w, "Bad request", e)
 			}
 			e = ioutil.WriteFile("storage/testReport.json", input, 0644)
 			if e != nil {
-				errorHandler(w, "Internal server error", e)
+				ErrorHandler(w, "Internal server error", e)
 			}
-			responseHandler(w, "Report posted!")
+			ResponseHandler(w, "Report posted!")
 			return
 		}
-		errorHandler(w, "Internal server error", err)
+		ErrorHandler(w, "Internal server error", err)
 	}
 
 	// converting existing data to ReportBody type
 	err = json.Unmarshal(content, &reports)
 	if err != nil || !ValidateType(reports) {
-		errorHandler(w, "Internal server error", err)
+		ErrorHandler(w, "Internal server error", err)
 	}
 	// append new reports
 	reports.Reports = append(reports.Reports, request.Reports...)
 	// Marshal it and write back to file
 	input, err := json.MarshalIndent(reports, "", " ")
 	if err != nil {
-		errorHandler(w, "Internal server error", err)
+		ErrorHandler(w, "Internal server error", err)
 	}
 	err = ioutil.WriteFile("storage/testReport.json", input, 0644)
 	if err != nil {
-		errorHandler(w, "Internal server error", err)
+		ErrorHandler(w, "Internal server error", err)
 	}
-	responseHandler(w, "Report posted!")
-}
-
-func errorHandler(w http.ResponseWriter, message string, err error) {
-	badResponse := ApiResponse{Code: 404, Message: message}
-	w.WriteHeader(http.StatusBadRequest)
-	e := json.NewEncoder(w).Encode(&badResponse)
-	if e != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Fatalln(e)
-	}
-	log.Fatalln(err)
-}
-
-func responseHandler(w http.ResponseWriter, message string) {
-	response := ApiResponse{Code: 200, Message: message}
-	w.WriteHeader(http.StatusOK)
-	err := json.NewEncoder(w).Encode(&response)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Fatalln(err)
-	}
+	ResponseHandler(w, "Report posted!")
 }

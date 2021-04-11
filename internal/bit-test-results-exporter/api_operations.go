@@ -9,6 +9,7 @@
 package bitTestResultsExporter
 
 import (
+	. "../apiResponseHandlers"
 	. "../models"
 	"bytes"
 	"encoding/json"
@@ -118,12 +119,7 @@ func PostReport(w http.ResponseWriter, r *http.Request) {
 
 	// validate that data from the user is of type Bandwidth
 	if err != nil || !ValidateType(request) {
-		w.WriteHeader(http.StatusBadRequest)
-		err = json.NewEncoder(w).Encode(&badRequest)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		return
+		ErrorHandler(w, "Internal server error", err)
 	}
 
 	// return ApiResponse response to the user
@@ -143,6 +139,9 @@ func PostReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	indexerRes.Body.Close()
-	json.NewEncoder(w).Encode(&res)
+	err = json.NewEncoder(w).Encode(&res)
+	if err != nil {
+		ErrorHandler(w, "Internal server error", err)
+	}
 	w.WriteHeader(http.StatusOK)
 }

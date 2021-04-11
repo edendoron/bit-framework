@@ -9,7 +9,8 @@
 package main
 
 import (
-	sw "./internal/bit-test-results-exporter"
+	sw2 "./internal/bit-indexer"
+	sw1 "./internal/bit-test-results-exporter"
 	"log"
 	"net/http"
 )
@@ -24,7 +25,20 @@ func main() {
 
 	log.Printf("Server started")
 
-	router := sw.NewRouter()
+	router := sw1.NewRouter()
+	router2 := sw2.NewRouter()
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	go func() {
+		err := http.ListenAndServe(":8080", router)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}()
+	log.Printf("Server 8080 started")
+	err := http.ListenAndServe(":8081", router2)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Printf("Server 8081 started")
+	//http.ListenAndServe("8081", router)
 }

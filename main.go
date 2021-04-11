@@ -11,34 +11,29 @@ package main
 import (
 	sw2 "./internal/bit-indexer"
 	sw1 "./internal/bit-test-results-exporter"
+	"./server"
 	"log"
-	"net/http"
 )
 
 func main() {
 
-	//logger := log.New(os.Stdout, "api ", log.LstdFlags|log.Lshortfile)
-	//
-	//router := sw.NewRouter()
-	//
-	//srv := server.NewServer(router, ":8080")
-
 	log.Printf("Server started")
 
-	router := sw1.NewRouter()
+	router1 := sw1.NewRouter()
 	router2 := sw2.NewRouter()
 
+	srv1 := server.NewServer(router1, ":8080")
+	srv2 := server.NewServer(router2, ":8081")
+
+	//TODO: need to change to ListenAndServeTLS in order to support https
 	go func() {
-		err := http.ListenAndServe(":8080", router)
+		err := srv1.ListenAndServe()
 		if err != nil {
 			log.Fatalln(err)
 		}
 	}()
-	log.Printf("Server 8080 started")
-	err := http.ListenAndServe(":8081", router2)
+	err := srv2.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Printf("Server 8081 started")
-	//http.ListenAndServe("8081", router)
 }

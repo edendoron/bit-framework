@@ -2,11 +2,12 @@ package server
 
 import (
 	"crypto/tls"
+	"github.com/gorilla/mux"
 	"net/http"
 	"time"
 )
 
-func NewServer(mux *http.ServeMux, serverAddress string) *http.Server {
+func NewServer(router *mux.Router, serverAddress string) *http.Server {
 	// See https://blog.cloudflare.com/exposing-go-on-the-internet/ for details
 	// about these settings
 	tlsConfig := &tls.Config{
@@ -35,7 +36,7 @@ func NewServer(mux *http.ServeMux, serverAddress string) *http.Server {
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
 		TLSConfig:    tlsConfig,
-		Handler:      mux,
+		Handler:      router,
 	}
 	return srv
 }

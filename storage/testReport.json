@@ -49,6 +49,40 @@
      "value": "7.1"
     }
    ]
+  },
+  {
+   "testId": 40,
+   "reportPriority": 200,
+   "timestamp": "2021-04-11T19:23:53.1208088+03:00",
+   "tagSet": [
+    {
+     "key": "versions",
+     "value": "external clients"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "ICD-1",
+     "value": "1.2.3.4-rc5678"
+    }
+   ]
+  },
+  {
+   "testId": 40,
+   "reportPriority": 200,
+   "timestamp": "2021-04-11T19:23:53.1208088+03:00",
+   "tagSet": [
+    {
+     "key": "versions",
+     "value": "external clients"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "ICD-1",
+     "value": "1.2.3.4-rc5678"
+    }
+   ]
   }
  ]
 }

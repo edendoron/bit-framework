@@ -26,7 +26,7 @@ func IndexerPostReport(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	content, err := ioutil.ReadFile("../storage/testReport.json")
+	content, err := ioutil.ReadFile("storage/testReport.json")
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
@@ -51,7 +51,7 @@ func IndexerPostReport(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	err = ioutil.WriteFile("../storage/testReport.json", input, 0644)
+	err = ioutil.WriteFile("storage/testReport.json", input, 0644)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}

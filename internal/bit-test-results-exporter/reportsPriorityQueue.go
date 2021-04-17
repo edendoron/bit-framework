@@ -45,6 +45,13 @@ func (pq *PriorityQueue) Pop() interface{} {
 	return item
 }
 
+func (pq *PriorityQueue) Top() interface{} {
+	old := *pq
+	n := len(old)
+	item := old[n-1]
+	return item
+}
+
 // update modifies the priority and value of an Item in the queue.
 func (pq *PriorityQueue) update(item *Item, value TestReport, priority float64) {
 	item.value = value

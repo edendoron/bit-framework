@@ -3,9 +3,9 @@ package bitExporter
 import (
 	. "../models"
 	"bytes"
-	"container/heap"
 	"encoding/json"
 	"fmt"
+	m "math"
 	"net/http"
 	"time"
 )
@@ -15,8 +15,17 @@ var reportsQueue = make(PriorityQueue, 0)
 
 var currentBW = Bandwidth{
 	Size:           25,
-	UnitsPerSecond: "KB",
+	UnitsPerSecond: "KiB",
 }
+
+const KiB = 1024
+const MiB = KiB * 1024
+const GiB = MiB * 1024
+const TiB = GiB * 1024
+const K = 1000
+const M = K * 1000
+const G = M * 1000
+const T = G * 1000
 
 const postIndexedUrl = "http://localhost:8081/report/raw"
 
@@ -81,11 +90,29 @@ const postIndexedUrl = "http://localhost:8081/report/raw"
 func calculateSizeLimit(bw Bandwidth) float32 {
 	switch bw.UnitsPerSecond {
 	case "KiB":
-		return bw.Size * 1000
-	case "MB":
-		return bw.Size * 1e6
+		return bw.Size * KiB
+	case "MiB":
+		return bw.Size * MiB
+	case "GiB":
+		return bw.Size * GiB
+	case "TiB":
+		return bw.Size * TiB
+	case "K":
+		return bw.Size * K
+	case "M":
+		return bw.Size * M
+	case "G":
+		return bw.Size * G
+	case "T":
+		return bw.Size * T
 	default:
-		return bw.Size * 1000
+		return 0
+	}
+}
+
+func modifyBandwidthSize(bw *Bandwidth) {
+	if bw.Size <= 0 {
+		bw.Size = m.MaxFloat32
 	}
 }
 
@@ -98,15 +125,25 @@ func reportsScheduler(d time.Duration, reporter func() float32) {
 		// sent a request to indexer service according to system current bandwidth limitation
 		// NOTE: reporter may exceed the limitation if a post request already initiated.
 		// TODO: need to check average postIndexer running time to determine possible average exceeding size
-		for reportsQueue.Len() > 0 && sizeSentInBytes < sizeLimitInBytes && time.Since(x) < d {
+		for validateBandwidthLimit(sizeSentInBytes, sizeLimitInBytes) && time.Since(x) < d {
 			sizeSentInBytes += reporter()
 			fmt.Println("sent and then limit ", sizeSentInBytes, sizeLimitInBytes)
 		}
 	}
 }
 
+func validateBandwidthLimit(sizeSentInBytes float32, sizeLimitInBytes float32) bool {
+	if reportsQueue.Len() < 1 {
+		return false
+	}
+	item := reportsQueue.Top().(*Item)
+	report := item.value
+	postBody, _ := json.MarshalIndent(report, "", " ")
+	return sizeSentInBytes+float32(len(postBody)) <= sizeLimitInBytes
+}
+
 func postIndexer() float32 {
-	item := heap.Pop(&reportsQueue).(*Item)
+	item := reportsQueue.Pop().(*Item)
 	report := item.value
 	postBody, err := json.MarshalIndent(report, "", " ")
 	postBodyRef := bytes.NewBuffer(postBody)

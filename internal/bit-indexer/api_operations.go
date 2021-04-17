@@ -18,47 +18,42 @@ import (
 	"os"
 )
 
-func PostReport(w http.ResponseWriter, r *http.Request) {
+func IndexerPostReport(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	reports, request := ReportBody{}, ReportBody{}
-
+	reports := ReportBody{}
+	request := TestReport{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		ErrorHandler(w, "Internal server error", err)
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-
-	content, err := ioutil.ReadFile("storage/testReport.json")
+	content, err := ioutil.ReadFile("../storage/testReport.json")
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			input, e := json.MarshalIndent(request, "", " ")
-			if e != nil {
-				ErrorHandler(w, "Bad request", e)
-			}
-			e = ioutil.WriteFile("storage/testReport.json", input, 0644)
-			if e != nil {
-				ErrorHandler(w, "Internal server error", e)
-			}
-			ResponseHandler(w, "Report posted!")
+		if !errors.Is(err, os.ErrNotExist) {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
-		ErrorHandler(w, "Internal server error", err)
+	} else {
+		err = json.Unmarshal(content, &reports)
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		}
+		// converting existing data to ReportBody type
+		err = ValidateType(reports)
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		}
 	}
 
-	// converting existing data to ReportBody type
-	err = json.Unmarshal(content, &reports)
-	if err != nil || !ValidateType(reports) {
-		ErrorHandler(w, "Internal server error", err)
-	}
 	// append new reports
-	reports.Reports = append(reports.Reports, request.Reports...)
+	reports.Reports = append(reports.Reports, request)
 	// Marshal it and write back to file
 	input, err := json.MarshalIndent(reports, "", " ")
 	if err != nil {
-		ErrorHandler(w, "Internal server error", err)
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	err = ioutil.WriteFile("storage/testReport.json", input, 0644)
+	err = ioutil.WriteFile("../storage/testReport.json", input, 0644)
 	if err != nil {
-		ErrorHandler(w, "Internal server error", err)
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	ResponseHandler(w, "Report posted!")
+	ApiResponseHandler(w, http.StatusOK, "Report received!", nil)
 }

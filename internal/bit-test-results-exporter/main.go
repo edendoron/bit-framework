@@ -2,12 +2,8 @@ package bitExporter
 
 import (
 	"../../server"
-	. "../models"
 	"container/heap"
-	"fmt"
 	"log"
-	"net/http"
-	"strings"
 	"time"
 )
 
@@ -28,45 +24,4 @@ func BitExporter() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-}
-
-func index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello bitTestResultsExporter!")
-}
-
-var routes = Routes{
-	Route{
-		Name:        "Index",
-		Method:      "GET",
-		Pattern:     "/",
-		HandlerFunc: index,
-	},
-
-	Route{
-		Name:        "ExporterGetPing",
-		Method:      strings.ToUpper("Get"),
-		Pattern:     "/ping",
-		HandlerFunc: ExporterGetPing,
-	},
-
-	Route{
-		Name:        "GetBandwidth",
-		Method:      strings.ToUpper("Get"),
-		Pattern:     "/qos/bandwidth",
-		HandlerFunc: GetBandwidth,
-	},
-
-	Route{
-		Name:        "PostBandwidth",
-		Method:      strings.ToUpper("Post"),
-		Pattern:     "/qos/bandwidth",
-		HandlerFunc: PostBandwidth,
-	},
-
-	Route{
-		Name:        "ExporterPostReport",
-		Method:      strings.ToUpper("Post"),
-		Pattern:     "/report/raw",
-		HandlerFunc: ExporterPostReport,
-	},
 }

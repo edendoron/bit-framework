@@ -2,11 +2,7 @@ package bitIndexer
 
 import (
 	"../../server"
-	. "../models"
-	"fmt"
 	"log"
-	"net/http"
-	"strings"
 )
 
 func BitIndexer() {
@@ -22,31 +18,4 @@ func BitIndexer() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-}
-
-func index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello bitIndexer!")
-}
-
-var routes = Routes{
-	Route{
-		Name:        "Index",
-		Method:      "GET",
-		Pattern:     "/",
-		HandlerFunc: index,
-	},
-
-	Route{
-		Name:        "IndexerGetPing",
-		Method:      strings.ToUpper("Get"),
-		Pattern:     "/ping",
-		HandlerFunc: IndexerGetPing,
-	},
-
-	Route{
-		Name:        "IndexerPostReport",
-		Method:      strings.ToUpper("Post"),
-		Pattern:     "/report/raw",
-		HandlerFunc: IndexerPostReport,
-	},
 }

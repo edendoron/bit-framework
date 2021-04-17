@@ -5,14 +5,14 @@ import (
 	"github.com/go-playground/validator"
 )
 
-func ValidateType(response interface{}) bool {
+func ValidateType(response interface{}) error {
 	v := validator.New()
 	err := v.Struct(response)
 	if err != nil {
 		for _, e := range err.(validator.ValidationErrors) {
 			fmt.Println(e.Error())
 		}
-		return false
+		return err
 	}
-	return true
+	return nil
 }

@@ -1,5 +1,5 @@
 /*
- * bit-test-results-exporter
+ * bitTestResultsExporter
  *
  * This protocol defines the API for **test-results-exporter** service in the **BIT** functionality.
  *

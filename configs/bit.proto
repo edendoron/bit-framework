@@ -1,0 +1,211 @@
+
+// BINA-BIT Protocol Buffers Declaration File
+
+syntax = "proto3";
+package bit;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Includes
+///////////////////////////////////////////////////////////////////////////////
+import "google/protobuf/timestamp.proto";
+
+///////////////////////////////////////////////////////////////////////////////
+//  Options
+///////////////////////////////////////////////////////////////////////////////
+option optimize_for = SPEED;
+
+// java lang customizations
+option java_package = "com.rafael.bina.bit";
+option java_outer_classname = "Bit";
+option java_multiple_files = true;
+
+// C# lang customizations
+option csharp_namespace = "Rafael.Bina.Bit";
+
+// go lang customizations
+option go_package = "rafael.com/bina/bit";
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  Enums
+///////////////////////////////////////////////////////////////////////////////
+enum ESeverity { 
+    MINOR   = 0; 
+    DEGRADED = 1;
+    CRITICAL = 2;
+    SAFETY = 3;
+}        
+///////////////////////////////////////////////////////////////////////////////
+// General structures
+///////////////////////////////////////////////////////////////////////////////
+message KeyValuePair {
+	// base64 encoded value
+    bytes key = 1;
+
+	// base64 encoded value
+    bytes value = 2;
+}
+
+ //---- general failure description ------
+ message FailureDescription {
+    string unit_name = 1; // Unit name that performs the test
+    string test_name = 2; // Test Name
+    uint64 test_id = 3; // Test ID, must be unique in the system	
+    repeated string bit_type = 4; // Type of BIT, e.g. PBIT, IBIT, CBIT, FBIT etc
+    string description = 5; // Test procedure description for presentation
+    string additional_info = 6; // Test additional information 
+    string purpose = 7; // Test purpose   
+    ESeverity severity = 8; 
+    repeated string operator_failure = 10; // describes system functionalities from oprarators 
+                                         // point of view that are influenced 
+                                         // (what I cannot do in the system)
+                                         // in case of failure. e.g. TargetDetection
+    repeated string line_replacent_units = 11; // Line replacement units, in the order of replacement 
+    repeated string field_replacemnt_units = 12; // Field replacement units, in the order of replacement 
+}
+
+//---- failure examination rule ------
+message FailureExaminationRule {
+    message FailureCriteria {
+        // Value based definition for failure anouncment
+        message FailureValueCriteria {    
+            double minimum = 1; // minimum value
+            double miximum = 2; // maximum value    
+            enum EThresholdMode {
+                WITHIN = 0;
+                OUTOF = 1;
+            }
+            EThresholdMode threshold_mode = 3; // in/out range
+            message Exceeding {
+                enum EExceedingType {
+                    VALUE = 0;
+                    PERCENT = 1;
+                }        
+                EExceedingType type = 1;
+                double value = 2; 
+            }
+            Exceeding exceeding = 4; //  exceeding limit
+        }
+        FailureValueCriteria value_criteria = 1;
+        // Time based definition for failure anouncment
+        message FailureTimeCriteria { 
+            enum EWindowType {
+                NO_WINDOW = 0;
+                SLIDING = 1;
+            }      
+            EWindowType window_type = 1; 
+            uint32 window_size = 2;  
+            uint32 failures_cCount = 3;
+        }
+        FailureTimeCriteria time_criteria = 2;
+    }
+    string matching_field = 1; // The field that should be evaluated for failure rport
+    KeyValuePair matching_tag = 2; // The tag that should be present
+    FailureCriteria failure_criteria = 3; // crioterions
+}
+
+//---- failure report duration ------
+message FailureReportDuration {
+    enum EIndicationLatchType {
+        NO_LATCH = 0; // indication is down when the test succedes
+        LATCH_UNTIL_RESET = 1; // indication is down until implicit request (enable delay until reported to someone) 
+        LATCH_FOREVER = 2;
+        NUM_OF_SECONDS = 3;
+    }
+    EIndicationLatchType indication = 1;
+    uint32 indication_seconds = 2; // relevant only if indication=NUM_OF_SECONDS    
+}
+
+// Result of test, it is inspired by Time-Series event i.e.
+//   <id>[<tag-key>=<tag-value>, ...][<field-key>=<field-value>, ...]<timestamp>
+message TestResult {  
+    uint64 test_id = 1; // Test ID, must be unique in the system	    
+    google.protobuf.Timestamp timestamp = 2; //  when the test was performed	  
+    repeated KeyValuePair tag_set = 3; // set of Tags, e.g.: hostname=server02, ip=10.1.1.1, zone=north, etc.  
+    repeated KeyValuePair field_set = 4; // set of Fields, e.g.: temperature=24.5, volts=7.1, etc.
+    uint32 report_priority = 5; // The report priority [0 - lowest]
+}
+
+message PrimaryHeader {
+
+	// consecutive message counter that is increased upon every transmission 
+	uint64 messageCounter = 1; 
+   
+	// when the status was determined
+	google.protobuf.Timestamp timestamp = 2; 
+		 
+	// the version of the schema 
+	string schemaVersion = 3;
+
+	// the identification of the sender, encoded with base64
+	string senderHost = 4;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// API structures
+///////////////////////////////////////////////////////////////////////////////
+
+
+
+/******************************************************************************/
+//
+// Message : TestResultsSet
+//
+// Sender  : - 'bit-client' to 'bit-test-results-exporter'
+//           - 'bit-test-results-exporter' to 'bit-indexer'
+//
+// Receiver: - test-results-exporter, bit-indexer
+//
+/******************************************************************************/
+message TestResultsSet { 
+
+	// header
+	PrimaryHeader header = 1;
+
+	// data
+    repeated TestResult results_set = 2;
+}
+
+
+// This structure describes failure. 
+message Failure {   
+    FailureDescription description = 1;
+  
+    FailureExaminationRule examination_rule = 2;
+ 
+    FailureReportDuration report_duration = 3;
+
+    // ----- dependencies ------
+    message FailureDependencies {
+        repeated string belongs_to_group = 1; // groups that this failure belongs to
+        repeated string masks_other_group = 2; // groups that this failure suppress 
+    }
+    FailureDependencies dependencies = 4;   
+}
+
+// This structure configures all falures that should not be reported for defined user groups
+message UserGroupsFiltering {
+    message FilteredFailures {  
+        string user_group = 1;
+        repeated uint64 masked_test_ids = 2; // Test ID, that is masked for specific user group
+    }       
+    repeated FilteredFailures group_filter = 1;
+}
+
+
+// This structure contains data that is reported as BIT Status
+message BitStatus {
+    string user_group = 1;
+    message RportedFailure {
+        FailureDescription failure_data = 1; // the failure description
+        google.protobuf.Timestamp timestamp = 2; // when the status was determined
+        uint64 count = 3;
+      }    
+    repeated RportedFailure failures = 2;
+}
+
+
+
+
+

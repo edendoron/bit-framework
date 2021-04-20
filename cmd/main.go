@@ -1,13 +1,16 @@
 package main
 
 import (
-	. "../internal/bit-indexer"
-	. "../internal/bit-test-results-exporter"
+	. "../internal/bitIndexer"
+	. "../internal/bitStorageAccess"
+	. "../internal/bitTestResultsExporter"
 	"log"
 )
 
 func main() {
 	log.Printf("Server started")
 	go BitExporter()
+	go BitStorageAccess()
 	BitIndexer()
 }
+

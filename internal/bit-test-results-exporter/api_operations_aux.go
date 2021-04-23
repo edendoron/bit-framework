@@ -13,8 +13,14 @@ import (
 // init global package variables
 var reportsQueue = make(PriorityQueue, 0)
 
+var reportsChannel = make(chan []byte)
+
+var sizeSentChannel = make(chan float32)
+
+var bandwidthChannel = make(chan bool)
+
 var currentBW = Bandwidth{
-	Size:           25,
+	Size:           1,
 	UnitsPerSecond: "KiB",
 }
 
@@ -116,36 +122,67 @@ func modifyBandwidthSize(bw *Bandwidth) {
 	}
 }
 
-func reportsScheduler(d time.Duration, reporter func() float32) {
-	for x := range time.Tick(d) {
-		// calculate current bandwidth limitation
-		sizeLimitInBytes := calculateSizeLimit(currentBW)
-		var sizeSentInBytes float32 = 0
-		fmt.Println(x)
-		// sent a request to indexer service according to system current bandwidth limitation
-		// NOTE: reporter may exceed the limitation if a post request already initiated.
-		// TODO: need to check average postIndexer running time to determine possible average exceeding size
-		for validateBandwidthLimit(sizeSentInBytes, sizeLimitInBytes) && time.Since(x) < d {
-			sizeSentInBytes += reporter()
-			fmt.Println("sent and then limit ", sizeSentInBytes, sizeLimitInBytes)
+func updateReportsChannel() {
+	for {
+		if reportsQueue.Len() < 1 {
+			return
+		}
+		item := reportsQueue.Top().(*Item)
+		report := item.value
+		postBody, _ := json.MarshalIndent(report, "", " ")
+		sizeSentInBytes := <-sizeSentChannel
+		if sizeSentInBytes+float32(len(postBody)) <= calculateSizeLimit(currentBW) {
+			reportsChannel <- postBody
 		}
 	}
 }
 
-func validateBandwidthLimit(sizeSentInBytes float32, sizeLimitInBytes float32) bool {
-	if reportsQueue.Len() < 1 {
-		return false
+func reportsScheduler(d time.Duration, reporter func([]byte) float32) {
+	// calculate current bandwidth limitation
+	sizeLimitInBytes := calculateSizeLimit(currentBW)
+	var sizeSentInBytes float32 = 0
+	//var indexerReport ReportBody
+	for {
+		//go func() {
+		//	if reportsQueue.Len() < 1 {
+		//		return
+		//	}
+		//	item := reportsQueue.Top().(*Item)
+		//	report := item.value
+		//	postBody, _ := json.MarshalIndent(report, "", " ")
+		//	if sizeSentInBytes+float32(len(postBody)) <= sizeLimitInBytes {
+		//		reportsChannel <- postBody
+		//	}
+		//}()
+
+		select {
+		case postBodyFromCh := <-reportsChannel:
+			sizeSentInBytes += reporter(postBodyFromCh)
+			sizeSentChannel <- sizeSentInBytes
+			fmt.Println("sent and then limit ", sizeSentInBytes, sizeLimitInBytes)
+		case <-time.After(d):
+			fmt.Println(time.Now())
+			//indexerReport = ReportBody{}
+			sizeSentInBytes = 0
+		case <-bandwidthChannel:
+			sizeLimitInBytes = calculateSizeLimit(currentBW)
+		}
 	}
-	item := reportsQueue.Top().(*Item)
-	report := item.value
-	postBody, _ := json.MarshalIndent(report, "", " ")
-	return sizeSentInBytes+float32(len(postBody)) <= sizeLimitInBytes
+	// sent a request to indexer service according to system current bandwidth limitation
 }
 
-func postIndexer() float32 {
-	item := reportsQueue.Pop().(*Item)
-	report := item.value
-	postBody, err := json.MarshalIndent(report, "", " ")
+//func validateBandwidthLimit(sizeSentInBytes float32, sizeLimitInBytes float32) bool {
+//	if reportsQueue.Len() < 1 {
+//		return false
+//	}
+//	item := reportsQueue.Top().(*Item)
+//	report := item.value
+//	postBody, _ := json.MarshalIndent(report, "", " ")
+//	return sizeSentInBytes+float32(len(postBody)) <= sizeLimitInBytes
+//}
+
+func postIndexer(postBody []byte) float32 {
+	reportsQueue.Pop()
 	postBodyRef := bytes.NewBuffer(postBody)
 	indexerRes, err := http.Post(postIndexedUrl, "application/json; charset=UTF-8", postBodyRef)
 	if err != nil || indexerRes.StatusCode != http.StatusOK {

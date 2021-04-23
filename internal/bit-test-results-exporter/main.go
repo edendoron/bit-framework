@@ -19,7 +19,10 @@ func BitExporter() {
 
 	go reportsScheduler(10*time.Second, postIndexer)
 
+	go updateReportsChannel()
+
 	//TODO: need to change to ListenAndServeTLS in order to support https
+	//err := srv.ListenAndServeTLS("localhost.crt", "localhost.key")
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)

@@ -43,6 +43,8 @@ func PostBandwidth(w http.ResponseWriter, r *http.Request) {
 	// update current bandwidth
 	currentBW = request
 
+	bandwidthChannel <- true
+
 	ApiResponseHandler(w, http.StatusOK, "Bandwidth updated!", nil)
 }
 

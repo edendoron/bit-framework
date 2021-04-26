@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: bit-test-results-exporter
+  title: bitTestResultsExporter
   description: This protocol defines the API for **test-results-exporter** service
     in the **BIT** functionality.
   contact:

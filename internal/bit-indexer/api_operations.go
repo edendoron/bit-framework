@@ -13,15 +13,21 @@ import (
 	. "../models"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 )
 
 func IndexerPostReport(w http.ResponseWriter, r *http.Request) {
-	b, _ := ioutil.ReadAll(r.Body)
-	fmt.Println("len is", len(b))
+	//
+	//fmt.Println("Content length:", r.ContentLength)
+	//p := make([]byte, 1000000)
+	//n, _ := r.Body.Read(p)
+	//fmt.Println("Body length:", n)
+	//fmt.Println("Header length:", len(r.Header))
+
+	//b, _ := ioutil.ReadAll(r.Body)
+	//fmt.Println("len is", len(b))
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	reports := ReportBody{}
 	request := ReportBody{}

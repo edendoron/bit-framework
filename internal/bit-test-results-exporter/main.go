@@ -17,9 +17,11 @@ func BitExporter() {
 
 	srv := server.NewServer(router, ":8080")
 
-	go reportsScheduler(10*time.Second, postIndexer)
-
-	go updateReportsChannel()
+	//go postIndexer()
+	//
+	go updateReportToIndexer()
+	//
+	go reportsScheduler(5 * time.Second)
 
 	//TODO: need to change to ListenAndServeTLS in order to support https
 	//err := srv.ListenAndServeTLS("localhost.crt", "localhost.key")

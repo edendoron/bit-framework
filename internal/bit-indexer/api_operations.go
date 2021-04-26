@@ -13,15 +13,18 @@ import (
 	. "../models"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 )
 
 func IndexerPostReport(w http.ResponseWriter, r *http.Request) {
+	b, _ := ioutil.ReadAll(r.Body)
+	fmt.Println("len is", len(b))
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	reports := ReportBody{}
-	request := TestReport{}
+	request := ReportBody{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
@@ -45,7 +48,7 @@ func IndexerPostReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// append new reports
-	reports.Reports = append(reports.Reports, request)
+	reports.Reports = append(reports.Reports, request.Reports...)
 	// Marshal it and write back to file
 	input, err := json.MarshalIndent(reports, "", " ")
 	if err != nil {

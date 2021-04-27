@@ -1,0 +1,4 @@
+package bitHistoryCurator
+
+func removeAgedData() {
+}

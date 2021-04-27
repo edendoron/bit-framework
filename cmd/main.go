@@ -1,6 +1,7 @@
 package main
 
 import (
+	. "../internal/bitHistoryCurator"
 	. "../internal/bitIndexer"
 	. "../internal/bitStorageAccess"
 	. "../internal/bitTestResultsExporter"
@@ -8,12 +9,14 @@ import (
 	"sync"
 )
 
+const NumOfServices = 4
+
 func main() {
 	log.Printf("Server started")
 
 	// create a 'WaitGroup'
 	wg := new(sync.WaitGroup)
-	wg.Add(3)
+	wg.Add(NumOfServices)
 
 	go func() {
 		BitExporter()
@@ -25,6 +28,10 @@ func main() {
 	}()
 	go func() {
 		BitIndexer()
+		wg.Done()
+	}()
+	go func() {
+		BitHistoryCurator()
 		wg.Done()
 	}()
 

@@ -17,6 +17,8 @@ var reportsQueue = prqueue.Build()
 
 var indexerRequestChannel = make(chan *bytes.Reader)
 
+var queueChannel = make(chan int, 1000)
+
 var currentBW = Bandwidth{}
 
 const KiB = 1024
@@ -30,8 +32,9 @@ const T = G * 1000
 
 const postIndexedUrl = "http://localhost:8081/report/raw"
 
-const httpPostHeaderSize = 300
-const reportBodyWrapSize = 200
+const httpPostHeaderSize = 20
+const reportBodyWrapSize = 218 // wireshark result
+const testReportWrapSize = 45  // wireshark result - still checking
 const indexerTotalExtraSize = httpPostHeaderSize + reportBodyWrapSize
 
 // Internal auxiliary functions
@@ -122,22 +125,22 @@ func modifyBandwidthSize(bw *Bandwidth) {
 	}
 }
 
-func updateRequestChannel(indexerReport ReportBody, reportFull bool) float32 {
+func updateRequestChannel(indexerReport ReportBody, reportFull bool) (float32, int) {
 	//TODO: handle error
 	postBody, _ := json.MarshalIndent(indexerReport, "", " ")
 	postBodyReader := bytes.NewReader(postBody)
 	indexerRequestChannel <- postBodyReader
 	if reportFull {
-		return -1
+		return -1, len(indexerReport.Reports)
 	} else {
-		return float32(len(postBody) + indexerTotalExtraSize)
+		return float32(len(postBody)), len(indexerReport.Reports)
 	}
 }
 
-func updateReportToIndexer(epochSentSize float32) float32 {
+func updateReportToIndexer(epochSentSize float32) (float32, int) {
 	indexerReport := ReportBody{}
 	if reportsQueue.Len() == 0 {
-		return 0
+		return 0, 0
 	}
 	for reportsQueue.Len() > 0 {
 		//TODO: handle error
@@ -147,9 +150,10 @@ func updateReportToIndexer(epochSentSize float32) float32 {
 		//TODO: handle error
 		reportByteBody, _ := json.MarshalIndent(report, "", " ")
 		sizeLimitInBytes := calculateSizeLimit(currentBW)
-		if epochSentSize+float32(len(reportByteBody))+indexerTotalExtraSize <= sizeLimitInBytes {
+		reportSize := epochSentSize + float32(len(reportByteBody)) + testReportWrapSize
+		if reportSize <= sizeLimitInBytes {
 			indexerReport.Reports = append(indexerReport.Reports, report)
-			epochSentSize += float32(len(reportByteBody))
+			epochSentSize += float32(len(reportByteBody)) + testReportWrapSize
 			fmt.Println("add to report. priority:", report.ReportPriority, "size:", epochSentSize, "limit is", sizeLimitInBytes)
 		} else {
 			//TODO: handle return value
@@ -162,16 +166,19 @@ func updateReportToIndexer(epochSentSize float32) float32 {
 
 func reportsScheduler(duration time.Duration) {
 	var indexerReqEpochSize float32 = indexerTotalExtraSize
-	for epoch := range time.Tick(duration) {
-		fmt.Println(epoch)
-		for time.Since(epoch) < duration && indexerReqEpochSize != -1 {
-			indexerReqEpochSize = updateReportToIndexer(indexerReqEpochSize)
-			// if indexerReqEpochSize == -1, than the bandwidth limit has reached, and the goroutine will sleep until the end of duration
+	reportProcessed := 0
+	for {
+		reportToProcess := <-queueChannel
+		epoch := time.Now()
+		for reportToProcess > 0 {
+			indexerReqEpochSize, reportProcessed = updateReportToIndexer(indexerReqEpochSize)
+			reportToProcess -= reportProcessed
+			if indexerReqEpochSize == -1 {
+				time.Sleep(duration - time.Since(epoch))
+				epoch = time.Now()
+			}
+			indexerReqEpochSize = indexerTotalExtraSize
 		}
-		if indexerReqEpochSize == -1 {
-			time.Sleep(duration - time.Since(epoch))
-		}
-		indexerReqEpochSize = indexerTotalExtraSize
 	}
 }
 
@@ -183,6 +190,6 @@ func postIndexer() {
 			//TODO: handle this error
 			return
 		}
-		fmt.Println("sent report to indexer of total size", postBodyRef.Size()+indexerTotalExtraSize)
+		fmt.Println(time.Now(), "total size sent:", postBodyRef.Size()+indexerTotalExtraSize)
 	}
 }

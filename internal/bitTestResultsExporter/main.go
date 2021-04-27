@@ -29,7 +29,7 @@ func BitExporter() {
 	//heap.Init(&reportsQueue)
 	//reportsQueue.Init(reportsQueue.maxSize)
 
-	srv := server.NewServer(router, ":8080")
+	srv := server.NewServer(router, ":8079")
 
 	go reportsScheduler(5 * time.Second)
 

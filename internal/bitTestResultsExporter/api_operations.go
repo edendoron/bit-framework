@@ -68,9 +68,10 @@ func ExporterPostReport(w http.ResponseWriter, r *http.Request) {
 			ApiResponseHandler(w, http.StatusBadRequest, "Bad request", err)
 			return
 		}
-
+		// TODO: handle error
 		reportsQueue.Push(report, int(report.ReportPriority))
 	}
+	queueChannel <- reportsQueue.Len()
 
 	ApiResponseHandler(w, http.StatusOK, "Report received!", nil)
 }

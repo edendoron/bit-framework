@@ -13,4 +13,3 @@ func main() {
 	go BitStorageAccess()
 	BitIndexer()
 }
-

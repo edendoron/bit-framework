@@ -9,10 +9,14 @@
 package bitStorageAccess
 
 import (
+	. "../../configs/rafael.com/bina/bit"
 	. "../apiResponseHandlers"
 	. "../models"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -20,6 +24,25 @@ import (
 
 func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	reportIds := r.URL.Query()["key"]
+	response := make([]TestResult, len(reportIds[0]))
+
+	fmt.Println(reportIds[0])
+
+	for i, id := range reportIds[0] {
+		protoReport, err := ioutil.ReadFile("../storage/report_" + fmt.Sprint(id) + ".txt")
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
+		}
+		err = proto.Unmarshal(protoReport, &response[i])
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		}
+	}
+	err := json.NewEncoder(w).Encode(&response)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -30,11 +53,18 @@ func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	reports, err := json.MarshalIndent(request, "", " ")
+	requestToProto := TestResult{
+		TestId:         uint64(request.TestId),
+		Timestamp:      timestamppb.New(request.Timestamp),
+		TagSet:         convertToKeyValuePair(request.TagSet),
+		FieldSet:       convertToKeyValuePair(request.FieldSet),
+		ReportPriority: uint32(request.ReportPriority),
+	}
+	protoReports, err := proto.Marshal(&requestToProto)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	err = ioutil.WriteFile("../storage/testReport.json", reports, 0644)
+	err = ioutil.WriteFile("../storage/report_"+fmt.Sprint(request.TestId)+".txt", protoReports, 0644)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
@@ -43,6 +73,37 @@ func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 
 func PutDataRead(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	var reportIds []string
+	err := json.NewDecoder(r.Body).Decode(&reportIds)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	reports := make([]TestResult, len(reportIds))
+
+	for i, id := range reportIds {
+		protoReport, err := ioutil.ReadFile("../storage/report_" + fmt.Sprint(id) + ".txt")
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
+		}
+		err = proto.Unmarshal(protoReport, &reports[i])
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		}
+	}
+	response := make([]TestReport, len(reportIds))
+	for i, report := range reports {
+		response[i] = TestReport{
+			TestId:         float64(report.TestId),
+			ReportPriority: float64(report.ReportPriority),
+			Timestamp:      report.Timestamp.AsTime(),
+			TagSet:         convertToKeyValue(report.TagSet),
+			FieldSet:       convertToKeyValue(report.FieldSet),
+		}
+	}
+	err = json.NewEncoder(w).Encode(&response)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
 	w.WriteHeader(http.StatusOK)
 }
 

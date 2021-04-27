@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// init global package variables
+// init global package variables and constants
 
 var reportsQueue = prqueue.Build()
 
@@ -35,6 +35,7 @@ const reportBodyWrapSize = 200
 const indexerTotalExtraSize = httpPostHeaderSize + reportBodyWrapSize
 
 // Internal auxiliary functions
+
 //func writeBandwidth(request Bandwidth) ApiResponse {
 //	input, err := json.MarshalIndent(request, "", " ")
 //	if err != nil {

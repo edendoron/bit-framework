@@ -32,5 +32,4 @@ func IndexerPostReport(w http.ResponseWriter, r *http.Request) {
 
 	http.Post(storageDataWriteURL, "application/json; charset=UTF-8", r.Body)
 	// ApiResponseHandler(w, resp.StatusCode, "Report posted!", nil)
-
 }

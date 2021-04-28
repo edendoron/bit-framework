@@ -167,17 +167,21 @@ func updateReportToIndexer(epochSentSize float32) (float32, int) {
 func reportsScheduler(duration time.Duration) {
 	var indexerReqEpochSize float32 = indexerTotalExtraSize
 	reportProcessed := 0
+	epoch := time.Now()
 	for {
 		reportToProcess := <-queueChannel
-		epoch := time.Now()
+		if time.Since(epoch) >= duration {
+			indexerReqEpochSize = indexerTotalExtraSize
+			epoch = time.Now()
+		}
 		for reportToProcess > 0 {
 			indexerReqEpochSize, reportProcessed = updateReportToIndexer(indexerReqEpochSize)
 			reportToProcess -= reportProcessed
 			if indexerReqEpochSize == -1 {
 				time.Sleep(duration - time.Since(epoch))
+				indexerReqEpochSize = indexerTotalExtraSize
 				epoch = time.Now()
 			}
-			indexerReqEpochSize = indexerTotalExtraSize
 		}
 	}
 }

@@ -26,14 +26,10 @@ func BitExporter() {
 
 	router := routes.NewRouter()
 
-	//heap.Init(&reportsQueue)
-	//reportsQueue.Init(reportsQueue.maxSize)
-
 	srv := server.NewServer(router, ":8079")
 
+	// TODO: requests may be sent in 0.01 deviation of the requested duration
 	go reportsScheduler(5 * time.Second)
-
-	go postIndexer()
 
 	//TODO: need to change to ListenAndServeTLS in order to support https
 	//err := srv.ListenAndServeTLS("localhost.crt", "localhost.key")

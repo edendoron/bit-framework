@@ -13,7 +13,7 @@ func BitExporter() {
 
 	log.Printf("Server started - bit-test-result-exporter")
 
-	os.Setenv("EXPORTERBWSIZE", "2")
+	os.Setenv("EXPORTERBWSIZE", "20")
 	os.Setenv("EXPORTERBWUNITS", "KiB")
 
 	size, _ := strconv.ParseFloat(os.Getenv("EXPORTERBWSIZE"), 32)
@@ -26,10 +26,10 @@ func BitExporter() {
 
 	router := routes.NewRouter()
 
-	srv := server.NewServer(router, ":8079")
+	srv := server.NewServer(router, ":8081")
 
-	// TODO: requests may be sent in 0.01 delay of the requested duration
-	go reportsScheduler(5 * time.Second)
+	// NOTE: requests may be sent in 0.04 of a second deviation of the requested duration
+	go reportsScheduler(time.Second)
 
 	//TODO: need to change to ListenAndServeTLS in order to support https
 	//err := srv.ListenAndServeTLS("localhost.crt", "localhost.key")

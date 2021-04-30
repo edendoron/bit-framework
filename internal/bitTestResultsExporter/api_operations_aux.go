@@ -199,5 +199,6 @@ func postIndexer(postBodyRef *bytes.Reader) {
 			//TODO: handle this error
 			return
 		}
+		defer indexerRes.Body.Close()
 	}()
 }

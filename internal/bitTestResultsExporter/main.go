@@ -28,7 +28,7 @@ func BitExporter() {
 
 	srv := server.NewServer(router, ":8079")
 
-	// TODO: requests may be sent in 0.01 deviation of the requested duration
+	// TODO: requests may be sent in 0.01 delay of the requested duration
 	go reportsScheduler(5 * time.Second)
 
 	//TODO: need to change to ListenAndServeTLS in order to support https

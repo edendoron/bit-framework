@@ -192,10 +192,12 @@ func postIndexer(postBodyRef *bytes.Reader) {
 	if postBodyRef.Size() < 1 {
 		return
 	}
-	fmt.Println(time.Now(), "total size to send:", postBodyRef.Size()+indexerTotalExtraSize)
-	indexerRes, err := http.Post(postIndexedUrl, "application/json; charset=UTF-8", postBodyRef)
-	if err != nil || indexerRes.StatusCode != http.StatusOK {
-		//TODO: handle this error
-		return
-	}
+	go func() {
+		fmt.Println(time.Now(), "total size to send:", postBodyRef.Size()+indexerTotalExtraSize)
+		indexerRes, err := http.Post(postIndexedUrl, "application/json; charset=UTF-8", postBodyRef)
+		if err != nil || indexerRes.StatusCode != http.StatusOK {
+			//TODO: handle this error
+			return
+		}
+	}()
 }

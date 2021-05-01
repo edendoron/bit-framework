@@ -1,7 +1,8 @@
 package main
 
 import (
-	. "../internal/bit-indexer"
+	. "../internal/bitHistoryCurator"
+	. "../internal/bitIndexer"
 	. "../internal/bitStorageAccess"
 	. "../internal/bitTestResultsExporter"
 	"log"
@@ -13,18 +14,25 @@ func main() {
 
 	// create a 'WaitGroup'
 	wg := new(sync.WaitGroup)
-	wg.Add(3)
 
 	go func() {
+		wg.Add(1)
 		BitExporter()
 		wg.Done()
 	}()
 	go func() {
+		wg.Add(1)
 		BitStorageAccess()
 		wg.Done()
 	}()
 	go func() {
+		wg.Add(1)
 		BitIndexer()
+		wg.Done()
+	}()
+	go func() {
+		wg.Add(1)
+		BitHistoryCurator()
 		wg.Done()
 	}()
 

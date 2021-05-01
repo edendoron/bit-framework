@@ -1,8 +1,33 @@
 {
  "reports": [
   {
-   "testId": 4,
-   "reportPriority": 2,
+   "testId": 1,
+   "reportPriority": 10,
+   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
+   "tagSet": [
+    {
+     "key": "versions",
+     "value": "external clients"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "ICD-1",
+     "value": "1.2.3.4-rc5678"
+    },
+    {
+     "key": "ICD-2",
+     "value": "3.2.3.4-rc5678"
+    },
+    {
+     "key": "ICD-3",
+     "value": "3.2.3.4-rc5678"
+    }
+   ]
+  },
+  {
+   "testId": 3,
+   "reportPriority": 9,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
    "tagSet": [
     {
@@ -18,8 +43,8 @@
    ]
   },
   {
-   "testId": 3,
-   "reportPriority": 9,
+   "testId": 5,
+   "reportPriority": 11,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
    "tagSet": [
     {
@@ -60,7 +85,32 @@
    ]
   },
   {
-   "testId": 7,
+   "testId": 2,
+   "reportPriority": 200,
+   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    },
+    {
+     "key": "hostname",
+     "value": "server02"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    },
+    {
+     "key": "volts",
+     "value": "7.1"
+    }
+   ]
+  },
+  {
+   "testId": 6,
    "reportPriority": 11,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
    "tagSet": [
@@ -77,53 +127,27 @@
    ]
   },
   {
-   "testId": 9,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
+   "testId": 1,
+   "reportPriority": 10,
+   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
    "tagSet": [
     {
-     "key": "zone",
-     "value": "north"
+     "key": "versions",
+     "value": "external clients"
     }
    ],
    "fieldSet": [
     {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 5,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
+     "key": "ICD-1",
+     "value": "1.2.3.4-rc5678"
+    },
     {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
+     "key": "ICD-2",
+     "value": "3.2.3.4-rc5678"
+    },
     {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 8,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
+     "key": "ICD-3",
+     "value": "3.2.3.4-rc5678"
     }
    ]
   },
@@ -170,40 +194,6 @@
    ]
   },
   {
-   "testId": 4,
-   "reportPriority": 2,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 3,
-   "reportPriority": 9,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
    "testId": 1,
    "reportPriority": 10,
    "timestamp": "2021-04-15T11:38:29.7987531+03:00",
@@ -225,91 +215,6 @@
     {
      "key": "ICD-3",
      "value": "3.2.3.4-rc5678"
-    }
-   ]
-  },
-  {
-   "testId": 7,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 9,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 5,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 8,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 6,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
     }
    ]
   },
@@ -339,23 +244,6 @@
    ]
   },
   {
-   "testId": 4,
-   "reportPriority": 2,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
    "testId": 3,
    "reportPriority": 9,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
@@ -394,91 +282,6 @@
     {
      "key": "ICD-3",
      "value": "3.2.3.4-rc5678"
-    }
-   ]
-  },
-  {
-   "testId": 7,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 9,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 5,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 8,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 6,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
     }
    ]
   },
@@ -508,184 +311,7 @@
    ]
   },
   {
-   "testId": 4,
-   "reportPriority": 2,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 4,
-   "reportPriority": 2,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 4,
-   "reportPriority": 2,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 3,
-   "reportPriority": 9,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 3,
-   "reportPriority": 9,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 3,
-   "reportPriority": 9,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 1,
-   "reportPriority": 10,
-   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
-   "tagSet": [
-    {
-     "key": "versions",
-     "value": "external clients"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "ICD-1",
-     "value": "1.2.3.4-rc5678"
-    },
-    {
-     "key": "ICD-2",
-     "value": "3.2.3.4-rc5678"
-    },
-    {
-     "key": "ICD-3",
-     "value": "3.2.3.4-rc5678"
-    }
-   ]
-  },
-  {
-   "testId": 1,
-   "reportPriority": 10,
-   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
-   "tagSet": [
-    {
-     "key": "versions",
-     "value": "external clients"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "ICD-1",
-     "value": "1.2.3.4-rc5678"
-    },
-    {
-     "key": "ICD-2",
-     "value": "3.2.3.4-rc5678"
-    },
-    {
-     "key": "ICD-3",
-     "value": "3.2.3.4-rc5678"
-    }
-   ]
-  },
-  {
-   "testId": 1,
-   "reportPriority": 10,
-   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
-   "tagSet": [
-    {
-     "key": "versions",
-     "value": "external clients"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "ICD-1",
-     "value": "1.2.3.4-rc5678"
-    },
-    {
-     "key": "ICD-2",
-     "value": "3.2.3.4-rc5678"
-    },
-    {
-     "key": "ICD-3",
-     "value": "3.2.3.4-rc5678"
-    }
-   ]
-  },
-  {
-   "testId": 7,
+   "testId": 5,
    "reportPriority": 11,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
    "tagSet": [
@@ -698,147 +324,229 @@
     {
      "key": "TemperatureCelsius",
      "value": "-40.8"
+    }
+   ]
+  },
+  {
+   "testId": 1,
+   "reportPriority": 10,
+   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
+   "tagSet": [
+    {
+     "key": "versions",
+     "value": "external clients"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "ICD-1",
+     "value": "1.2.3.4-rc5678"
+    },
+    {
+     "key": "ICD-2",
+     "value": "3.2.3.4-rc5678"
+    },
+    {
+     "key": "ICD-3",
+     "value": "3.2.3.4-rc5678"
+    }
+   ]
+  },
+  {
+   "testId": 3,
+   "reportPriority": 9,
+   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    }
+   ]
+  },
+  {
+   "testId": 5,
+   "reportPriority": 11,
+   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    }
+   ]
+  },
+  {
+   "testId": 1,
+   "reportPriority": 10,
+   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
+   "tagSet": [
+    {
+     "key": "versions",
+     "value": "external clients"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "ICD-1",
+     "value": "1.2.3.4-rc5678"
+    },
+    {
+     "key": "ICD-2",
+     "value": "3.2.3.4-rc5678"
+    },
+    {
+     "key": "ICD-3",
+     "value": "3.2.3.4-rc5678"
+    }
+   ]
+  },
+  {
+   "testId": 2,
+   "reportPriority": 200,
+   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    },
+    {
+     "key": "hostname",
+     "value": "server02"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    },
+    {
+     "key": "volts",
+     "value": "7.1"
+    }
+   ]
+  },
+  {
+   "testId": 3,
+   "reportPriority": 9,
+   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    }
+   ]
+  },
+  {
+   "testId": 1,
+   "reportPriority": 10,
+   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
+   "tagSet": [
+    {
+     "key": "versions",
+     "value": "external clients"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "ICD-1",
+     "value": "1.2.3.4-rc5678"
+    },
+    {
+     "key": "ICD-2",
+     "value": "3.2.3.4-rc5678"
+    },
+    {
+     "key": "ICD-3",
+     "value": "3.2.3.4-rc5678"
+    }
+   ]
+  },
+  {
+   "testId": 2,
+   "reportPriority": 200,
+   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    },
+    {
+     "key": "hostname",
+     "value": "server02"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    },
+    {
+     "key": "volts",
+     "value": "7.1"
+    }
+   ]
+  },
+  {
+   "testId": 3,
+   "reportPriority": 9,
+   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    }
+   ]
+  },
+  {
+   "testId": 1,
+   "reportPriority": 10,
+   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
+   "tagSet": [
+    {
+     "key": "versions",
+     "value": "external clients"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "ICD-1",
+     "value": "1.2.3.4-rc5678"
+    },
+    {
+     "key": "ICD-2",
+     "value": "3.2.3.4-rc5678"
+    },
+    {
+     "key": "ICD-3",
+     "value": "3.2.3.4-rc5678"
     }
    ]
   },
   {
    "testId": 6,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 8,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 6,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 5,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 9,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 7,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 5,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 8,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 5,
    "reportPriority": 11,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
    "tagSet": [
@@ -906,8 +614,33 @@
    ]
   },
   {
-   "testId": 6,
-   "reportPriority": 11,
+   "testId": 2,
+   "reportPriority": 200,
+   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    },
+    {
+     "key": "hostname",
+     "value": "server02"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    },
+    {
+     "key": "volts",
+     "value": "7.1"
+    }
+   ]
+  },
+  {
+   "testId": 3,
+   "reportPriority": 9,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
    "tagSet": [
     {
@@ -923,100 +656,8 @@
    ]
   },
   {
-   "testId": 9,
+   "testId": 5,
    "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 2,
-   "reportPriority": 200,
-   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    },
-    {
-     "key": "hostname",
-     "value": "server02"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    },
-    {
-     "key": "volts",
-     "value": "7.1"
-    }
-   ]
-  },
-  {
-   "testId": 2,
-   "reportPriority": 200,
-   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    },
-    {
-     "key": "hostname",
-     "value": "server02"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    },
-    {
-     "key": "volts",
-     "value": "7.1"
-    }
-   ]
-  },
-  {
-   "testId": 2,
-   "reportPriority": 200,
-   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    },
-    {
-     "key": "hostname",
-     "value": "server02"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    },
-    {
-     "key": "volts",
-     "value": "7.1"
-    }
-   ]
-  },
-  {
-   "testId": 4,
-   "reportPriority": 2,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
    "tagSet": [
     {
@@ -1049,57 +690,6 @@
    ]
   },
   {
-   "testId": 3,
-   "reportPriority": 9,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 3,
-   "reportPriority": 9,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 3,
-   "reportPriority": 9,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
    "testId": 1,
    "reportPriority": 10,
    "timestamp": "2021-04-15T11:38:29.7987531+03:00",
@@ -1125,176 +715,32 @@
    ]
   },
   {
-   "testId": 1,
-   "reportPriority": 10,
+   "testId": 2,
+   "reportPriority": 200,
    "timestamp": "2021-04-15T11:38:29.7987531+03:00",
    "tagSet": [
     {
-     "key": "versions",
-     "value": "external clients"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "ICD-1",
-     "value": "1.2.3.4-rc5678"
-    },
-    {
-     "key": "ICD-2",
-     "value": "3.2.3.4-rc5678"
-    },
-    {
-     "key": "ICD-3",
-     "value": "3.2.3.4-rc5678"
-    }
-   ]
-  },
-  {
-   "testId": 1,
-   "reportPriority": 10,
-   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
-   "tagSet": [
-    {
-     "key": "versions",
-     "value": "external clients"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "ICD-1",
-     "value": "1.2.3.4-rc5678"
-    },
-    {
-     "key": "ICD-2",
-     "value": "3.2.3.4-rc5678"
-    },
-    {
-     "key": "ICD-3",
-     "value": "3.2.3.4-rc5678"
-    }
-   ]
-  },
-  {
-   "testId": 5,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
      "key": "zone",
      "value": "north"
+    },
+    {
+     "key": "hostname",
+     "value": "server02"
     }
    ],
    "fieldSet": [
     {
      "key": "TemperatureCelsius",
      "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 9,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
+    },
     {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 5,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
+     "key": "volts",
+     "value": "7.1"
     }
    ]
   },
   {
    "testId": 6,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 8,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 5,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 9,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 7,
    "reportPriority": 11,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
    "tagSet": [
@@ -1345,7 +791,7 @@
    ]
   },
   {
-   "testId": 6,
+   "testId": 7,
    "reportPriority": 11,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
    "tagSet": [
@@ -1358,6 +804,99 @@
     {
      "key": "TemperatureCelsius",
      "value": "-40.8"
+    }
+   ]
+  },
+  {
+   "testId": 3,
+   "reportPriority": 9,
+   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    }
+   ]
+  },
+  {
+   "testId": 5,
+   "reportPriority": 11,
+   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    }
+   ]
+  },
+  {
+   "testId": 4,
+   "reportPriority": 2,
+   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    }
+   ]
+  },
+  {
+   "testId": 9,
+   "reportPriority": 11,
+   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    }
+   ]
+  },
+  {
+   "testId": 2,
+   "reportPriority": 200,
+   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    },
+    {
+     "key": "hostname",
+     "value": "server02"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    },
+    {
+     "key": "volts",
+     "value": "7.1"
     }
    ]
   },
@@ -1380,6 +919,23 @@
   },
   {
    "testId": 6,
+   "reportPriority": 11,
+   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
+   "tagSet": [
+    {
+     "key": "zone",
+     "value": "north"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "TemperatureCelsius",
+     "value": "-40.8"
+    }
+   ]
+  },
+  {
+   "testId": 5,
    "reportPriority": 11,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
    "tagSet": [
@@ -1413,8 +969,33 @@
    ]
   },
   {
-   "testId": 7,
-   "reportPriority": 11,
+   "testId": 1,
+   "reportPriority": 10,
+   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
+   "tagSet": [
+    {
+     "key": "versions",
+     "value": "external clients"
+    }
+   ],
+   "fieldSet": [
+    {
+     "key": "ICD-1",
+     "value": "1.2.3.4-rc5678"
+    },
+    {
+     "key": "ICD-2",
+     "value": "3.2.3.4-rc5678"
+    },
+    {
+     "key": "ICD-3",
+     "value": "3.2.3.4-rc5678"
+    }
+   ]
+  },
+  {
+   "testId": 3,
+   "reportPriority": 9,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
    "tagSet": [
     {
@@ -1430,100 +1011,8 @@
    ]
   },
   {
-   "testId": 2,
-   "reportPriority": 200,
-   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    },
-    {
-     "key": "hostname",
-     "value": "server02"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    },
-    {
-     "key": "volts",
-     "value": "7.1"
-    }
-   ]
-  },
-  {
-   "testId": 2,
-   "reportPriority": 200,
-   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    },
-    {
-     "key": "hostname",
-     "value": "server02"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    },
-    {
-     "key": "volts",
-     "value": "7.1"
-    }
-   ]
-  },
-  {
-   "testId": 2,
-   "reportPriority": 200,
-   "timestamp": "2021-04-15T11:38:29.7987531+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    },
-    {
-     "key": "hostname",
-     "value": "server02"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    },
-    {
-     "key": "volts",
-     "value": "7.1"
-    }
-   ]
-  },
-  {
-   "testId": 101,
-   "reportPriority": 11,
-   "timestamp": "2021-04-16T17:08:09.6729229+03:00",
-   "tagSet": [
-    {
-     "key": "zone",
-     "value": "north"
-    }
-   ],
-   "fieldSet": [
-    {
-     "key": "TemperatureCelsius",
-     "value": "-40.8"
-    }
-   ]
-  },
-  {
-   "testId": 101,
-   "reportPriority": 11,
+   "testId": 4,
+   "reportPriority": 2,
    "timestamp": "2021-04-16T17:08:09.6729229+03:00",
    "tagSet": [
     {

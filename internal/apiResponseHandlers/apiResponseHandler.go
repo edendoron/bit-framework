@@ -14,9 +14,9 @@ func ApiResponseHandler(w http.ResponseWriter, code int, message string, e error
 	err := json.NewEncoder(w).Encode(&response)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	if code != 200 {
-		log.Fatalln(e)
+		log.Println(e)
 	}
 }

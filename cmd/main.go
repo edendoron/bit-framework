@@ -9,28 +9,29 @@ import (
 	"sync"
 )
 
-const NumOfServices = 4
-
 func main() {
 	log.Printf("Server started")
 
 	// create a 'WaitGroup'
 	wg := new(sync.WaitGroup)
-	wg.Add(NumOfServices)
 
 	go func() {
+		wg.Add(1)
 		BitExporter()
 		wg.Done()
 	}()
 	go func() {
+		wg.Add(1)
 		BitStorageAccess()
 		wg.Done()
 	}()
 	go func() {
+		wg.Add(1)
 		BitIndexer()
 		wg.Done()
 	}()
 	go func() {
+		wg.Add(1)
 		BitHistoryCurator()
 		wg.Done()
 	}()
@@ -38,3 +39,5 @@ func main() {
 	// wait until WaitGroup is done
 	wg.Wait()
 }
+
+//

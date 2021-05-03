@@ -14,7 +14,7 @@ func BitConfig() {
 	srv := server.NewServer(router, ":8084")
 
 	go func() {
-		WriteFailuresData()
+		PostFailuresData()
 		log.Printf("Service ended - bit-config")
 		//TODO: handle error
 		srv.Shutdown(context.Background())

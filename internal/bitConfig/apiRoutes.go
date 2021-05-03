@@ -7,21 +7,21 @@ import (
 	"strings"
 )
 
-func HistoryIndex(w http.ResponseWriter, r *http.Request) {
+func ConfigIndex(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello bit-history-curator!")
 }
 
 var routes = Routes{
 	Route{
-		Name:        "HistoryIndex",
+		Name:        "ConfigIndex",
 		Method:      "GET",
 		Pattern:     "/",
-		HandlerFunc: HistoryIndex,
+		HandlerFunc: ConfigIndex,
 	},
 	Route{
 		Name:        "StorageGetPing",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/ping",
-		HandlerFunc: HistoryCuratorGetPing,
+		HandlerFunc: ConfigGetPing,
 	},
 }

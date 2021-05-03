@@ -7,7 +7,7 @@ import (
 
 func getConfig() HistoryCuratorConfig {
 	configs := HistoryCuratorConfig{}
-	content, err := ioutil.ReadFile("config.json")
+	content, err := ioutil.ReadFile("voltage_week_failure.json")
 	if err != nil {
 		//TODO: handle error
 	}

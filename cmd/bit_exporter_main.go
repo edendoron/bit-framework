@@ -14,8 +14,8 @@ func main() {
 
 	log.Printf("Server started - bit-test-result-exporter")
 
-	os.Setenv("EXPORTERBWSIZE", "20")
-	os.Setenv("EXPORTERBWUNITS", "KiB")
+	//os.Setenv("EXPORTERBWSIZE", "20")
+	//os.Setenv("EXPORTERBWUNITS", "KiB")
 
 	size, _ := strconv.ParseFloat(os.Getenv("EXPORTERBWSIZE"), 32)
 	units := os.Getenv("EXPORTERBWUNITS")
@@ -27,13 +27,13 @@ func main() {
 
 	router := exporter.ExporterRoutes.NewRouter()
 
-	srv := server.NewServer(router, ":8081")
+	srv := server.NewServer(router, ":8079")
 
 	// NOTE: requests may be sent in 0.04 of a second deviation of the requested duration
 	go exporter.ReportsScheduler(time.Second)
 
 	//TODO: need to change to ListenAndServeTLS in order to support https
-	//err := srv.ListenAndServeTLS("localhost.crt", "localhost.key")
+	//err := srv.ListenAndServeTLS("../localhost.crt", "../localhost.key")
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)

@@ -1,20 +1,22 @@
-package bitConfig
+package main
 
 import (
-	"../../server"
+	config "../internal/bitConfig"
+	"../server"
 	"context"
 	"log"
 )
 
-func BitConfig() {
+func main() {
 	log.Printf("Service started - bit-config")
 
-	router := routes.NewRouter()
+	router := config.ConfigRoutes.NewRouter()
 
 	srv := server.NewServer(router, ":8084")
 
 	go func() {
-		PostFailuresData()
+		config.PostFailuresData()
+		config.PostGroupFilterData()
 		log.Printf("Service ended - bit-config")
 		//TODO: handle error
 		srv.Shutdown(context.Background())

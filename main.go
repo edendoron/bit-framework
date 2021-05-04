@@ -1,7 +1,7 @@
-package bit_framework
+package main
 
-//
 //import (
+//	. "./internal/bitConfig"
 //	. "../internal/bitHistoryCurator"
 //	. "../internal/bitIndexer"
 //	. "../internal/bitStorageAccess"
@@ -34,6 +34,11 @@ package bit_framework
 //	go func() {
 //		wg.Add(1)
 //		BitHistoryCurator()
+//		wg.Done()
+//	}()
+//	go func() {
+//		wg.Add(1)
+//		BitConfig()
 //		wg.Done()
 //	}()
 //

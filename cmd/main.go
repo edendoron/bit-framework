@@ -1,6 +1,7 @@
 package main
 
 import (
+	. "../internal/bitConfig"
 	. "../internal/bitHistoryCurator"
 	. "../internal/bitIndexer"
 	. "../internal/bitStorageAccess"
@@ -33,6 +34,11 @@ func main() {
 	go func() {
 		wg.Add(1)
 		BitHistoryCurator()
+		wg.Done()
+	}()
+	go func() {
+		wg.Add(1)
+		BitConfig()
 		wg.Done()
 	}()
 

@@ -13,11 +13,11 @@ import (
 
 // init global package variables and constants
 
-var reportsQueue = prqueue.Build()
+var ReportsQueue = prqueue.Build()
 
 var queueChannel = make(chan int, 1000)
 
-var currentBW = Bandwidth{}
+var CurrentBW = Bandwidth{}
 
 const KiB = 1024
 const MiB = KiB * 1024
@@ -130,13 +130,13 @@ func modifyBandwidthSize(bw *Bandwidth) {
 	}
 }
 
-func reportsScheduler(duration time.Duration) {
+func ReportsScheduler(duration time.Duration) {
 	var indexerReqEpochSize float32 = indexerTotalExtraSize
 
 	epoch := time.Now()
 	for {
 		<-queueChannel
-		for reportsQueue.Len() > 0 {
+		for ReportsQueue.Len() > 0 {
 			indexerReqEpochSize = updateReportToIndexer(indexerReqEpochSize, epoch, duration)
 			if indexerReqEpochSize == -1 { // indicates that we reached size limit or time limit
 				indexerReqEpochSize = indexerTotalExtraSize
@@ -149,9 +149,9 @@ func reportsScheduler(duration time.Duration) {
 func updateReportToIndexer(epochSentSize float32, epoch time.Time, duration time.Duration) float32 {
 	indexerReport := ReportBody{}
 	postBodyPrev := &bytes.Reader{}
-	for reportsQueue.Len() > 0 && time.Since(epoch) < duration {
+	for ReportsQueue.Len() > 0 && time.Since(epoch) < duration {
 		//TODO: handle error
-		item, _ := reportsQueue.Pull()
+		item, _ := ReportsQueue.Pull()
 		report := item.(TestReport)
 
 		indexerReport.Reports = append(indexerReport.Reports, report)
@@ -159,12 +159,12 @@ func updateReportToIndexer(epochSentSize float32, epoch time.Time, duration time
 		//TODO: handle error
 		postBody, _ := json.MarshalIndent(indexerReport, "", " ")
 
-		sizeLimitInBytes := calculateSizeLimit(currentBW)
+		sizeLimitInBytes := calculateSizeLimit(CurrentBW)
 		reportSize := epochSentSize + float32(len(postBody))
 
 		if reportSize > sizeLimitInBytes {
 			//TODO: handle return value
-			reportsQueue.Push(report, int(report.ReportPriority))
+			ReportsQueue.Push(report, int(report.ReportPriority))
 			indexerReport.Reports = indexerReport.Reports[:len(indexerReport.Reports)-1]
 			return updateRequestChannel(postBodyPrev, SizeLimit, epoch, duration)
 		}

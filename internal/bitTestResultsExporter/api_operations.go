@@ -12,7 +12,7 @@ func GetBandwidth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 	// return Bandwidth response to the user
-	err := json.NewEncoder(w).Encode(&currentBW)
+	err := json.NewEncoder(w).Encode(&CurrentBW)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Fatalln(err)
@@ -35,9 +35,9 @@ func PostBandwidth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// update current bandwidth
-	currentBW = request
+	CurrentBW = request
 
-	modifyBandwidthSize(&currentBW)
+	modifyBandwidthSize(&CurrentBW)
 
 	// return ApiResponse response to the user
 	//err = json.NewEncoder(w).Encode(writeBandwidth(request))
@@ -69,9 +69,9 @@ func ExporterPostReport(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// TODO: handle error
-		reportsQueue.Push(report, int(report.ReportPriority))
+		ReportsQueue.Push(report, int(report.ReportPriority))
 	}
-	queueChannel <- reportsQueue.Len()
+	queueChannel <- ReportsQueue.Len()
 
 	ApiResponseHandler(w, http.StatusOK, "Report received!", nil)
 }

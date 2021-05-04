@@ -11,7 +11,7 @@ func ConfigIndex(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello bit-history-curator!")
 }
 
-var routes = Routes{
+var ConfigRoutes = Routes{
 	Route{
 		Name:        "ConfigIndex",
 		Method:      "GET",

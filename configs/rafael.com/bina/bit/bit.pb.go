@@ -1045,7 +1045,7 @@ func (m *UserGroupsFiltering_FilteredFailures) GetMaskedTestIds() []uint64 {
 // This structure contains data that is reported as BIT Status
 type BitStatus struct {
 	UserGroup            string                      `protobuf:"bytes,1,opt,name=user_group,json=userGroup,proto3" json:"user_group,omitempty"`
-	Failures             []*BitStatus_RportedFailure `protobuf:"bytes,2,rep,name=config_failures,proto3" json:"config_failures,omitempty"`
+	Failures             []*BitStatus_RportedFailure `protobuf:"bytes,2,rep,name=failures,proto3" json:"failures,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
 	XXX_unrecognized     []byte                      `json:"-"`
 	XXX_sizecache        int32                       `json:"-"`

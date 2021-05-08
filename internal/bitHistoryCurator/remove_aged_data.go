@@ -3,8 +3,6 @@ package bitHistoryCurator
 import (
 	"fmt"
 	"net/http"
-	"net/url"
-	"strings"
 	"time"
 )
 
@@ -14,17 +12,21 @@ func RemoveAgedData(agedTime time.Duration) {
 	timeStamp := time.Now().Add(-agedTime)
 	fmt.Println(timeStamp)
 
-	params := url.Values{}
-	params.Add("timestamp", timeStamp.String())
-
-	req, err := http.NewRequest(http.MethodDelete, bitStorageAccessUrl, strings.NewReader(params.Encode()))
+	req, err := http.NewRequest(http.MethodDelete, bitStorageAccessUrl, nil)
 	if err != nil {
 		//TODO: handle error
 		return
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
+	params := req.URL.Query()
+	params.Add("timestamp", timeStamp.String())
+
+	req.URL.RawQuery = params.Encode()
+
 	client := &http.Client{}
+
+	//fmt.Println(req.URL.String())
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {

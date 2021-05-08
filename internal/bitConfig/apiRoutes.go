@@ -19,7 +19,7 @@ var ConfigRoutes = Routes{
 		HandlerFunc: ConfigIndex,
 	},
 	Route{
-		Name:        "StorageGetPing",
+		Name:        "ConfigGetPing",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/ping",
 		HandlerFunc: ConfigGetPing,

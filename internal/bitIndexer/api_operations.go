@@ -9,7 +9,13 @@
 package bitIndexer
 
 import (
+	. "../apiResponseHandlers"
+	. "../models"
+	"bytes"
+	"encoding/json"
+	"io"
 	"net/http"
+	"strings"
 )
 
 const storageDataWriteURL = "http://localhost:8082/data/write"
@@ -29,7 +35,14 @@ func IndexerPostReport(w http.ResponseWriter, r *http.Request) {
 	//if resp.StatusCode == http.StatusInternalServerError{
 	//	ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	//}
-
-	http.Post(storageDataWriteURL, "application/json; charset=UTF-8", r.Body)
-	// ApiResponseHandler(w, resp.StatusCode, "Report posted!", nil)
+	buf := new(strings.Builder)
+	io.Copy(buf, r.Body)
+	message := KeyValue{Key: "reports", Value: buf.String()}
+	bodyRef, _ := json.MarshalIndent(message, "", " ")
+	body := bytes.NewBuffer(bodyRef)
+	resp, err := http.Post(storageDataWriteURL, "application/json; charset=UTF-8", body)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	ApiResponseHandler(w, resp.StatusCode, "Report sent to storage!", nil)
 }

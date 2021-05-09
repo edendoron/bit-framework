@@ -13,8 +13,10 @@ import (
 	. "../apiResponseHandlers"
 	. "../models"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -24,8 +26,6 @@ import (
 func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	timestamps := r.URL.Query()["key"]
-
-	fmt.Println(timestamps[0])
 
 	var reports []TestResult
 	err := filepath.Walk("../storage/"+ timestamps[0] + "/",
@@ -81,7 +81,7 @@ func PutDataRead(w http.ResponseWriter, r *http.Request) {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	var reports []TestResult
-	err = filepath.Walk("../storage/"+ query + "/",
+	err = filepath.Walk("../storage/"+query+"/",
 		func(path string, info os.FileInfo, err error) error {
 			if !info.IsDir() {
 				protoReport, err := ioutil.ReadFile(path)
@@ -105,11 +105,6 @@ func PutDataRead(w http.ResponseWriter, r *http.Request) {
 	for i, report := range reports {
 		response[i] = testResultToTestReport(report)
 	}
-	err = json.NewEncoder(w).Encode(&response)
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func PutDataWrite(w http.ResponseWriter, r *http.Request) {

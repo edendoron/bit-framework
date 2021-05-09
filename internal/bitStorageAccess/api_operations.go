@@ -13,33 +13,46 @@ import (
 	. "../apiResponseHandlers"
 	. "../models"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	reportIds := r.URL.Query()["key"]
-	response := make([]TestResult, len(reportIds[0]))
+	timestamps := r.URL.Query()["key"]
 
-	fmt.Println(reportIds[0])
+	fmt.Println(timestamps[0])
 
-	for i, id := range reportIds[0] {
-		protoReport, err := ioutil.ReadFile("../storage/report_" + fmt.Sprint(id) + ".txt")
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
-		}
-		err = proto.Unmarshal(protoReport, &response[i])
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-		}
+	var reports []TestResult
+	err := filepath.Walk("../storage/"+ timestamps[0] + "/",
+		func(path string, info os.FileInfo, err error) error {
+			if !info.IsDir() {
+				protoReport, err := ioutil.ReadFile(path)
+				if err != nil {
+					ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
+				}
+				temp := TestResult{}
+				err = proto.Unmarshal(protoReport, &temp)
+				if err != nil {
+					ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+				}
+				reports = append(reports, temp)
+			}
+			return nil
+		})
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	err := json.NewEncoder(w).Encode(&response)
+	fmt.Println("do iget here?")
+	response := make([]TestReport, len(reports))
+	for i, report := range reports {
+		response[i] = testResultToTestReport(report)
+	}
+	err = json.NewEncoder(w).Encode(&response)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
@@ -48,57 +61,49 @@ func GetDataRead(w http.ResponseWriter, r *http.Request) {
 
 func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	request := TestReport{}
-	err := json.NewDecoder(r.Body).Decode(&request)
+	requestBody := KeyValue{}
+	err := json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	requestToProto := TestResult{
-		TestId:         uint64(request.TestId),
-		Timestamp:      timestamppb.New(request.Timestamp),
-		TagSet:         convertToKeyValuePair(request.TagSet),
-		FieldSet:       convertToKeyValuePair(request.FieldSet),
-		ReportPriority: uint32(request.ReportPriority),
+	switch requestBody.Key {
+	case "reports":
+		postReports(w, &requestBody.Value)
+		ApiResponseHandler(w, http.StatusOK, "Report stored!", nil)
 	}
-	protoReports, err := proto.Marshal(&requestToProto)
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-	}
-	err = ioutil.WriteFile("../storage/report_"+fmt.Sprint(request.TestId)+".txt", protoReports, 0644)
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-	}
-	ApiResponseHandler(w, http.StatusOK, "Report received!", nil)
 }
 
 func PutDataRead(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	var reportIds []string
-	err := json.NewDecoder(r.Body).Decode(&reportIds)
+	var query string
+	err := json.NewDecoder(r.Body).Decode(&query)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	reports := make([]TestResult, len(reportIds))
-
-	for i, id := range reportIds {
-		protoReport, err := ioutil.ReadFile("../storage/report_" + fmt.Sprint(id) + ".txt")
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
-		}
-		err = proto.Unmarshal(protoReport, &reports[i])
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-		}
+	var reports []TestResult
+	err = filepath.Walk("../storage/"+ query + "/",
+		func(path string, info os.FileInfo, err error) error {
+			if !info.IsDir() {
+				protoReport, err := ioutil.ReadFile(path)
+				if err != nil {
+					ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
+				}
+				temp := TestResult{}
+				err = proto.Unmarshal(protoReport, &temp)
+				if err != nil {
+					ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+				}
+				reports = append(reports, temp)
+			}
+			return nil
+		})
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	response := make([]TestReport, len(reportIds))
+
+	response := make([]TestReport, len(reports))
 	for i, report := range reports {
-		response[i] = TestReport{
-			TestId:         float64(report.TestId),
-			ReportPriority: float64(report.ReportPriority),
-			Timestamp:      report.Timestamp.AsTime(),
-			TagSet:         convertToKeyValue(report.TagSet),
-			FieldSet:       convertToKeyValue(report.FieldSet),
-		}
+		response[i] = testResultToTestReport(report)
 	}
 	err = json.NewEncoder(w).Encode(&response)
 	if err != nil {
@@ -109,38 +114,26 @@ func PutDataRead(w http.ResponseWriter, r *http.Request) {
 
 func PutDataWrite(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	reports := ReportBody{}
 	request := TestReport{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	content, err := ioutil.ReadFile("../storage/testReport.json")
-	if err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-			return
-		}
-	} else {
-		err = json.Unmarshal(content, &reports)
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-		}
-		// converting existing data to ReportBody type
-		err = ValidateType(reports)
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-		}
+	path := "../storage/" + fmt.Sprint(request.Timestamp.Date()) + "/" + fmt.Sprint(request.Timestamp.Hour()) +
+		"/" + fmt.Sprint(request.Timestamp.Minute()) + "/" + fmt.Sprint(request.Timestamp.Second())
+	if _, err = os.Stat(path + "/tests_results.txt"); os.IsNotExist(err) {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	// append new reports
-	reports.Reports = append(reports.Reports, request)
-	// Marshal it and write back to file
-	input, err := json.MarshalIndent(reports, "", " ")
+	f, err := os.OpenFile(path + "/tests_results.txt", os.O_APPEND | os.O_WRONLY, 0644)
+	if err != nil{
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	requestToProto := testReportToTestResult(request)
+	protoReports, err := proto.Marshal(&requestToProto)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	err = ioutil.WriteFile("../storage/testReport.json", input, 0644)
-	if err != nil {
+	if _, err = f.Write(protoReports); err != nil{
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	ApiResponseHandler(w, http.StatusOK, "Report received!", nil)

@@ -15,7 +15,7 @@ var reportsQueue = make(PriorityQueue, 0)
 
 var currentBW = Bandwidth{
 	Size:           25,
-	UnitsPerSecond: "KB",
+	UnitsPerSecond: "MB",
 }
 
 const postIndexedUrl = "http://localhost:8081/report/raw"

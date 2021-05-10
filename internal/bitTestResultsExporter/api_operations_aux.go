@@ -28,7 +28,7 @@ const M = K * 1000
 const G = M * 1000
 const T = G * 1000
 
-const postIndexedUrl = "http://localhost:8081/report/raw"
+const postIndexerUrl = "http://localhost:8081/report/raw"
 
 const httpPostHeaderSize = 20
 const reportBodyWrapSize = 218 // wireshark result
@@ -194,7 +194,7 @@ func postIndexer(postBodyRef *bytes.Reader) {
 	}
 	go func() {
 		fmt.Println(time.Now(), "total size to send:", postBodyRef.Size()+indexerTotalExtraSize)
-		indexerRes, err := http.Post(postIndexedUrl, "application/json; charset=UTF-8", postBodyRef)
+		indexerRes, err := http.Post(postIndexerUrl, "application/json; charset=UTF-8", postBodyRef)
 		if err != nil || indexerRes.StatusCode != http.StatusOK {
 			//TODO: handle this error
 			return

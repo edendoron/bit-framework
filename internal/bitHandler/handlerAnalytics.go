@@ -223,52 +223,64 @@ func (a *BitAnalyzer) filterAndUpdateFailures() {
 }
 
 func (a *BitAnalyzer) checkExaminationRule(failure Failure) (uint64, *timestamppb.Timestamp) {
-	var countExaminationRuleViolation uint64 = 0
-	timestamp := timestamppb.Now()
-	if len(a.Reports) == 0 {
-		return countExaminationRuleViolation, timestamp
-	}
 	examinationRule := failure.ExaminationRule
-	failureCriteria := examinationRule.FailureCriteria
-	timeCriteria := failureCriteria.TimeCriteria
+	timeCriteria := examinationRule.FailureCriteria.TimeCriteria
 	// count failed tests
-	var countTimeCriteriaViolation uint32 = 0
 	switch timeCriteria.WindowType {
 	case FailureExaminationRule_FailureCriteria_FailureTimeCriteria_NO_WINDOW:
-		for _, test := range a.Reports {
-			if failedValueCriteria(&test, examinationRule) {
-				countTimeCriteriaViolation++
-				timestamp = test.Timestamp
-			}
-			if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
-				countExaminationRuleViolation = 1
-			}
-		}
+		return a.checkNoWindow(examinationRule, timeCriteria)
 	case FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING:
 		// TODO: make sure that reports from storage are sorted by timestamp
-		begin, end := 0, 0
-		for end < len(a.Reports) {
-			startWindowTest := a.Reports[begin]
-			endWindowTest := a.Reports[end]
-			timeDiff := endWindowTest.Timestamp.Seconds - startWindowTest.Timestamp.Seconds
-			if timeDiff <= int64(timeCriteria.WindowSize) {
-				if failedValueCriteria(&endWindowTest, examinationRule) {
-					countTimeCriteriaViolation++
-					timestamp = endWindowTest.Timestamp
-				}
-				end++
-				if end == len(a.Reports) && countTimeCriteriaViolation > timeCriteria.FailuresCCount {
-					countExaminationRuleViolation++
-				}
-			} else {
-				if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
-					countExaminationRuleViolation++
-				}
-				if failedValueCriteria(&startWindowTest, examinationRule) {
-					countTimeCriteriaViolation--
-				}
-				begin++
+		return a.checkSlidingWindow(timeCriteria, examinationRule)
+	default:
+		return 0, timestamppb.Now()
+	}
+}
+
+func (a *BitAnalyzer) checkSlidingWindow(timeCriteria *FailureExaminationRule_FailureCriteria_FailureTimeCriteria, examinationRule *FailureExaminationRule) (uint64, *timestamppb.Timestamp) {
+	var countExaminationRuleViolation uint64 = 0
+	timestamp := timestamppb.Now()
+	var countTimeCriteriaViolation uint32 = 0
+	begin, end := 0, 0
+	for end < len(a.Reports) {
+		startWindowTest := a.Reports[begin]
+		endWindowTest := a.Reports[end]
+
+		timeDiff := endWindowTest.Timestamp.Seconds - startWindowTest.Timestamp.Seconds
+		if timeDiff <= int64(timeCriteria.WindowSize) {
+			if failedValueCriteria(&endWindowTest, examinationRule) {
+				countTimeCriteriaViolation++
+				timestamp = endWindowTest.Timestamp
 			}
+			end++
+		} else {
+			if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
+				countExaminationRuleViolation++
+			}
+			if failedValueCriteria(&startWindowTest, examinationRule) {
+				countTimeCriteriaViolation--
+			}
+			begin++
+		}
+	}
+	// check for end of reports (last report in time frame)
+	if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
+		countExaminationRuleViolation++
+	}
+	return countExaminationRuleViolation, timestamp
+}
+
+func (a *BitAnalyzer) checkNoWindow(examinationRule *FailureExaminationRule, timeCriteria *FailureExaminationRule_FailureCriteria_FailureTimeCriteria) (uint64, *timestamppb.Timestamp) {
+	var countExaminationRuleViolation uint64 = 0
+	timestamp := timestamppb.Now()
+	var countTimeCriteriaViolation uint32 = 0
+	for _, test := range a.Reports {
+		if failedValueCriteria(&test, examinationRule) {
+			countTimeCriteriaViolation++
+			timestamp = test.Timestamp
+		}
+		if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
+			countExaminationRuleViolation = 1
 		}
 	}
 	return countExaminationRuleViolation, timestamp

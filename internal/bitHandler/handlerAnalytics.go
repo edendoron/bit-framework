@@ -165,6 +165,7 @@ func (a *BitAnalyzer) Crosscheck() {
 				}
 				a.SavedFailures = append(a.SavedFailures, timedFailure)
 			}
+			//TODO: do we need to post this failure to storage in order to restore it later on?
 		}
 		// TODO: a.Status.UserGroup
 	}
@@ -192,6 +193,19 @@ func (a *BitAnalyzer) WriteBitStatus() {
 	defer storageResponse.Body.Close()
 
 	a.cleanBitStatus()
+}
+
+func (a *BitAnalyzer) FilterSavedFailures() {
+	n := 0
+	for _, item := range a.SavedFailures {
+		isResetIndication := item.failure.ReportDuration.Indication == FailureReportDuration_LATCH_UNTIL_RESET
+		if !isResetIndication {
+			// keep saved failure for next trigger check
+			a.SavedFailures[n] = item
+			n++
+		}
+	}
+	a.SavedFailures = a.SavedFailures[:n]
 }
 
 // internal methods

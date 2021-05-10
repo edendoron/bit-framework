@@ -16,6 +16,10 @@ const storageDataWriteURL = storageDataBaseUrl + "/data/write"
 
 func StatusScheduler() {
 	d := time.Duration(CurrentTrigger.PeriodSec) * time.Second
+	var analyzer BitAnalyzer
+	analyzer.ReadFailuresFromStorage("config_failure")
+	analyzer.ReadFailuresFromStorage("forever_failure")
+	//analyzer.ReadFailureFromLocalConfigFile()
 	ticker := time.NewTicker(d)
 	for {
 		select {
@@ -29,11 +33,11 @@ func StatusScheduler() {
 		case epoch := <-ticker.C:
 			fmt.Println(epoch)
 			go func() {
-				var a Analyzer
-				a.ReadFromStorage("report")
-				a.ReadFromStorage("failure")
-				a.Crosscheck()
-				a.WriteBitStatus()
+				analyzer.ReadReportsFromStorage(d)
+				//analyzer.ReadReportsFromLocalConfigFile(d)
+
+				analyzer.Crosscheck()
+				analyzer.WriteBitStatus()
 			}()
 		}
 	}

@@ -3,5 +3,5 @@ package bitHistoryCurator
 import "time"
 
 type HistoryCuratorConfig struct {
-	AgedTimeDuration time.Duration `json:"agedTimeDuration,omitempty"`
+	AgedTimeDuration time.Time `json:"agedTimeDuration,omitempty"`
 }

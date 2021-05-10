@@ -14,7 +14,7 @@ const storageURL = "http://localhost:8082/data/write"
 
 func PostFailuresData() {
 	failure := Failure{}
-	files, err := ioutil.ReadDir("../configs/config_failures")
+	files, err := ioutil.ReadDir("./configs/config_failures")
 	if err != nil {
 		//TODO: handle error
 		return
@@ -30,7 +30,7 @@ func PostFailuresData() {
 		//TODO: handle error
 		err = ValidateType(failure)
 
-		message := KeyValue{Key: "config_failures", Value: string(content)}
+		message := KeyValue{Key: "config_failure", Value: string(content)}
 		//TODO: handle error
 		postBody, _ := json.MarshalIndent(message, "", " ")
 		postBodyBuf := bytes.NewReader(postBody)
@@ -46,7 +46,7 @@ func PostFailuresData() {
 
 func PostGroupFilterData() {
 	groupFilter := UserGroupsFiltering{}
-	files, err := ioutil.ReadDir("../configs/config_user_groups")
+	files, err := ioutil.ReadDir("./configs/config_user_groups")
 	if err != nil {
 		//TODO: handle error
 		return
@@ -62,7 +62,7 @@ func PostGroupFilterData() {
 		//TODO: handle error
 		err = ValidateType(groupFilter)
 
-		message := KeyValue{Key: "config_user_groups", Value: string(content)}
+		message := KeyValue{Key: "user_groups", Value: string(content)}
 		//TODO: handle error
 		postBody, _ := json.MarshalIndent(message, "", " ")
 		postBodyBuf := bytes.NewReader(postBody)

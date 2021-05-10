@@ -7,15 +7,79 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"net/http"
 	"strconv"
+	"time"
 )
 
-type Analyzer struct {
-	Failures []Failure
-	Reports  []TestResult
-	Status   BitStatus
+type BitAnalyzer struct {
+	ConfigFailures []Failure
+	Reports        []TestResult
+	SavedFailures  []extendedFailure
+	Status         BitStatus
 }
 
-func (a *Analyzer) ReadFromStorage(key string) {
+type extendedFailure struct {
+	failure Failure
+	time    time.Time
+	count   uint64
+}
+
+// exported methods
+
+//func (a *BitAnalyzer) ReadFailureFromLocalConfigFile() {
+//	failure := Failure{}
+//	content, err := ioutil.ReadFile("./configs/config_failures/voltage_week_failure.json")
+//	if err != nil {
+//		//TODO: handle error
+//	}
+//	err = json.Unmarshal(content, &failure)
+//	if err != nil {
+//		//TODO: handle error
+//	}
+//	failure.ExaminationRule.MatchingTag.Key = []byte("zone")
+//	failure.ExaminationRule.MatchingTag.Value = []byte("north")
+//
+//	a.ConfigFailures = append(a.ConfigFailures, failure)
+//}
+//
+//func (a *BitAnalyzer) ReadReportsFromLocalConfigFile() {
+//	reportBody := TestReport{}
+//	content, err := ioutil.ReadFile("./storage/reports/reports.json")
+//	if err != nil {
+//		//TODO: handle error
+//	}
+//	err = json.Unmarshal(content, &reportBody)
+//	if err != nil {
+//		//TODO: handle error
+//	}
+//	tagset1 := KeyValuePair{
+//		Key:   []byte("zone"),
+//		Value: []byte("north"),
+//	}
+//	tagset2 := KeyValuePair{
+//		Key:   []byte("hostname"),
+//		Value: []byte("server02"),
+//	}
+//	fieldset1 := KeyValuePair{
+//		Key:   []byte("TemperatureCelsius"),
+//		Value: []byte("-40.8"),
+//	}
+//	fieldset2 := KeyValuePair{
+//		Key:   []byte("volts"),
+//		Value: []byte("7.8"),
+//	}
+//	testResult := TestResult{
+//		TestId:         uint64(reportBody.TestId),
+//		Timestamp:      timestamppb.New(reportBody.Timestamp),
+//		TagSet:         []*KeyValuePair{&tagset1, &tagset2},
+//		FieldSet:       []*KeyValuePair{&fieldset1, &fieldset2},
+//		ReportPriority: uint32(reportBody.ReportPriority),
+//	}
+//	a.Reports = append(a.Reports, testResult)
+//
+//}
+
+func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
+	// read config failures
 	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
 	if err != nil {
 		// TODO: handle error
@@ -24,7 +88,7 @@ func (a *Analyzer) ReadFromStorage(key string) {
 	//defer req.Body.Close()
 
 	params := req.URL.Query()
-	params.Add("key", key)
+	params.Add("key", keyValue)
 
 	client := &http.Client{}
 
@@ -35,40 +99,84 @@ func (a *Analyzer) ReadFromStorage(key string) {
 	}
 	defer storageResponse.Body.Close()
 
-	if key == "Failure" {
-		err = json.NewDecoder(storageResponse.Body).Decode(&a.Failures)
-	} else if key == "Report" {
-		err = json.NewDecoder(storageResponse.Body).Decode(&a.Reports)
+	switch keyValue {
+	case "config_failure":
+		err = json.NewDecoder(storageResponse.Body).Decode(&a.ConfigFailures)
+	case "forever_failure":
+		err = json.NewDecoder(storageResponse.Body).Decode(&a.SavedFailures)
 	}
-
 	if err != nil {
 		// TODO: handle error
 		return
 	}
 }
 
-func (a *Analyzer) Crosscheck() {
-	for _, failure := range a.Failures {
+func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
+	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
+	if err != nil {
+		// TODO: handle error
+		return
+	}
+	//defer req.Body.Close()
+
+	params := req.URL.Query()
+	params.Add("key", "report")
+	params.Add("duration", d.String())
+
+	client := &http.Client{}
+
+	storageResponse, err := client.Do(req)
+	if err != nil || storageResponse.StatusCode != http.StatusOK {
+		// TODO: handle error
+		return
+	}
+	defer storageResponse.Body.Close()
+
+	err = json.NewDecoder(storageResponse.Body).Decode(&a.Reports)
+	if err != nil {
+		// TODO: handle error
+		return
+	}
+}
+
+func (a *BitAnalyzer) Crosscheck() {
+	for _, failure := range a.ConfigFailures {
 		countFailed, timestamp := a.checkExaminationRule(failure)
+
+		// insert old failures to BitStatus
+		a.filterAndUpdateFailures()
+
 		if countFailed > 0 {
+			// insert failure to BitStatus
 			reportedFailure := &BitStatus_RportedFailure{
 				FailureData: failure.Description,
-				Timestamp:   timestamp,
-				Count:       countFailed,
+				//TODO: check if need to change to timestamppb.Now()
+				Timestamp: timestamp,
+				Count:     countFailed,
 			}
 			a.Status.Failures = append(a.Status.Failures, reportedFailure)
+
+			// insert timed failures (of any kind) to SavedFailures
+			if failure.ReportDuration.Indication != FailureReportDuration_NO_LATCH {
+				timedFailure := extendedFailure{
+					failure: failure,
+					time:    timestamp.AsTime(),
+					count:   countFailed,
+				}
+				a.SavedFailures = append(a.SavedFailures, timedFailure)
+			}
 		}
 		// TODO: a.Status.UserGroup
 	}
 }
 
-func (a *Analyzer) WriteBitStatus() {
+func (a *BitAnalyzer) WriteBitStatus() {
 
 	//TODO: handle error
 	jsonStatus, _ := json.MarshalIndent(a.Status, "", " ")
 
 	message := KeyValuePair{
-		Key:   []byte("BitStatus"),
+		Key:   []byte("bit_status"),
 		Value: jsonStatus,
 	}
 
@@ -82,13 +190,43 @@ func (a *Analyzer) WriteBitStatus() {
 		return
 	}
 	defer storageResponse.Body.Close()
+
+	a.cleanBitStatus()
 }
 
-func (a *Analyzer) checkExaminationRule(failure Failure) (uint64, *timestamppb.Timestamp) {
+// internal methods
+
+func (a *BitAnalyzer) cleanBitStatus() {
+	a.Status = BitStatus{}
+}
+
+func (a *BitAnalyzer) filterAndUpdateFailures() {
+	n := 0
+	for _, item := range a.SavedFailures {
+		isSecondIndication := item.failure.ReportDuration.Indication == FailureReportDuration_NUM_OF_SECONDS
+		if !isSecondIndication || uint32(time.Since(item.time)) < item.failure.ReportDuration.IndicationSeconds {
+
+			// insert failure to BitStatus
+			reportedFailure := &BitStatus_RportedFailure{
+				FailureData: item.failure.Description,
+				Timestamp:   timestamppb.New(item.time),
+				Count:       item.count,
+			}
+			a.Status.Failures = append(a.Status.Failures, reportedFailure)
+
+			// keep saved failure for next trigger check
+			a.SavedFailures[n] = item
+			n++
+		}
+	}
+	a.SavedFailures = a.SavedFailures[:n]
+}
+
+func (a *BitAnalyzer) checkExaminationRule(failure Failure) (uint64, *timestamppb.Timestamp) {
 	var countExaminationRuleViolation uint64 = 0
-	time := timestamppb.Now()
+	timestamp := timestamppb.Now()
 	if len(a.Reports) == 0 {
-		return countExaminationRuleViolation, time
+		return countExaminationRuleViolation, timestamp
 	}
 	examinationRule := failure.ExaminationRule
 	failureCriteria := examinationRule.FailureCriteria
@@ -100,14 +238,14 @@ func (a *Analyzer) checkExaminationRule(failure Failure) (uint64, *timestamppb.T
 		for _, test := range a.Reports {
 			if failedValueCriteria(&test, examinationRule) {
 				countTimeCriteriaViolation++
-				time = test.Timestamp
+				timestamp = test.Timestamp
 			}
 			if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
 				countExaminationRuleViolation = 1
 			}
 		}
 	case FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING:
-		// we assume that reports from storage are sorted by time
+		// TODO: make sure that reports from storage are sorted by timestamp
 		begin, end := 0, 0
 		for end < len(a.Reports) {
 			startWindowTest := a.Reports[begin]
@@ -116,7 +254,7 @@ func (a *Analyzer) checkExaminationRule(failure Failure) (uint64, *timestamppb.T
 			if timeDiff <= int64(timeCriteria.WindowSize) {
 				if failedValueCriteria(&endWindowTest, examinationRule) {
 					countTimeCriteriaViolation++
-					time = endWindowTest.Timestamp
+					timestamp = endWindowTest.Timestamp
 				}
 				end++
 				if end == len(a.Reports) && countTimeCriteriaViolation > timeCriteria.FailuresCCount {
@@ -133,7 +271,7 @@ func (a *Analyzer) checkExaminationRule(failure Failure) (uint64, *timestamppb.T
 			}
 		}
 	}
-	return countExaminationRuleViolation, time
+	return countExaminationRuleViolation, timestamp
 }
 
 func failedValueCriteria(test *TestResult, examinationRule *FailureExaminationRule) bool {
@@ -143,7 +281,7 @@ func failedValueCriteria(test *TestResult, examinationRule *FailureExaminationRu
 		return false
 	}
 
-	return checkValue(fieldValue, examinationRule.FailureCriteria.ValueCriteria)
+	return checkFailedValue(fieldValue, examinationRule.FailureCriteria.ValueCriteria)
 }
 
 // check field existing
@@ -167,7 +305,7 @@ func checkTag(test *TestResult, examinationRule *FailureExaminationRule) bool {
 }
 
 // check failure value criteria
-func checkValue(value string, criteria *FailureExaminationRule_FailureCriteria_FailureValueCriteria) bool {
+func checkFailedValue(value string, criteria *FailureExaminationRule_FailureCriteria_FailureValueCriteria) bool {
 	min, max := calculateThreshold(criteria.Minimum, criteria.Miximum, criteria.Exceeding)
 	floatValue, err := strconv.ParseFloat(value, 64)
 	if err != nil {
@@ -177,11 +315,11 @@ func checkValue(value string, criteria *FailureExaminationRule_FailureCriteria_F
 	valueWithin := floatValue >= min && floatValue <= max
 	switch criteria.ThresholdMode {
 	case FailureExaminationRule_FailureCriteria_FailureValueCriteria_WITHIN:
-		return valueWithin
-	case FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF:
 		return !valueWithin
-	default:
+	case FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF:
 		return valueWithin
+	default:
+		return !valueWithin
 	}
 }
 

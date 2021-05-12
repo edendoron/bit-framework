@@ -167,7 +167,6 @@ func (a *BitAnalyzer) Crosscheck() {
 				writeForeverFailure(failure)
 			}
 		}
-		// TODO: handle a.Status.UserGroup
 	}
 
 	// filter saved failures and update BitStatus (timed failures and masked groups)

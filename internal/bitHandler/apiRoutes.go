@@ -39,4 +39,11 @@ var HandlerRoutes = Routes{
 		Pattern:     "/logic",
 		HandlerFunc: PostTrigger,
 	},
+
+	Route{
+		Name:        "PutResetIndications",
+		Method:      strings.ToUpper("Put"),
+		Pattern:     "/reset",
+		HandlerFunc: PutResetIndications,
+	},
 }

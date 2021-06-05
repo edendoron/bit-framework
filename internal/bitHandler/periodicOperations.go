@@ -10,6 +10,8 @@ var CurrentTrigger = TriggerBody{}
 
 var TriggerChannel = make(chan TriggerBody)
 
+var ResetIndicationChannel = make(chan bool)
+
 const storageDataBaseUrl = "http://localhost:8082"
 const storageDataReadURL = storageDataBaseUrl + "/data/read"
 const storageDataWriteURL = storageDataBaseUrl + "/data/write"
@@ -18,6 +20,7 @@ func StatusScheduler() {
 	d := time.Duration(CurrentTrigger.PeriodSec) * time.Second
 	var analyzer BitAnalyzer
 	analyzer.ReadFailuresFromStorage("config_failure")
+	// TODO: need to read (and write) those from server?
 	analyzer.ReadFailuresFromStorage("forever_failure")
 	//analyzer.ReadFailureFromLocalConfigFile()
 	ticker := time.NewTicker(d)
@@ -30,6 +33,8 @@ func StatusScheduler() {
 			} else {
 				ticker.Reset(d)
 			}
+		case <-ResetIndicationChannel:
+			analyzer.FilterSavedFailures()
 		case epoch := <-ticker.C:
 			fmt.Println(epoch)
 			go func() {

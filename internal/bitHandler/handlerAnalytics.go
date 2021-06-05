@@ -2,6 +2,7 @@ package bitHandler
 
 import (
 	. "../../configs/rafael.com/bina/bit"
+	. "../models"
 	"bytes"
 	"encoding/json"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -140,34 +141,36 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 }
 
 func (a *BitAnalyzer) Crosscheck() {
+
+	// generate map of masked groups
+	maskedUserGroups := make(map[string]int)
+
 	for _, failure := range a.ConfigFailures {
 		countFailed, timestamp := a.checkExaminationRule(failure)
 
-		// insert old failures to BitStatus
-		a.filterAndUpdateFailures()
-
 		if countFailed > 0 {
-			// insert failure to BitStatus
-			reportedFailure := &BitStatus_RportedFailure{
-				FailureData: failure.Description,
-				//TODO: check if need to change to timestamppb.Now()
-				Timestamp: timestamp,
-				Count:     countFailed,
+			// update masked groups map
+			for _, userGroup := range failure.Dependencies.BelongsToGroup {
+				maskedUserGroups[userGroup] = 1
 			}
-			a.Status.Failures = append(a.Status.Failures, reportedFailure)
 
-			// insert timed failures (of any kind) to SavedFailures
-			if failure.ReportDuration.Indication != FailureReportDuration_NO_LATCH {
-				timedFailure := extendedFailure{
-					failure: failure,
-					time:    timestamp.AsTime(),
-					count:   countFailed,
-				}
-				a.SavedFailures = append(a.SavedFailures, timedFailure)
+			// insert failures to SavedFailures
+			timedFailure := extendedFailure{
+				failure: failure,
+				time:    timestamp.AsTime(),
+				count:   countFailed,
+			}
+			a.SavedFailures = append(a.SavedFailures, timedFailure)
+
+			// post forever failures to storage in order to restore it later if needed
+			if failure.ReportDuration.Indication == FailureReportDuration_LATCH_FOREVER {
+				writeForeverFailure(failure)
 			}
 		}
-		// TODO: a.Status.UserGroup
 	}
+
+	// filter saved failures and update BitStatus (timed failures and masked groups)
+	a.updateBitStatus(maskedUserGroups)
 }
 
 func (a *BitAnalyzer) WriteBitStatus() {
@@ -194,26 +197,11 @@ func (a *BitAnalyzer) WriteBitStatus() {
 	a.cleanBitStatus()
 }
 
-// internal methods
-
-func (a *BitAnalyzer) cleanBitStatus() {
-	a.Status = BitStatus{}
-}
-
-func (a *BitAnalyzer) filterAndUpdateFailures() {
+func (a *BitAnalyzer) FilterSavedFailures() {
 	n := 0
 	for _, item := range a.SavedFailures {
-		isSecondIndication := item.failure.ReportDuration.Indication == FailureReportDuration_NUM_OF_SECONDS
-		if !isSecondIndication || uint32(time.Since(item.time)) < item.failure.ReportDuration.IndicationSeconds {
-
-			// insert failure to BitStatus
-			reportedFailure := &BitStatus_RportedFailure{
-				FailureData: item.failure.Description,
-				Timestamp:   timestamppb.New(item.time),
-				Count:       item.count,
-			}
-			a.Status.Failures = append(a.Status.Failures, reportedFailure)
-
+		isResetIndication := item.failure.ReportDuration.Indication == FailureReportDuration_LATCH_UNTIL_RESET
+		if !isResetIndication {
 			// keep saved failure for next trigger check
 			a.SavedFailures[n] = item
 			n++
@@ -222,53 +210,121 @@ func (a *BitAnalyzer) filterAndUpdateFailures() {
 	a.SavedFailures = a.SavedFailures[:n]
 }
 
-func (a *BitAnalyzer) checkExaminationRule(failure Failure) (uint64, *timestamppb.Timestamp) {
-	var countExaminationRuleViolation uint64 = 0
-	timestamp := timestamppb.Now()
-	if len(a.Reports) == 0 {
-		return countExaminationRuleViolation, timestamp
+// internal methods
+
+func (a *BitAnalyzer) cleanBitStatus() {
+	a.Status = BitStatus{}
+}
+
+func (a *BitAnalyzer) updateBitStatus(maskedUserGroups map[string]int) {
+	n := 0
+	for _, item := range a.SavedFailures {
+		masked := checkMasked(maskedUserGroups, item)
+		indication := item.failure.ReportDuration.Indication
+		switch indication {
+		case FailureReportDuration_NO_LATCH:
+			a.insertReportedFailureBitStatus(masked, item)
+		case FailureReportDuration_NUM_OF_SECONDS:
+			if uint32(time.Since(item.time)) < item.failure.ReportDuration.IndicationSeconds {
+				//keep saved failure for next trigger check
+				a.SavedFailures[n] = item
+				n++
+
+				a.insertReportedFailureBitStatus(masked, item)
+			}
+		default:
+			// for until_reset and forever failures
+			//keep saved failure for next trigger check
+			a.SavedFailures[n] = item
+			n++
+
+			a.insertReportedFailureBitStatus(masked, item)
+		}
 	}
+	a.SavedFailures = a.SavedFailures[:n]
+}
+
+func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item extendedFailure) {
+	if !masked {
+		// insert failure to BitStatus
+		reportedFailure := &BitStatus_RportedFailure{
+			FailureData: item.failure.Description,
+			Timestamp:   timestamppb.New(item.time),
+			Count:       item.count,
+		}
+		a.Status.Failures = append(a.Status.Failures, reportedFailure)
+	}
+}
+
+func checkMasked(maskedUserGroups map[string]int, item extendedFailure) bool {
+	countBelongGroupMask := 0
+	for _, group := range item.failure.Dependencies.BelongsToGroup {
+		if maskedUserGroups[group] == 1 {
+			countBelongGroupMask++
+		}
+	}
+	return countBelongGroupMask == len(item.failure.Dependencies.BelongsToGroup)
+}
+
+func (a *BitAnalyzer) checkExaminationRule(failure Failure) (uint64, *timestamppb.Timestamp) {
 	examinationRule := failure.ExaminationRule
-	failureCriteria := examinationRule.FailureCriteria
-	timeCriteria := failureCriteria.TimeCriteria
+	timeCriteria := examinationRule.FailureCriteria.TimeCriteria
 	// count failed tests
-	var countTimeCriteriaViolation uint32 = 0
 	switch timeCriteria.WindowType {
 	case FailureExaminationRule_FailureCriteria_FailureTimeCriteria_NO_WINDOW:
-		for _, test := range a.Reports {
-			if failedValueCriteria(&test, examinationRule) {
-				countTimeCriteriaViolation++
-				timestamp = test.Timestamp
-			}
-			if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
-				countExaminationRuleViolation = 1
-			}
-		}
+		return a.checkNoWindow(examinationRule, timeCriteria)
 	case FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING:
 		// TODO: make sure that reports from storage are sorted by timestamp
-		begin, end := 0, 0
-		for end < len(a.Reports) {
-			startWindowTest := a.Reports[begin]
-			endWindowTest := a.Reports[end]
-			timeDiff := endWindowTest.Timestamp.Seconds - startWindowTest.Timestamp.Seconds
-			if timeDiff <= int64(timeCriteria.WindowSize) {
-				if failedValueCriteria(&endWindowTest, examinationRule) {
-					countTimeCriteriaViolation++
-					timestamp = endWindowTest.Timestamp
-				}
-				end++
-				if end == len(a.Reports) && countTimeCriteriaViolation > timeCriteria.FailuresCCount {
-					countExaminationRuleViolation++
-				}
-			} else {
-				if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
-					countExaminationRuleViolation++
-				}
-				if failedValueCriteria(&startWindowTest, examinationRule) {
-					countTimeCriteriaViolation--
-				}
-				begin++
+		return a.checkSlidingWindow(timeCriteria, examinationRule)
+	default:
+		return 0, timestamppb.Now()
+	}
+}
+
+func (a *BitAnalyzer) checkSlidingWindow(timeCriteria *FailureExaminationRule_FailureCriteria_FailureTimeCriteria, examinationRule *FailureExaminationRule) (uint64, *timestamppb.Timestamp) {
+	var countExaminationRuleViolation uint64 = 0
+	timestamp := timestamppb.Now()
+	var countTimeCriteriaViolation uint32 = 0
+	begin, end := 0, 0
+	for end < len(a.Reports) {
+		startWindowTest := a.Reports[begin]
+		endWindowTest := a.Reports[end]
+
+		timeDiff := endWindowTest.Timestamp.Seconds - startWindowTest.Timestamp.Seconds
+		if timeDiff <= int64(timeCriteria.WindowSize) {
+			if failedValueCriteria(&endWindowTest, examinationRule) {
+				countTimeCriteriaViolation++
+				timestamp = endWindowTest.Timestamp
 			}
+			end++
+		} else {
+			if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
+				countExaminationRuleViolation++
+			}
+			if failedValueCriteria(&startWindowTest, examinationRule) {
+				countTimeCriteriaViolation--
+			}
+			begin++
+		}
+	}
+	// check for end of reports (last report in time frame)
+	if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
+		countExaminationRuleViolation++
+	}
+	return countExaminationRuleViolation, timestamp
+}
+
+func (a *BitAnalyzer) checkNoWindow(examinationRule *FailureExaminationRule, timeCriteria *FailureExaminationRule_FailureCriteria_FailureTimeCriteria) (uint64, *timestamppb.Timestamp) {
+	var countExaminationRuleViolation uint64 = 0
+	timestamp := timestamppb.Now()
+	var countTimeCriteriaViolation uint32 = 0
+	for _, test := range a.Reports {
+		if failedValueCriteria(&test, examinationRule) {
+			countTimeCriteriaViolation++
+			timestamp = test.Timestamp
+		}
+		if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
+			countExaminationRuleViolation = 1
 		}
 	}
 	return countExaminationRuleViolation, timestamp
@@ -333,4 +389,25 @@ func calculateThreshold(minimum float64, maximum float64, exceeding *FailureExam
 	default:
 		return minimum, maximum
 	}
+}
+
+func writeForeverFailure(failure Failure) {
+	//TODO: handle error
+	jsonForeverFailure, _ := json.MarshalIndent(failure, "", " ")
+
+	message := KeyValue{
+		Key:   "forever_failure",
+		Value: string(jsonForeverFailure),
+	}
+
+	//TODO: handle error
+	jsonMessage, _ := json.MarshalIndent(message, "", " ")
+	postBody := bytes.NewReader(jsonMessage)
+
+	storageResponse, err := http.Post(storageDataWriteURL, "application/json; charset=UTF-8", postBody)
+	if err != nil || storageResponse.StatusCode != http.StatusOK {
+		//TODO: handle this error
+		return
+	}
+	defer storageResponse.Body.Close()
 }

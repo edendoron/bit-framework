@@ -74,3 +74,14 @@ func PostTrigger(w http.ResponseWriter, r *http.Request) {
 	ApiResponseHandler(w, http.StatusOK, "Trigger updated!", nil)
 	w.WriteHeader(http.StatusOK)
 }
+
+func PutResetIndications(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	// remove un-relevant indications
+	ResetIndicationChannel <- true
+
+	// return ApiResponse response to the user
+	ApiResponseHandler(w, http.StatusOK, "Trigger updated!", nil)
+	w.WriteHeader(http.StatusOK)
+}

@@ -19,6 +19,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 )
 
 func GetDataRead(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +28,7 @@ func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	timestamps := r.URL.Query()["key"]
 
 	var reports []TestResult
-	err := filepath.Walk("../storage/"+ timestamps[0] + "/",
+	err := filepath.Walk("storage/"+ string(timestamps[0]) + "/",
 		func(path string, info os.FileInfo, err error) error {
 			if !info.IsDir() {
 				protoReport, err := ioutil.ReadFile(path)
@@ -45,7 +47,6 @@ func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	fmt.Println("do iget here?")
 	response := make([]TestReport, len(reports))
 	for i, report := range reports {
 		response[i] = testResultToTestReport(report)
@@ -68,7 +69,10 @@ func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 	case "reports":
 		postReports(w, &requestBody.Value)
 		ApiResponseHandler(w, http.StatusOK, "Report stored!", nil)
+	case "config_failure":
+	case "forever_failures":
 	}
+
 }
 
 func PutDataRead(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +83,7 @@ func PutDataRead(w http.ResponseWriter, r *http.Request) {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	var reports []TestResult
-	err = filepath.Walk("../storage/"+query+"/",
+	err = filepath.Walk("storage/"+ query +"/",
 		func(path string, info os.FileInfo, err error) error {
 			if !info.IsDir() {
 				protoReport, err := ioutil.ReadFile(path)
@@ -130,4 +134,38 @@ func PutDataWrite(w http.ResponseWriter, r *http.Request) {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	ApiResponseHandler(w, http.StatusOK, "Report received!", nil)
+}
+
+func DeleteData(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	timestamp := r.URL.Query()["timestamp"][0]
+	const layout = "2006-January-02 15:4:5"
+	threshold, err := time.Parse(layout, timestamp)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	err = filepath.Walk("storage/",
+		func(path string, info os.FileInfo, err error) error {
+			pathToTime := strings.Split(path, "\\")
+			if len(pathToTime) >= 2 {
+				timeToCmp := strings.ReplaceAll(pathToTime[1], " ", "-") + " " + strings.Join(pathToTime[2:], ":")
+				reportTime, err := time.Parse(layout, timeToCmp)
+				if err == nil && info.IsDir() && reportTime.Before(threshold){
+					err = os.RemoveAll(path); if err != nil {
+						ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+					}
+					currentDir, _ := os.Getwd()
+					for true {
+						if currentDir == "storage" {
+							break
+						}
+					}
+				}
+			}
+			return nil
+		})
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	ApiResponseHandler(w, http.StatusOK, "Old reports deleted successfully", nil)
 }

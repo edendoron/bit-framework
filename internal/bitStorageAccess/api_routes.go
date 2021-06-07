@@ -68,4 +68,11 @@ var StorageAccessRoutes = Routes{
 		Pattern:     "/data/write",
 		HandlerFunc: PutDataWrite,
 	},
+
+	Route{
+		Name:        "DeleteData",
+		Method:      strings.ToUpper("Delete"),
+		Pattern:     "/data/delete",
+		HandlerFunc: DeleteData,
+	},
 }

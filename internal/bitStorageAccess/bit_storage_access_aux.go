@@ -13,30 +13,32 @@ import (
 )
 
 
-func postReports(w http.ResponseWriter, reports *string) {
-	request := TestReport{}
-	if err := json.Unmarshal([]byte(*reports), &request); err != nil {
+func postReports(w http.ResponseWriter, testReports *string) {
+	reports := ReportBody{}
+	if err := json.Unmarshal([]byte(*testReports), &reports); err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	requestToProto := testReportToTestResult(request)
-	protoReports, err := proto.Marshal(&requestToProto)
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-	}
-	path := "../storage/" + fmt.Sprint(request.Timestamp.Date()) + "/" + fmt.Sprint(request.Timestamp.Hour()) +
-		"/" + fmt.Sprint(request.Timestamp.Minute()) + "/" + fmt.Sprint(request.Timestamp.Second())
-	if _, err = os.Stat(path + "/tests_results.txt"); os.IsNotExist(err) {
-		err = os.MkdirAll(path, 0700)
+	for _, report := range reports.Reports {
+		requestToProto := testReportToTestResult(report)
+		protoReports, err := proto.Marshal(&requestToProto)
 		if err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		}
-	}
-	f, err := os.OpenFile(path + "/tests_results.txt", os.O_APPEND | os.O_CREATE | os.O_WRONLY, 0644)
-	if err != nil{
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-	}
-	if _, err = f.Write(protoReports); err != nil{
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		path := "storage/" + fmt.Sprint(report.Timestamp.Date()) + "/" + fmt.Sprint(report.Timestamp.Hour()) +
+			"/" + fmt.Sprint(report.Timestamp.Minute()) + "/" + fmt.Sprint(report.Timestamp.Second())
+		if _, err = os.Stat(path + "/tests_results.txt"); os.IsNotExist(err) {
+			err = os.MkdirAll(path, 0700)
+			if err != nil {
+				ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			}
+		}
+		f, err := os.OpenFile(path+"/tests_results.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		}
+		if _, err = f.Write(protoReports); err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		}
 	}
 }
 

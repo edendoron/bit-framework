@@ -2,21 +2,21 @@
   "description": {
     "unit_name": "system test check",
     "test_name": "volts test",
-    "test_id": 104,
+    "test_id": 1,
     "bit_type": [
       "CBIT"
     ],
     "description": "this is a mock failure to test services",
-    "additional_info": "none",
+    "additional_info": "the failure finds voltage problem",
     "purpose": "check voltage is within 1-7 range, with a deviation of 10%",
     "severity": 1,
     "operator_failure": [
       "unable to start",
-      "unable to stop"
+      "normal functionality is damaged"
     ],
     "line_replacent_units": [
-      "unit1",
-      "unit2"
+      "line1",
+      "line2"
     ],
     "field_replacemnt_units": [
       "field1",

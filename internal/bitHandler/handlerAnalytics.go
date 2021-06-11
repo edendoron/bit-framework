@@ -28,7 +28,7 @@ type extendedFailure struct {
 
 //func (a *BitAnalyzer) ReadFailureFromLocalConfigFile() {
 //	failure := Failure{}
-//	content, err := ioutil.ReadFile("./configs/config_failures/voltage_week_failure.json")
+//	content, err := ioutil.ReadFile("./configs/config_failures/voltage_failure.json")
 //	if err != nil {
 //		//TODO: handle error
 //	}
@@ -178,9 +178,9 @@ func (a *BitAnalyzer) WriteBitStatus() {
 	//TODO: handle error
 	jsonStatus, _ := json.MarshalIndent(a.Status, "", " ")
 
-	message := KeyValuePair{
-		Key:   []byte("bit_status"),
-		Value: jsonStatus,
+	message := KeyValue{
+		Key:   "bit_status",
+		Value: string(jsonStatus),
 	}
 
 	//TODO: handle error

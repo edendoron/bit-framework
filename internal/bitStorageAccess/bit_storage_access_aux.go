@@ -51,7 +51,7 @@ func writeConfigFailures(w http.ResponseWriter, failureToWrite *string){
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	filename := failure.Description.UnitName + "_" + failure.Description.TestName + "_" + strconv.FormatUint(failure.Description.TestId, 10)
-	f, err := os.OpenFile("storage/config/" + filename + ".txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile("storage/config/filtering_rules/" + filename + ".txt", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
@@ -60,6 +60,28 @@ func writeConfigFailures(w http.ResponseWriter, failureToWrite *string){
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	if _, err = f.Write(failureToProto); err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+}
+
+func writeUserGroupFiltering(w http.ResponseWriter, userGroupConfig *string){
+	userGroupsFilters := UserGroupsFiltering_FilteredFailures{}
+	if err := json.Unmarshal([]byte(*userGroupConfig), &userGroupsFilters); err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		if userGroupsFilters.UserGroup == "" {
+			return
+		}
+	}
+	filename := "storage/config/user_groups_masks/" + userGroupsFilters.UserGroup + ".txt"
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	userGroupToProto, err := proto.Marshal(&userGroupsFilters)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	if _, err = f.Write(userGroupToProto); err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 }
@@ -97,12 +119,12 @@ func readReports(w http.ResponseWriter, timestamps string) {
 
 func readConfigFailures(w http.ResponseWriter) {
 	var configFailures []Failure
-	files, err := ioutil.ReadDir("storage/config")
+	files, err := ioutil.ReadDir("storage/config/filtering_rules")
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	for _, f := range files {
-		content, err := ioutil.ReadFile("storage/config/" + f.Name())
+		content, err := ioutil.ReadFile("storage/config/filtering_rules/" + f.Name())
 		if err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		}
@@ -114,6 +136,22 @@ func readConfigFailures(w http.ResponseWriter) {
 		configFailures = append(configFailures, decodedContent)
 	}
 	err = json.NewEncoder(w).Encode(&configFailures)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+}
+
+func readUserGroupMaskedTestIds(w http.ResponseWriter, userGroup string){
+	content, err := ioutil.ReadFile("storage/config/user_groups_masks/" + userGroup + ".txt")
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	decodedContent := UserGroupsFiltering_FilteredFailures{}
+	err = proto.Unmarshal(content, &decodedContent)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	err = json.NewEncoder(w).Encode(&decodedContent.MaskedTestIds)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}

@@ -25,37 +25,19 @@ import (
 
 func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	timestamps := r.URL.Query()["key"]
 
-	var reports []TestResult
-	err := filepath.Walk("storage/"+ string(timestamps[0]) + "/",
-		func(path string, info os.FileInfo, err error) error {
-			if !info.IsDir() {
-				protoReport, err := ioutil.ReadFile(path)
-				if err != nil {
-					ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
-				}
-				temp := TestResult{}
-				err = proto.Unmarshal(protoReport, &temp)
-				if err != nil {
-					ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-				}
-				reports = append(reports, temp)
-			}
-			return nil
-		})
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	if len(r.URL.Query()["reports"]) > 0 {
+		readReports(w, r.URL.Query()["reports"][0])
+		ApiResponseHandler(w, http.StatusOK, "Reports sent!", nil)
+	}else if len(r.URL.Query()["config_failures"]) > 0 {
+		readConfigFailures(w)
+		ApiResponseHandler(w, http.StatusOK, "Config failures sent!", nil)
+	}else if len(r.URL.Query()["forever_failure"]) > 0 {
+
+	}else if len(r.URL.Query()["config_user_group_filtering"]) > 0 {
+
 	}
-	response := make([]TestReport, len(reports))
-	for i, report := range reports {
-		response[i] = testResultToTestReport(report)
-	}
-	err = json.NewEncoder(w).Encode(&response)
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-	}
-	w.WriteHeader(http.StatusOK)
+
 }
 
 func PostDataWrite(w http.ResponseWriter, r *http.Request) {
@@ -67,10 +49,13 @@ func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 	}
 	switch requestBody.Key {
 	case "reports":
-		postReports(w, &requestBody.Value)
+		writeReports(w, &requestBody.Value)
 		ApiResponseHandler(w, http.StatusOK, "Report stored!", nil)
 	case "config_failure":
-	case "forever_failures":
+		writeConfigFailures(w, &requestBody.Value)
+		ApiResponseHandler(w, http.StatusOK, "Report stored!", nil)
+	case "forever_failure":
+	case "config_user_group_filtering":
 	}
 
 }
@@ -144,11 +129,11 @@ func DeleteData(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	err = filepath.Walk("storage/",
+	err = filepath.Walk("storage/test_reports",
 		func(path string, info os.FileInfo, err error) error {
 			pathToTime := strings.Split(path, "\\")
 			if len(pathToTime) >= 2 {
-				timeToCmp := strings.ReplaceAll(pathToTime[1], " ", "-") + " " + strings.Join(pathToTime[2:], ":")
+				timeToCmp := strings.ReplaceAll(pathToTime[2], " ", "-") + " " + strings.Join(pathToTime[3:], ":")
 				reportTime, err := time.Parse(layout, timeToCmp)
 				if err == nil && info.IsDir() && reportTime.Before(threshold){
 					err = os.RemoveAll(path); if err != nil {

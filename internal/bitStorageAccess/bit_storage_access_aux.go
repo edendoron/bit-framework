@@ -8,12 +8,15 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strconv"
 )
 
 
-func postReports(w http.ResponseWriter, testReports *string) {
+func writeReports(w http.ResponseWriter, testReports *string) {
 	reports := ReportBody{}
 	if err := json.Unmarshal([]byte(*testReports), &reports); err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
@@ -24,7 +27,7 @@ func postReports(w http.ResponseWriter, testReports *string) {
 		if err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		}
-		path := "storage/" + fmt.Sprint(report.Timestamp.Date()) + "/" + fmt.Sprint(report.Timestamp.Hour()) +
+		path := "storage/test_reports/" + fmt.Sprint(report.Timestamp.Date()) + "/" + fmt.Sprint(report.Timestamp.Hour()) +
 			"/" + fmt.Sprint(report.Timestamp.Minute()) + "/" + fmt.Sprint(report.Timestamp.Second())
 		if _, err = os.Stat(path + "/tests_results.txt"); os.IsNotExist(err) {
 			err = os.MkdirAll(path, 0700)
@@ -39,6 +42,80 @@ func postReports(w http.ResponseWriter, testReports *string) {
 		if _, err = f.Write(protoReports); err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		}
+	}
+}
+
+func writeConfigFailures(w http.ResponseWriter, failureToWrite *string){
+	failure := Failure{}
+	if err := json.Unmarshal([]byte(*failureToWrite), &failure); err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	filename := failure.Description.UnitName + "_" + failure.Description.TestName + "_" + strconv.FormatUint(failure.Description.TestId, 10)
+	f, err := os.OpenFile("storage/config/" + filename + ".txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	failureToProto, err := proto.Marshal(&failure)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	if _, err = f.Write(failureToProto); err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+}
+
+func readReports(w http.ResponseWriter, timestamps string) {
+	var reports []TestResult
+	err := filepath.Walk("storage/test_reports/"+ string(timestamps) + "/",
+		func(path string, info os.FileInfo, err error) error {
+			if !info.IsDir() {
+				protoReport, err := ioutil.ReadFile(path)
+				if err != nil {
+					ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
+				}
+				temp := TestResult{}
+				err = proto.Unmarshal(protoReport, &temp)
+				if err != nil {
+					ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+				}
+				reports = append(reports, temp)
+			}
+			return nil
+		})
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	response := make([]TestReport, len(reports))
+	for i, report := range reports {
+		response[i] = testResultToTestReport(report)
+	}
+	err = json.NewEncoder(w).Encode(&response)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+}
+
+func readConfigFailures(w http.ResponseWriter) {
+	var configFailures []Failure
+	files, err := ioutil.ReadDir("storage/config")
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	for _, f := range files {
+		content, err := ioutil.ReadFile("storage/config/" + f.Name())
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		}
+		decodedContent := Failure{}
+		err = proto.Unmarshal(content, &decodedContent)
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		}
+		configFailures = append(configFailures, decodedContent)
+	}
+	err = json.NewEncoder(w).Encode(&configFailures)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 }
 

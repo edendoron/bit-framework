@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -83,13 +84,13 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 	// read config failures
 	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
 	if err != nil {
-		// TODO: handle error
+		log.Printf("error create storage request")
 		return
 	}
-	//defer req.Body.Close()
+	//TODO: defer req.Body.Close()
 
 	params := req.URL.Query()
-	params.Add("key", keyValue)
+	params.Add(keyValue, "")
 
 	client := &http.Client{}
 
@@ -98,7 +99,6 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 		// TODO: handle error
 		return
 	}
-	defer storageResponse.Body.Close()
 
 	switch keyValue {
 	case "config_failure":
@@ -107,22 +107,31 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 		err = json.NewDecoder(storageResponse.Body).Decode(&a.SavedFailures)
 	}
 	if err != nil {
-		// TODO: handle error
+		log.Println("error reading failures from storage")
 		return
+	}
+
+	err = storageResponse.Body.Close()
+	if err != nil {
+		log.Printf("error close storage response body")
 	}
 }
 
 func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
 	if err != nil {
-		// TODO: handle error
+		log.Printf("error create storage request")
 		return
 	}
 	//defer req.Body.Close()
 
+	endTime := time.Now()
+	startTime := endTime.Add(-d)
 	params := req.URL.Query()
-	params.Add("key", "report")
-	params.Add("duration", d.String())
+	params.Add("report", "")
+	params.Add("filter", "time")
+	params.Add("start", startTime.String())
+	params.Add("end", endTime.String())
 
 	client := &http.Client{}
 
@@ -131,13 +140,17 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 		// TODO: handle error
 		return
 	}
-	defer storageResponse.Body.Close()
 
 	err = json.NewDecoder(storageResponse.Body).Decode(&a.Reports)
 	if err != nil {
-		// TODO: handle error
+		log.Printf("error decode storage response body")
 		return
 	}
+	err = storageResponse.Body.Close()
+	if err != nil {
+		log.Printf("error close storage response body")
+	}
+
 }
 
 func (a *BitAnalyzer) Crosscheck() {
@@ -175,24 +188,34 @@ func (a *BitAnalyzer) Crosscheck() {
 
 func (a *BitAnalyzer) WriteBitStatus() {
 
-	//TODO: handle error
-	jsonStatus, _ := json.MarshalIndent(a.Status, "", " ")
+	jsonStatus, err := json.MarshalIndent(a.Status, "", " ")
+	if err != nil {
+		log.Printf("error marshal bit_status")
+		return
+	}
 
 	message := KeyValue{
 		Key:   "bit_status",
 		Value: string(jsonStatus),
 	}
 
-	//TODO: handle error
-	jsonMessage, _ := json.MarshalIndent(message, "", " ")
+	jsonMessage, err := json.MarshalIndent(message, "", " ")
+	if err != nil {
+		log.Printf("error marshal bit_status")
+		return
+	}
+
 	postBody := bytes.NewReader(jsonMessage)
 
 	storageResponse, err := http.Post(storageDataWriteURL, "application/json; charset=UTF-8", postBody)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
-		//TODO: handle this error
+		log.Printf("error post bit_status to storage")
 		return
 	}
-	defer storageResponse.Body.Close()
+	err = storageResponse.Body.Close()
+	if err != nil {
+		log.Printf("error close storage response body")
+	}
 
 	a.cleanBitStatus()
 }
@@ -392,22 +415,31 @@ func calculateThreshold(minimum float64, maximum float64, exceeding *FailureExam
 }
 
 func writeForeverFailure(failure Failure) {
-	//TODO: handle error
-	jsonForeverFailure, _ := json.MarshalIndent(failure, "", " ")
+	jsonForeverFailure, err := json.MarshalIndent(failure, "", " ")
+	if err != nil {
+		log.Printf("error marshal forever_failure")
+		return
+	}
 
 	message := KeyValue{
 		Key:   "forever_failure",
 		Value: string(jsonForeverFailure),
 	}
 
-	//TODO: handle error
-	jsonMessage, _ := json.MarshalIndent(message, "", " ")
+	jsonMessage, err := json.MarshalIndent(message, "", " ")
+	if err != nil {
+		log.Printf("error marshal forever_failure")
+		return
+	}
 	postBody := bytes.NewReader(jsonMessage)
 
 	storageResponse, err := http.Post(storageDataWriteURL, "application/json; charset=UTF-8", postBody)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
-		//TODO: handle this error
+		log.Printf("error post forever_failure to storage")
 		return
 	}
-	defer storageResponse.Body.Close()
+	err = storageResponse.Body.Close()
+	if err != nil {
+		log.Printf("error close storage response body")
+	}
 }

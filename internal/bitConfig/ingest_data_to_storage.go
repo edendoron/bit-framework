@@ -23,7 +23,7 @@ func PostFailuresData() {
 	for _, f := range files {
 		fmt.Println(f.Name())
 		//TODO: handle error
-		content, _ := ioutil.ReadFile(f.Name())
+		content, _ := ioutil.ReadFile("./configs/config_failures/" + f.Name())
 
 		//TODO: handle error
 		err = json.Unmarshal(content, &failure)

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -16,62 +17,86 @@ func PostFailuresData() {
 	failure := Failure{}
 	files, err := ioutil.ReadDir("./configs/config_failures")
 	if err != nil {
-		//TODO: handle error
+		log.Println("error reading config_failures dir")
 		return
 	}
-	//TODO: handle error
-	for _, f := range files {
+	for i, f := range files {
 		fmt.Println(f.Name())
-		//TODO: handle error
-		content, _ := ioutil.ReadFile("./configs/config_failures/" + f.Name())
-
-		//TODO: handle error
-		err = json.Unmarshal(content, &failure)
-		//TODO: handle error
-		err = ValidateType(failure)
-
+		content, e := ioutil.ReadFile("./configs/config_failures/" + f.Name())
+		if e != nil {
+			log.Println("error reading config_failures file number ", i)
+			return
+		}
+		e = json.Unmarshal(content, &failure)
+		if e != nil {
+			log.Println("error unmarshal config_failures file number ", i)
+			return
+		}
+		e = ValidateType(failure)
+		if e != nil {
+			log.Println("error validate config_failures file number ", i)
+			return
+		}
 		message := KeyValue{Key: "config_failure", Value: string(content)}
-		//TODO: handle error
-		postBody, _ := json.MarshalIndent(message, "", " ")
+		postBody, e := json.MarshalIndent(message, "", " ")
+		if e != nil {
+			log.Println("error marshal config_failures file number ", i)
+			return
+		}
 		postBodyBuf := bytes.NewReader(postBody)
 		storageResp, e := http.Post(storageURL, "application/json; charset=UTF-8", postBodyBuf)
 		if e != nil || storageResp.StatusCode != http.StatusOK {
-			//TODO: handle this error
+			log.Println("error post to storage config_failures file number ", i)
 			return
 		}
-		//TODO: handle error
-		storageResp.Body.Close()
+		e = storageResp.Body.Close()
+		if e != nil {
+			log.Println("error close request body ", i)
+			return
+		}
 	}
 }
 
 func PostGroupFilterData() {
-	groupFilter := UserGroupsFiltering{}
-	files, err := ioutil.ReadDir("./configs/config_user_groups")
+	groupFilter := UserGroupsFiltering_FilteredFailures{}
+	files, err := ioutil.ReadDir("./configs/config_user_groups_filtering")
 	if err != nil {
-		//TODO: handle error
+		log.Println("error reading config_user_groups_filtering dir")
 		return
 	}
-	//TODO: handle error
-	for _, f := range files {
+	for i, f := range files {
 		fmt.Println(f.Name())
-		//TODO: handle error
-		content, _ := ioutil.ReadFile(f.Name())
-
-		//TODO: handle error
-		err = json.Unmarshal(content, &groupFilter)
-		//TODO: handle error
-		err = ValidateType(groupFilter)
-
-		message := KeyValue{Key: "user_groups", Value: string(content)}
-		//TODO: handle error
-		postBody, _ := json.MarshalIndent(message, "", " ")
+		content, e := ioutil.ReadFile("./configs/config_user_groups_filtering/" + f.Name())
+		if e != nil {
+			log.Println("error reading config_user_groups_filtering file number ", i)
+			return
+		}
+		e = json.Unmarshal(content, &groupFilter)
+		if e != nil {
+			log.Println("error unmarshal config_user_groups_filtering file number ", i)
+			return
+		}
+		e = ValidateType(groupFilter)
+		if e != nil {
+			log.Println("error validate config_user_groups_filtering file number ", i)
+			return
+		}
+		message := KeyValue{Key: "config_user_group_filtering", Value: string(content)}
+		postBody, e := json.MarshalIndent(message, "", " ")
+		if e != nil {
+			log.Println("error marshal config_user_groups_filtering file number ", i)
+			return
+		}
 		postBodyBuf := bytes.NewReader(postBody)
 		storageResp, e := http.Post(storageURL, "application/json; charset=UTF-8", postBodyBuf)
 		if e != nil || storageResp.StatusCode != http.StatusOK {
-			//TODO: handle this error
+			log.Println("error post to storage config_user_groups_filtering file number ", i)
 			return
 		}
-		//TODO: handle error
-		storageResp.Body.Close()
+		e = storageResp.Body.Close()
+		if e != nil {
+			log.Println("error close request body ", i)
+			return
+		}
 	}
 }

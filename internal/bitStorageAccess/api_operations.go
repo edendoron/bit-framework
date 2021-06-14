@@ -38,7 +38,6 @@ func GetDataRead(w http.ResponseWriter, r *http.Request) {
 		readUserGroupMaskedTestIds(w, query["id"][0])
 		ApiResponseHandler(w, http.StatusOK, "User group masked test ids sent!", nil)
 	}
-
 }
 
 func PostDataWrite(w http.ResponseWriter, r *http.Request) {

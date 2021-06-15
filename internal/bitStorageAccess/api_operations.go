@@ -27,16 +27,13 @@ func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	query := r.URL.Query()
 	if len(query["reports"]) > 0 {
-		readReports(w, query["reports"][0])
-		ApiResponseHandler(w, http.StatusOK, "Reports sent!", nil)
+		readReports(w, query["start"][0], query["end"][0], query["filter"][0])
 	}else if len(query["config_failures"]) > 0 {
 		readConfigFailures(w)
-		ApiResponseHandler(w, http.StatusOK, "Config failures sent!", nil)
 	}else if len(query["forever_failure"]) > 0 {
 
 	}else if len(query["config_user_groups_filtering"]) > 0 {
 		readUserGroupMaskedTestIds(w, query["id"][0])
-		ApiResponseHandler(w, http.StatusOK, "User group masked test ids sent!", nil)
 	}
 }
 
@@ -50,14 +47,11 @@ func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 	switch requestBody.Key {
 	case "reports":
 		writeReports(w, &requestBody.Value)
-		ApiResponseHandler(w, http.StatusOK, "Report stored!", nil)
 	case "config_failure":
 		writeConfigFailures(w, &requestBody.Value)
-		ApiResponseHandler(w, http.StatusOK, "Config failure stored!", nil)
 	case "forever_failure":
 	case "config_user_group_filtering":
 		writeUserGroupFiltering(w, &requestBody.Value)
-		ApiResponseHandler(w, http.StatusOK, "User group filters stored!", nil)
 	}
 
 }

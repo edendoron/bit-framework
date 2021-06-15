@@ -2,24 +2,24 @@ import React, {FC} from 'react';
 import {FormControl, FormHelperText, InputLabel, MenuItem, Select} from "@material-ui/core";
 
 interface SelectorProps {
+    menuItems: string[],
     queryType: string,
     onChange: (event: React.ChangeEvent<{ value: unknown }>) => void,
 }
 
-export const Selector: FC<SelectorProps> = ({queryType, onChange}) => {
+export const Selector: FC<SelectorProps> = ({menuItems, queryType, onChange}) => {
 
+    const renderMenuItems = () => {
+        return menuItems.map(item => <MenuItem value={item}>{item}</MenuItem>)
+    }
     return (
         <FormControl>
-            <InputLabel>Type</InputLabel>
             <Select
                 value={queryType}
                 onChange={onChange}
             >
-                <MenuItem value={"Reports"}>Reports</MenuItem>
-                <MenuItem value={"BIT Status"}>Bit Status</MenuItem>
-                <MenuItem value={"Config Files"}>Config Files</MenuItem>
+                {renderMenuItems()}
             </Select>
-            <FormHelperText>Select query type</FormHelperText>
         </FormControl>
         )
 }

@@ -5,13 +5,20 @@ import {Box, Card, CardContent, CardHeader} from '@material-ui/core'
 import {Selector} from "./components/Selector";
 
 const STORAGE_DATA_READ_URL = 'http://localhost:8082/data/read'
+const queryTypes = ['Reports', 'BIT Status', 'Config Failures']
+const userGroups = ['group1', 'group2', 'group3', 'group4', 'groupRafael', 'TemperatureCelsius group', 'group general', 'groupField']
 
 export const App = () => {
     const [queryType, setQueryType] = useState('');
+    const [userGroup, setUserGroup] = useState('');
     const [data, setData] = useState();
 
     const changeQueryType = (event: React.ChangeEvent<{ value: unknown }>) => {
         setQueryType(event.target.value as string)
+    }
+
+    const changeUserGroup = (event: React.ChangeEvent<{ value: unknown }>) => {
+        setUserGroup(event.target.value as string)
     }
 
     useEffect(() => {
@@ -27,7 +34,7 @@ export const App = () => {
             case 'BIT Status':
                 break;
             case 'Config Files':
-                // return renderConfigs();
+                // fetchFilteringRules()
         }
         return <div/>;
     }
@@ -42,7 +49,9 @@ export const App = () => {
             <Card>
                 <CardHeader title="BIT Framework Query System"/>
                 <CardContent>
-                    <Selector queryType={queryType} onChange={changeQueryType} />
+                    <Selector menuItems={userGroups} queryType={userGroup} onChange={changeUserGroup}/>
+                    {userGroup !== '' && <Selector menuItems={queryTypes} queryType={queryType} onChange={changeQueryType}/>}
+
                     {renderData()}
                 </CardContent>
             </Card>

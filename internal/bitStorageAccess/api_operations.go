@@ -25,19 +25,19 @@ import (
 
 func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
-	if len(r.URL.Query()["reports"]) > 0 {
-		readReports(w, r.URL.Query()["reports"][0])
+	query := r.URL.Query()
+	if len(query["reports"]) > 0 {
+		readReports(w, query["reports"][0])
 		ApiResponseHandler(w, http.StatusOK, "Reports sent!", nil)
-	}else if len(r.URL.Query()["config_failures"]) > 0 {
+	}else if len(query["config_failures"]) > 0 {
 		readConfigFailures(w)
 		ApiResponseHandler(w, http.StatusOK, "Config failures sent!", nil)
-	}else if len(r.URL.Query()["forever_failure"]) > 0 {
+	}else if len(query["forever_failure"]) > 0 {
 
-	}else if len(r.URL.Query()["config_user_group_filtering"]) > 0 {
-
+	}else if len(query["config_user_groups_filtering"]) > 0 {
+		readUserGroupMaskedTestIds(w, query["id"][0])
+		ApiResponseHandler(w, http.StatusOK, "User group masked test ids sent!", nil)
 	}
-
 }
 
 func PostDataWrite(w http.ResponseWriter, r *http.Request) {
@@ -53,9 +53,11 @@ func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 		ApiResponseHandler(w, http.StatusOK, "Report stored!", nil)
 	case "config_failure":
 		writeConfigFailures(w, &requestBody.Value)
-		ApiResponseHandler(w, http.StatusOK, "Report stored!", nil)
+		ApiResponseHandler(w, http.StatusOK, "Config failure stored!", nil)
 	case "forever_failure":
 	case "config_user_group_filtering":
+		writeUserGroupFiltering(w, &requestBody.Value)
+		ApiResponseHandler(w, http.StatusOK, "User group filters stored!", nil)
 	}
 
 }

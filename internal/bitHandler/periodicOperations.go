@@ -19,8 +19,8 @@ const storageDataWriteURL = storageDataBaseUrl + "/data/write"
 func StatusScheduler() {
 	d := time.Duration(CurrentTrigger.PeriodSec) * time.Second
 	var analyzer BitAnalyzer
-	analyzer.ReadFailuresFromStorage("config_failure")
-	analyzer.ReadFailuresFromStorage("forever_failure")
+	analyzer.ReadFailuresFromStorage("config_failures")
+	analyzer.ReadFailuresFromStorage("forever_failures")
 	ticker := time.NewTicker(d)
 	for {
 		select {

@@ -80,6 +80,8 @@ type extendedFailure struct {
 //
 //}
 
+const layout = "2006-January-02 15:4:5"
+
 func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 	// read config failures
 	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
@@ -91,24 +93,23 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 
 	params := req.URL.Query()
 	params.Add(keyValue, "")
+	req.URL.RawQuery = params.Encode()
 
 	client := &http.Client{}
 
 	storageResponse, err := client.Do(req)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
-		// TODO: handle error
-		return
+		log.Fatalln("error reading failures from storage")
 	}
 
 	switch keyValue {
-	case "config_failure":
+	case "config_failures":
 		err = json.NewDecoder(storageResponse.Body).Decode(&a.ConfigFailures)
-	case "forever_failure":
+	case "forever_failures":
 		err = json.NewDecoder(storageResponse.Body).Decode(&a.SavedFailures)
 	}
 	if err != nil {
-		log.Println("error reading failures from storage")
-		return
+		log.Printf("error reading failures from storage")
 	}
 
 	err = storageResponse.Body.Close()
@@ -130,8 +131,9 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 	params := req.URL.Query()
 	params.Add("report", "")
 	params.Add("filter", "time")
-	params.Add("start", startTime.String())
-	params.Add("end", endTime.String())
+	params.Add("start", startTime.Format(layout))
+	params.Add("end", endTime.Format(layout))
+	req.URL.RawQuery = params.Encode()
 
 	client := &http.Client{}
 

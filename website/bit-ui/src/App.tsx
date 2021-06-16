@@ -11,7 +11,7 @@ const userGroups = ['group1', 'group2', 'group3', 'group4', 'groupRafael', 'Temp
 export const App = () => {
     const [queryType, setQueryType] = useState('');
     const [userGroup, setUserGroup] = useState('');
-    const [data, setData] = useState();
+    const [data, setData] = useState<>();
 
     const changeQueryType = (event: React.ChangeEvent<{ value: unknown }>) => {
         setQueryType(event.target.value as string)
@@ -36,6 +36,7 @@ export const App = () => {
             case 'Config Files':
                 // fetchFilteringRules()
         }
+        if (data) return <Box>{data.map((item) => <Box>{item}</Box>)}</Box>
         return <div/>;
     }
 
@@ -43,16 +44,21 @@ export const App = () => {
     //
     // }
 
+    console.log(data)
     return (
     <Box bgcolor="#373A36" minHeight="100vh" textAlign="center">
         <Box bgcolor="#D48166" minHeight="100vh" marginRight="150px" marginLeft="150px">
             <Card>
                 <CardHeader title="BIT Framework Query System"/>
                 <CardContent>
-                    <Selector menuItems={userGroups} queryType={userGroup} onChange={changeUserGroup}/>
-                    {userGroup !== '' && <Selector menuItems={queryTypes} queryType={queryType} onChange={changeQueryType}/>}
+                    <Box display="flex" flexDirection="column">
+                        <Selector menuItems={userGroups} queryType={userGroup} onChange={changeUserGroup}/>
+                        {userGroup !== '' && <Selector menuItems={queryTypes} queryType={queryType} onChange={changeQueryType}/>}
+                    </Box>
+                    <Box>
+                        {renderData()}
+                    </Box>
 
-                    {renderData()}
                 </CardContent>
             </Card>
         </Box>

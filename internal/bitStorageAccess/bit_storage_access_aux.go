@@ -128,11 +128,13 @@ func readConfigFailures(w http.ResponseWriter) {
 		if err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		}
+
 		decodedContent := Failure{}
 		err = proto.Unmarshal(content, &decodedContent)
 		if err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		}
+
 		configFailures = append(configFailures, decodedContent)
 	}
 	err = json.NewEncoder(w).Encode(&configFailures)

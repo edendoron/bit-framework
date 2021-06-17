@@ -5,6 +5,7 @@ import (
 	. "../models"
 	"bytes"
 	"encoding/json"
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"net/http"
@@ -15,15 +16,21 @@ import (
 type BitAnalyzer struct {
 	ConfigFailures []Failure
 	Reports        []TestResult
-	SavedFailures  []extendedFailure
+	SavedFailures  []ExtendedFailure
 	Status         BitStatus
 }
 
-type extendedFailure struct {
-	failure Failure
+type ExtendedFailure struct {
+	Failure Failure
 	time    time.Time
 	count   uint64
 }
+
+func (e *ExtendedFailure) Reset() { *e = ExtendedFailure{} }
+
+func (e *ExtendedFailure) String() string { return proto.CompactTextString(e) }
+
+func (e *ExtendedFailure) ProtoMessage() {}
 
 // exported methods
 
@@ -170,8 +177,8 @@ func (a *BitAnalyzer) Crosscheck() {
 			}
 
 			// insert failures to SavedFailures
-			timedFailure := extendedFailure{
-				failure: failure,
+			timedFailure := ExtendedFailure{
+				Failure: failure,
 				time:    timestamp.AsTime(),
 				count:   countFailed,
 			}
@@ -225,7 +232,7 @@ func (a *BitAnalyzer) WriteBitStatus() {
 func (a *BitAnalyzer) FilterSavedFailures() {
 	n := 0
 	for _, item := range a.SavedFailures {
-		isResetIndication := item.failure.ReportDuration.Indication == FailureReportDuration_LATCH_UNTIL_RESET
+		isResetIndication := item.Failure.ReportDuration.Indication == FailureReportDuration_LATCH_UNTIL_RESET
 		if !isResetIndication {
 			// keep saved failure for next trigger check
 			a.SavedFailures[n] = item
@@ -245,12 +252,12 @@ func (a *BitAnalyzer) updateBitStatus(maskedUserGroups map[string]int) {
 	n := 0
 	for _, item := range a.SavedFailures {
 		masked := checkMasked(maskedUserGroups, item)
-		indication := item.failure.ReportDuration.Indication
+		indication := item.Failure.ReportDuration.Indication
 		switch indication {
 		case FailureReportDuration_NO_LATCH:
 			a.insertReportedFailureBitStatus(masked, item)
 		case FailureReportDuration_NUM_OF_SECONDS:
-			if uint32(time.Since(item.time)) < item.failure.ReportDuration.IndicationSeconds {
+			if uint32(time.Since(item.time)) < item.Failure.ReportDuration.IndicationSeconds {
 				//keep saved failure for next trigger check
 				a.SavedFailures[n] = item
 				n++
@@ -269,11 +276,11 @@ func (a *BitAnalyzer) updateBitStatus(maskedUserGroups map[string]int) {
 	a.SavedFailures = a.SavedFailures[:n]
 }
 
-func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item extendedFailure) {
+func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item ExtendedFailure) {
 	if !masked {
 		// insert failure to BitStatus
 		reportedFailure := &BitStatus_RportedFailure{
-			FailureData: item.failure.Description,
+			FailureData: item.Failure.Description,
 			Timestamp:   timestamppb.New(item.time),
 			Count:       item.count,
 		}
@@ -281,14 +288,14 @@ func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item extendedF
 	}
 }
 
-func checkMasked(maskedUserGroups map[string]int, item extendedFailure) bool {
+func checkMasked(maskedUserGroups map[string]int, item ExtendedFailure) bool {
 	countBelongGroupMask := 0
-	for _, group := range item.failure.Dependencies.BelongsToGroup {
+	for _, group := range item.Failure.Dependencies.BelongsToGroup {
 		if maskedUserGroups[group] == 1 {
 			countBelongGroupMask++
 		}
 	}
-	return countBelongGroupMask == len(item.failure.Dependencies.BelongsToGroup)
+	return countBelongGroupMask == len(item.Failure.Dependencies.BelongsToGroup)
 }
 
 func (a *BitAnalyzer) checkExaminationRule(failure Failure) (uint64, *timestamppb.Timestamp) {

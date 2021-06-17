@@ -34,6 +34,8 @@ func GetDataRead(w http.ResponseWriter, r *http.Request) {
 
 	}else if len(query["config_user_groups_filtering"]) > 0 {
 		readUserGroupMaskedTestIds(w, query["id"][0])
+	}else if len(query["bit_status"]) > 0 {
+		readBitStatus(w, query["start"][0], query["end"][0], query["filter"][0])
 	}
 }
 
@@ -52,6 +54,8 @@ func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 	case "forever_failure":
 	case "config_user_group_filtering":
 		writeUserGroupFiltering(w, &requestBody.Value)
+	case "bit_status":
+		writeBitStatus(w, &requestBody.Value)
 	}
 
 }

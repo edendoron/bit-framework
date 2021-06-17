@@ -109,7 +109,7 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 		err = json.NewDecoder(storageResponse.Body).Decode(&a.SavedFailures)
 	}
 	if err != nil {
-		log.Printf("error reading failures from storage")
+		log.Println("error reading " + keyValue + " from storage")
 	}
 
 	err = storageResponse.Body.Close()
@@ -127,9 +127,9 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 	//defer req.Body.Close()
 
 	endTime := time.Now()
-	startTime := endTime.Add(-d)
+	startTime, _ := time.Parse(layout, "2021-April-15 12:00:00")
 	params := req.URL.Query()
-	params.Add("report", "")
+	params.Add("reports", "")
 	params.Add("filter", "time")
 	params.Add("start", startTime.Format(layout))
 	params.Add("end", endTime.Format(layout))

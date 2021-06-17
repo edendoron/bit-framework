@@ -13,6 +13,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
+	"time"
 )
 
 
@@ -86,32 +88,47 @@ func writeUserGroupFiltering(w http.ResponseWriter, userGroupConfig *string){
 	}
 }
 
-func readReports(w http.ResponseWriter, timestamps string) {
+func readReports(w http.ResponseWriter, start string, end string, filter string) {
 	var reports []TestResult
-	err := filepath.Walk("storage/test_reports/"+ string(timestamps) + "/",
-		func(path string, info os.FileInfo, err error) error {
-			if !info.IsDir() {
-				protoReport, err := ioutil.ReadFile(path)
-				if err != nil {
-					ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
-				}
-				temp := TestResult{}
-				err = proto.Unmarshal(protoReport, &temp)
-				if err != nil {
-					ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-				}
-				reports = append(reports, temp)
-			}
-			return nil
-		})
+	const layout = "2006-January-02 15:4:5"
+	startTime, err := time.Parse(layout, start)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	response := make([]TestReport, len(reports))
-	for i, report := range reports {
-		response[i] = testResultToTestReport(report)
+	endTime, err := time.Parse(layout, end)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	err = json.NewEncoder(w).Encode(&response)
+	err = filepath.Walk("storage/test_reports/",
+		func(path string, info os.FileInfo, err error) error {
+			pathToTime := strings.Split(path, "\\")
+			if len(pathToTime) >= 2 {
+				timeToCmp := strings.ReplaceAll(pathToTime[2], " ", "-") + " " + strings.Join(pathToTime[3:], ":")
+				reportTime, err := time.Parse(layout, timeToCmp)
+				if err == nil && info.IsDir() && reportTime.After(startTime) && reportTime.Before(endTime){
+					protoReport, err := ioutil.ReadFile(path + "/tests_results.txt")
+					if err != nil {
+						ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
+					}
+					temp := TestResult{}
+					err = proto.Unmarshal(protoReport, &temp)
+					if err != nil {
+						ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+					}
+					reports = append(reports, temp)
+				}
+
+			}
+			return nil
+		})
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			}
+	//response := make([]TestReport, len(reports))
+	//for i, report := range reports {
+	//	response[i] = testResultToTestReport(report)
+	//}
+	err = json.NewEncoder(w).Encode(&reports)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}

@@ -11,7 +11,8 @@ const userGroups = ['group1', 'group2', 'group3', 'group4', 'groupRafael', 'Temp
 export const App = () => {
     const [queryType, setQueryType] = useState('');
     const [userGroup, setUserGroup] = useState('');
-    const [data, setData] = useState<>();
+    const [data, setData] = useState();
+
 
     const changeQueryType = (event: React.ChangeEvent<{ value: unknown }>) => {
         setQueryType(event.target.value as string)
@@ -36,7 +37,6 @@ export const App = () => {
             case 'Config Files':
                 // fetchFilteringRules()
         }
-        if (data) return <Box>{data.map((item) => <Box>{item}</Box>)}</Box>
         return <div/>;
     }
 
@@ -58,7 +58,6 @@ export const App = () => {
                     <Box>
                         {renderData()}
                     </Box>
-
                 </CardContent>
             </Card>
         </Box>

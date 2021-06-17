@@ -31,7 +31,7 @@ func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	}else if len(query["config_failures"]) > 0 {
 		readConfigFailures(w)
 	}else if len(query["forever_failure"]) > 0 {
-
+		readExtendedFailures(w)
 	}else if len(query["config_user_groups_filtering"]) > 0 {
 		readUserGroupMaskedTestIds(w, query["id"][0])
 	}else if len(query["bit_status"]) > 0 {
@@ -52,6 +52,7 @@ func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 	case "config_failure":
 		writeConfigFailures(w, &requestBody.Value)
 	case "forever_failure":
+		writeExtendedFailures(w, &requestBody.Value)
 	case "config_user_group_filtering":
 		writeUserGroupFiltering(w, &requestBody.Value)
 	case "bit_status":

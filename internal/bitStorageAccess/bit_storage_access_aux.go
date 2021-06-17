@@ -3,6 +3,7 @@ package bitStorageAccess
 import (
 	. "../../configs/rafael.com/bina/bit"
 	. "../apiResponseHandlers"
+	. "../bitHandler"
 	. "../models"
 	"encoding/json"
 	"fmt"
@@ -68,6 +69,26 @@ func writeConfigFailures(w http.ResponseWriter, failureToWrite *string){
 	w.WriteHeader(http.StatusOK)
 }
 
+func writeExtendedFailures(w http.ResponseWriter, failureToWrite *string){
+	failure := ExtendedFailure{}
+	if err := json.Unmarshal([]byte(*failureToWrite), &failure); err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	filename := failure.Failure.Description.UnitName + "_" + failure.Failure.Description.TestName + "_" + strconv.FormatUint(failure.Failure.Description.TestId, 10)
+	f, err := os.OpenFile("storage/config/perm_filtering_rules/" + filename + ".txt", os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	failureToProto, err := proto.Marshal(&failure)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	if _, err = f.Write(failureToProto); err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 func writeUserGroupFiltering(w http.ResponseWriter, userGroupConfig *string){
 	userGroupsFilters := UserGroupsFiltering_FilteredFailures{}
 	if err := json.Unmarshal([]byte(*userGroupConfig), &userGroupsFilters); err != nil {
@@ -117,6 +138,8 @@ func writeBitStatus(w http.ResponseWriter, bitStatus *string){
 	}
 	w.WriteHeader(http.StatusOK)
 }
+
+
 
 func readReports(w http.ResponseWriter, start string, end string, filter string) {
 	var reports []TestResult
@@ -180,6 +203,31 @@ func readConfigFailures(w http.ResponseWriter) {
 		configFailures = append(configFailures, decodedContent)
 	}
 	err = json.NewEncoder(w).Encode(&configFailures)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func readExtendedFailures(w http.ResponseWriter) {
+	var foreverFailures []ExtendedFailure
+	files, err := ioutil.ReadDir("storage/config/perm_filtering_rules")
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	for _, f := range files {
+		content, err := ioutil.ReadFile("storage/config/perm_filtering_rules/" + f.Name())
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		}
+		decodedContent := ExtendedFailure{}
+		err = proto.Unmarshal(content, &decodedContent)
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		}
+		foreverFailures = append(foreverFailures, decodedContent)
+	}
+	err = json.NewEncoder(w).Encode(&foreverFailures)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}

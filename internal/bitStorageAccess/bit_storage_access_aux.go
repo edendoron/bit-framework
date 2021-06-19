@@ -18,7 +18,6 @@ import (
 	"time"
 )
 
-
 func writeReports(w http.ResponseWriter, testReports *string) {
 	reports := ReportBody{}
 	if err := json.Unmarshal([]byte(*testReports), &reports); err != nil {
@@ -49,13 +48,13 @@ func writeReports(w http.ResponseWriter, testReports *string) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func writeConfigFailures(w http.ResponseWriter, failureToWrite *string){
+func writeConfigFailures(w http.ResponseWriter, failureToWrite *string) {
 	failure := Failure{}
 	if err := json.Unmarshal([]byte(*failureToWrite), &failure); err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	filename := failure.Description.UnitName + "_" + failure.Description.TestName + "_" + strconv.FormatUint(failure.Description.TestId, 10)
-	f, err := os.OpenFile("storage/config/filtering_rules/" + filename + ".txt", os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile("storage/config/filtering_rules/"+filename+".txt", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
@@ -69,13 +68,13 @@ func writeConfigFailures(w http.ResponseWriter, failureToWrite *string){
 	w.WriteHeader(http.StatusOK)
 }
 
-func writeExtendedFailures(w http.ResponseWriter, failureToWrite *string){
+func writeExtendedFailures(w http.ResponseWriter, failureToWrite *string) {
 	failure := ExtendedFailure{}
 	if err := json.Unmarshal([]byte(*failureToWrite), &failure); err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	filename := failure.Failure.Description.UnitName + "_" + failure.Failure.Description.TestName + "_" + strconv.FormatUint(failure.Failure.Description.TestId, 10)
-	f, err := os.OpenFile("storage/config/perm_filtering_rules/" + filename + ".txt", os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile("storage/config/perm_filtering_rules/"+filename+".txt", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
@@ -89,7 +88,7 @@ func writeExtendedFailures(w http.ResponseWriter, failureToWrite *string){
 	w.WriteHeader(http.StatusOK)
 }
 
-func writeUserGroupFiltering(w http.ResponseWriter, userGroupConfig *string){
+func writeUserGroupFiltering(w http.ResponseWriter, userGroupConfig *string) {
 	userGroupsFilters := UserGroupsFiltering_FilteredFailures{}
 	if err := json.Unmarshal([]byte(*userGroupConfig), &userGroupsFilters); err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
@@ -112,7 +111,7 @@ func writeUserGroupFiltering(w http.ResponseWriter, userGroupConfig *string){
 	w.WriteHeader(http.StatusOK)
 }
 
-func writeBitStatus(w http.ResponseWriter, bitStatus *string){
+func writeBitStatus(w http.ResponseWriter, bitStatus *string) {
 	status := BitStatus{}
 	if err := json.Unmarshal([]byte(*bitStatus), &status); err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
@@ -121,8 +120,9 @@ func writeBitStatus(w http.ResponseWriter, bitStatus *string){
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	path := "storage/bit_status/" + fmt.Sprint(time.Now().Date()) + "/" + fmt.Sprint(time.Now().Hour()) +
-		"/" + fmt.Sprint(time.Now().Minute()) + "/" + fmt.Sprint(time.Now().Second())
+	currentTime := time.Now()
+	path := "storage/bit_status/" + fmt.Sprint(currentTime.Date()) + "/" + fmt.Sprint(currentTime.Hour()) +
+		"/" + fmt.Sprint(currentTime.Minute()) + "/" + fmt.Sprint(currentTime.Second())
 	if _, err = os.Stat(path + "/bit_status.txt"); os.IsNotExist(err) {
 		err = os.MkdirAll(path, 0700)
 		if err != nil {
@@ -138,8 +138,6 @@ func writeBitStatus(w http.ResponseWriter, bitStatus *string){
 	}
 	w.WriteHeader(http.StatusOK)
 }
-
-
 
 func readReports(w http.ResponseWriter, start string, end string, filter string) {
 	var reports []TestResult
@@ -158,7 +156,7 @@ func readReports(w http.ResponseWriter, start string, end string, filter string)
 			if len(pathToTime) >= 2 {
 				timeToCmp := strings.ReplaceAll(pathToTime[2], " ", "-") + " " + strings.Join(pathToTime[3:], ":")
 				reportTime, err := time.Parse(layout, timeToCmp)
-				if err == nil && info.IsDir() && reportTime.After(startTime) && reportTime.Before(endTime){
+				if err == nil && info.IsDir() && reportTime.After(startTime) && reportTime.Before(endTime) {
 					protoReport, err := ioutil.ReadFile(path + "/tests_results.txt")
 					if err != nil {
 						ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
@@ -173,9 +171,9 @@ func readReports(w http.ResponseWriter, start string, end string, filter string)
 			}
 			return nil
 		})
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-			}
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
 	response := make([]TestReport, len(reports))
 	for i, report := range reports {
 		response[i] = testResultToTestReport(report)
@@ -237,7 +235,7 @@ func readExtendedFailures(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func readBitStatus(w http.ResponseWriter, start string, end string, filter string){
+func readBitStatus(w http.ResponseWriter, start string, end string, filter string) {
 	var statuses []BitStatus
 	const layout = "2006-January-02 15:4:5"
 	startTime, err := time.Parse(layout, start)
@@ -254,7 +252,7 @@ func readBitStatus(w http.ResponseWriter, start string, end string, filter strin
 			if len(pathToTime) >= 2 {
 				timeToCmp := strings.ReplaceAll(pathToTime[2], " ", "-") + " " + strings.Join(pathToTime[3:], ":")
 				reportTime, err := time.Parse(layout, timeToCmp)
-				if err == nil && info.IsDir() && reportTime.After(startTime) && reportTime.Before(endTime){
+				if err == nil && info.IsDir() && reportTime.After(startTime) && reportTime.Before(endTime) {
 					protoStatus, err := ioutil.ReadFile(path + "/bit_status.txt")
 					if err != nil {
 						ApiResponseHandler(w, http.StatusInternalServerError, "Can't find status!", err)
@@ -279,7 +277,7 @@ func readBitStatus(w http.ResponseWriter, start string, end string, filter strin
 	w.WriteHeader(http.StatusOK)
 }
 
-func readUserGroupMaskedTestIds(w http.ResponseWriter, userGroup string){
+func readUserGroupMaskedTestIds(w http.ResponseWriter, userGroup string) {
 	content, err := ioutil.ReadFile("storage/config/user_groups_masks/" + userGroup + ".txt")
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
@@ -314,7 +312,7 @@ func convertToKeyValue(arr []*KeyValuePair) []KeyValue {
 	return copyArr
 }
 
-func testReportToTestResult(tr TestReport) TestResult{
+func testReportToTestResult(tr TestReport) TestResult {
 	return TestResult{
 		TestId:         uint64(tr.TestId),
 		Timestamp:      timestamppb.New(tr.Timestamp),
@@ -324,7 +322,7 @@ func testReportToTestResult(tr TestReport) TestResult{
 	}
 }
 
-func testResultToTestReport(tr TestResult) TestReport{
+func testResultToTestReport(tr TestResult) TestReport {
 	return TestReport{
 		TestId:         float64(tr.TestId),
 		ReportPriority: float64(tr.ReportPriority),

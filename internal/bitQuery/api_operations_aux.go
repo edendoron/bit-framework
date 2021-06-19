@@ -3,7 +3,6 @@ package bitQuery
 import (
 	. "../../configs/rafael.com/bina/bit"
 	. "../apiResponseHandlers"
-	. "../models"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -24,7 +23,7 @@ func bitStatusQueryHandler(w http.ResponseWriter, req *http.Request, requestedDa
 	}
 	switch requestedData {
 	case "bit_status":
-		bitStatusList := BitStatusList{}
+		var bitStatusList []BitStatus
 		err = json.NewDecoder(resp.Body).Decode(&bitStatusList)
 		if err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
@@ -35,7 +34,13 @@ func bitStatusQueryHandler(w http.ResponseWriter, req *http.Request, requestedDa
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
-		ApiResponseHandler(w, resp.StatusCode, bitStatusList.String(), nil)
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		err = json.NewEncoder(w).Encode(&bitStatusList)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusOK)
 	case "report":
 		report := TestResult{}
 		err = json.NewDecoder(resp.Body).Decode(&report)
@@ -82,6 +87,8 @@ func getUserGroupsFiltering(userGroup string) ([]uint64, error) {
 	params.Add("config_user_groups_filtering", "")
 	params.Add("id", userGroup)
 
+	req.URL.RawQuery = params.Encode()
+
 	client := &http.Client{}
 
 	storageResponse, err := client.Do(req)
@@ -102,13 +109,13 @@ func getUserGroupsFiltering(userGroup string) ([]uint64, error) {
 	return res, nil
 }
 
-func filterBitStatus(statusList *BitStatusList, userGroup string) error {
+func filterBitStatus(statusList *[]BitStatus, userGroup string) error {
 	maskedTestIds, err := getUserGroupsFiltering(userGroup)
 	if err != nil {
 		return err
 	}
 
-	for _, status := range statusList.StatusList {
+	for _, status := range *statusList {
 		n := 0
 		found := false
 		for _, failure := range status.Failures {

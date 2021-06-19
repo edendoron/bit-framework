@@ -2,7 +2,7 @@
   "description": {
     "unit_name": "system test check",
     "test_name": "temperature test",
-    "test_id": 2,
+    "test_id": 3,
     "bit_type": [
       "CBIT"
     ],

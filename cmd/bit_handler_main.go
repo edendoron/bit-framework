@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	log.Printf("Server started - bit-storage-access")
+	log.Printf("Server started - bit-handler")
 
 	os.Setenv("HANDLERTRIGGERPERIOD", "1")
 	os.Setenv("HANDLERTRIGGERBITTYPE", "CBIT")

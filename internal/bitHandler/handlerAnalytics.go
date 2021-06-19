@@ -5,7 +5,9 @@ import (
 	. "../models"
 	"bytes"
 	"encoding/json"
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -14,15 +16,21 @@ import (
 type BitAnalyzer struct {
 	ConfigFailures []Failure
 	Reports        []TestResult
-	SavedFailures  []extendedFailure
+	SavedFailures  []ExtendedFailure
 	Status         BitStatus
 }
 
-type extendedFailure struct {
-	failure Failure
+type ExtendedFailure struct {
+	Failure Failure
 	time    time.Time
 	count   uint64
 }
+
+func (e *ExtendedFailure) Reset() { *e = ExtendedFailure{} }
+
+func (e *ExtendedFailure) String() string { return proto.CompactTextString(e) }
+
+func (e *ExtendedFailure) ProtoMessage() {}
 
 // exported methods
 
@@ -79,50 +87,60 @@ type extendedFailure struct {
 //
 //}
 
+const layout = "2006-January-02 15:4:5"
+
 func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 	// read config failures
 	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
 	if err != nil {
-		// TODO: handle error
+		log.Printf("error create storage request")
 		return
 	}
-	//defer req.Body.Close()
+	//TODO: defer req.Body.Close()
 
 	params := req.URL.Query()
-	params.Add("key", keyValue)
+	params.Add(keyValue, "")
+	req.URL.RawQuery = params.Encode()
 
 	client := &http.Client{}
 
 	storageResponse, err := client.Do(req)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
-		// TODO: handle error
-		return
+		log.Fatalln("error reading failures from storage")
 	}
-	defer storageResponse.Body.Close()
 
 	switch keyValue {
-	case "config_failure":
+	case "config_failures":
 		err = json.NewDecoder(storageResponse.Body).Decode(&a.ConfigFailures)
-	case "forever_failure":
+	case "forever_failures":
 		err = json.NewDecoder(storageResponse.Body).Decode(&a.SavedFailures)
 	}
 	if err != nil {
-		// TODO: handle error
-		return
+		log.Println("error reading " + keyValue + " from storage")
+	}
+
+	err = storageResponse.Body.Close()
+	if err != nil {
+		log.Printf("error close storage response body")
 	}
 }
 
 func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
 	if err != nil {
-		// TODO: handle error
+		log.Printf("error create storage request")
 		return
 	}
 	//defer req.Body.Close()
 
+	endTime := time.Now()
+	startTime, _ := time.Parse(layout, "2021-April-15 12:00:00")
 	params := req.URL.Query()
-	params.Add("key", "report")
-	params.Add("duration", d.String())
+	params.Add("reports", "")
+	params.Add("filter", "time")
+	params.Add("start", startTime.Format(layout))
+	params.Add("end", endTime.Format(layout))
+	req.URL.RawQuery = params.Encode()
 
 	client := &http.Client{}
 
@@ -131,13 +149,17 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 		// TODO: handle error
 		return
 	}
-	defer storageResponse.Body.Close()
 
 	err = json.NewDecoder(storageResponse.Body).Decode(&a.Reports)
 	if err != nil {
-		// TODO: handle error
+		log.Printf("error decode storage response body")
 		return
 	}
+	err = storageResponse.Body.Close()
+	if err != nil {
+		log.Printf("error close storage response body")
+	}
+
 }
 
 func (a *BitAnalyzer) Crosscheck() {
@@ -155,8 +177,8 @@ func (a *BitAnalyzer) Crosscheck() {
 			}
 
 			// insert failures to SavedFailures
-			timedFailure := extendedFailure{
-				failure: failure,
+			timedFailure := ExtendedFailure{
+				Failure: failure,
 				time:    timestamp.AsTime(),
 				count:   countFailed,
 			}
@@ -175,24 +197,34 @@ func (a *BitAnalyzer) Crosscheck() {
 
 func (a *BitAnalyzer) WriteBitStatus() {
 
-	//TODO: handle error
-	jsonStatus, _ := json.MarshalIndent(a.Status, "", " ")
+	jsonStatus, err := json.MarshalIndent(a.Status, "", " ")
+	if err != nil {
+		log.Printf("error marshal bit_status")
+		return
+	}
 
 	message := KeyValue{
 		Key:   "bit_status",
 		Value: string(jsonStatus),
 	}
 
-	//TODO: handle error
-	jsonMessage, _ := json.MarshalIndent(message, "", " ")
+	jsonMessage, err := json.MarshalIndent(message, "", " ")
+	if err != nil {
+		log.Printf("error marshal bit_status")
+		return
+	}
+
 	postBody := bytes.NewReader(jsonMessage)
 
 	storageResponse, err := http.Post(storageDataWriteURL, "application/json; charset=UTF-8", postBody)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
-		//TODO: handle this error
+		log.Printf("error post bit_status to storage")
 		return
 	}
-	defer storageResponse.Body.Close()
+	err = storageResponse.Body.Close()
+	if err != nil {
+		log.Printf("error close storage response body")
+	}
 
 	a.cleanBitStatus()
 }
@@ -200,7 +232,7 @@ func (a *BitAnalyzer) WriteBitStatus() {
 func (a *BitAnalyzer) FilterSavedFailures() {
 	n := 0
 	for _, item := range a.SavedFailures {
-		isResetIndication := item.failure.ReportDuration.Indication == FailureReportDuration_LATCH_UNTIL_RESET
+		isResetIndication := item.Failure.ReportDuration.Indication == FailureReportDuration_LATCH_UNTIL_RESET
 		if !isResetIndication {
 			// keep saved failure for next trigger check
 			a.SavedFailures[n] = item
@@ -220,12 +252,12 @@ func (a *BitAnalyzer) updateBitStatus(maskedUserGroups map[string]int) {
 	n := 0
 	for _, item := range a.SavedFailures {
 		masked := checkMasked(maskedUserGroups, item)
-		indication := item.failure.ReportDuration.Indication
+		indication := item.Failure.ReportDuration.Indication
 		switch indication {
 		case FailureReportDuration_NO_LATCH:
 			a.insertReportedFailureBitStatus(masked, item)
 		case FailureReportDuration_NUM_OF_SECONDS:
-			if uint32(time.Since(item.time)) < item.failure.ReportDuration.IndicationSeconds {
+			if uint32(time.Since(item.time)) < item.Failure.ReportDuration.IndicationSeconds {
 				//keep saved failure for next trigger check
 				a.SavedFailures[n] = item
 				n++
@@ -244,11 +276,11 @@ func (a *BitAnalyzer) updateBitStatus(maskedUserGroups map[string]int) {
 	a.SavedFailures = a.SavedFailures[:n]
 }
 
-func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item extendedFailure) {
+func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item ExtendedFailure) {
 	if !masked {
 		// insert failure to BitStatus
 		reportedFailure := &BitStatus_RportedFailure{
-			FailureData: item.failure.Description,
+			FailureData: item.Failure.Description,
 			Timestamp:   timestamppb.New(item.time),
 			Count:       item.count,
 		}
@@ -256,14 +288,14 @@ func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item extendedF
 	}
 }
 
-func checkMasked(maskedUserGroups map[string]int, item extendedFailure) bool {
+func checkMasked(maskedUserGroups map[string]int, item ExtendedFailure) bool {
 	countBelongGroupMask := 0
-	for _, group := range item.failure.Dependencies.BelongsToGroup {
+	for _, group := range item.Failure.Dependencies.BelongsToGroup {
 		if maskedUserGroups[group] == 1 {
 			countBelongGroupMask++
 		}
 	}
-	return countBelongGroupMask == len(item.failure.Dependencies.BelongsToGroup)
+	return countBelongGroupMask == len(item.Failure.Dependencies.BelongsToGroup)
 }
 
 func (a *BitAnalyzer) checkExaminationRule(failure Failure) (uint64, *timestamppb.Timestamp) {
@@ -392,22 +424,31 @@ func calculateThreshold(minimum float64, maximum float64, exceeding *FailureExam
 }
 
 func writeForeverFailure(failure Failure) {
-	//TODO: handle error
-	jsonForeverFailure, _ := json.MarshalIndent(failure, "", " ")
+	jsonForeverFailure, err := json.MarshalIndent(failure, "", " ")
+	if err != nil {
+		log.Printf("error marshal forever_failure")
+		return
+	}
 
 	message := KeyValue{
 		Key:   "forever_failure",
 		Value: string(jsonForeverFailure),
 	}
 
-	//TODO: handle error
-	jsonMessage, _ := json.MarshalIndent(message, "", " ")
+	jsonMessage, err := json.MarshalIndent(message, "", " ")
+	if err != nil {
+		log.Printf("error marshal forever_failure")
+		return
+	}
 	postBody := bytes.NewReader(jsonMessage)
 
 	storageResponse, err := http.Post(storageDataWriteURL, "application/json; charset=UTF-8", postBody)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
-		//TODO: handle this error
+		log.Printf("error post forever_failure to storage")
 		return
 	}
-	defer storageResponse.Body.Close()
+	err = storageResponse.Body.Close()
+	if err != nil {
+		log.Printf("error close storage response body")
+	}
 }

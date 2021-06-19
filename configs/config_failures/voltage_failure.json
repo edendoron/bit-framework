@@ -27,8 +27,8 @@
   "examination_rule": {
     "matching_field": "volts",
     "matching_tag": {
-      "key": "zone",
-      "value": "north"
+      "key": "hostname",
+      "value": "server02"
     },
     "failure_criteria": {
       "value_criteria": {
@@ -49,7 +49,7 @@
   },
   "report_duration": {
     "indication": 3,
-    "indication_seconds": 4
+    "indication_seconds": 2
   },
   "dependencies": {
     "belongs_to_group": [

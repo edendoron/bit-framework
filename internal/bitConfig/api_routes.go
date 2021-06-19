@@ -8,7 +8,7 @@ import (
 )
 
 func ConfigIndex(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello bit-history-curator!")
+	fmt.Fprintf(w, "Hello bit-config!")
 }
 
 var ConfigRoutes = Routes{

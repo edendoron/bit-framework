@@ -2,7 +2,6 @@ package bitHandler
 
 import (
 	. "../models"
-	"fmt"
 	"time"
 )
 
@@ -33,8 +32,8 @@ func StatusScheduler() {
 			}
 		case <-ResetIndicationChannel:
 			analyzer.FilterSavedFailures()
-		case epoch := <-ticker.C:
-			fmt.Println(epoch)
+		case <-ticker.C:
+			//fmt.Println(epoch)
 			go func() {
 				analyzer.ReadReportsFromStorage(d)
 				analyzer.Crosscheck()

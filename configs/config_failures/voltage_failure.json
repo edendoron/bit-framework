@@ -48,8 +48,8 @@
     }
   },
   "report_duration": {
-    "indication": 3,
-    "indication_seconds": 2
+    "indication": 0,
+    "indication_seconds": 600
   },
   "dependencies": {
     "belongs_to_group": [

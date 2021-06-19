@@ -163,21 +163,24 @@ func readReports(w http.ResponseWriter, start string, end string, filter string)
 					if err != nil {
 						ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
 					}
-					temp := TestResult{}
+					var temp TestResult
 					err = proto.Unmarshal(protoReport, &temp)
 					if err != nil {
 						ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 					}
 					reports = append(reports, temp)
 				}
-
 			}
 			return nil
 		})
 		if err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			}
-	err = json.NewEncoder(w).Encode(&reports)
+	response := make([]TestReport, len(reports))
+	for i, report := range reports {
+		response[i] = testResultToTestReport(report)
+	}
+	err = json.NewEncoder(w).Encode(&response)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}

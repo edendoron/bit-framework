@@ -1,22 +1,24 @@
-import React, {useEffect, useState} from 'react';
-import Axios from 'axios';
+import React, {useCallback, useEffect, useState} from 'react';
 import './App.css';
-import {Box, Card, CardContent, CardHeader, createStyles, Grid, makeStyles} from '@material-ui/core'
+import {getReports, getBitStatus} from './utils/queryAPI';
+import {Box, Button, Card, CardContent, CardHeader, createStyles, Grid, makeStyles, Paper} from '@material-ui/core'
 import {Selector} from "./components/Selector";
 import {DatePicker} from "./components/DatePicker";
 
-const STORAGE_DATA_READ_URL = 'http://localhost:8082/data/read';
-const queryTypes = ['Reports', 'BIT Status', 'Config Failures'];
+const queryTypes = ['Reports', 'BIT Status'];
 const userGroups = ['group1', 'group2', 'group3', 'group4', 'groupRafael', 'TemperatureCelsius group', 'group general', 'groupField'];
 const filterOptions = ['time', 'tag', 'field'];
-// const currentDate = new Date();
-// const fullDate = currentDate.getFullYear() + currentDate.getMonth() +
 
 const useStyles = makeStyles(() =>
     createStyles({
         dateGrid: {
             marginTop: 20,
         },
+        paper: {
+            width: '50%',
+            marginLeft: '25%',
+            marginTop: 20,
+        }
     },
 ));
 
@@ -29,7 +31,7 @@ export const App = () => {
     const [isDisabled, setDisabled] = useState(true);
     const [startTime, setStartTime] = useState(new Date());
     const [endTime, setEndTime] = useState(new Date());
-    const [data, setData] = useState();
+    const [data, setData] = useState('');
 
     const changeQueryType = (event: React.ChangeEvent<{ value: unknown }>) => {
         setQueryType(event.target.value as string);
@@ -55,21 +57,15 @@ export const App = () => {
         setEndTime(event.target.value as Date)
     }
 
-    useEffect(() => {
-        Axios.get(STORAGE_DATA_READ_URL + '?bit_status=').then((res) => {
-            setData(res.data)
-        })
-    }, [queryType]);
-
-    const renderData = () => {
+    const renderData = async () => {
         switch (queryType){
             case 'Reports':
+                setData(await getReports(filter, startTime, endTime));
                 break;
             case 'BIT Status':
+                setData(await getBitStatus(userGroup, startTime, endTime, filter));
                 break;
         }
-        if (data) return <Box>{data}</Box>
-        return <div/>;
     }
 
     return (
@@ -97,7 +93,11 @@ export const App = () => {
                         />
                     </Grid>}
                 </CardContent>
+                <Button onClick={renderData}>
+                    send
+                </Button>
             </Card>
+            <Paper className={classes.paper}>{JSON.stringify(data)}</Paper>
         </Box>
     </Box>
     );

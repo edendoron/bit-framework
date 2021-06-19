@@ -28,7 +28,7 @@ export const DatePicker: FC<DatePickerProps> = ({currentDate, onChange, placehol
     return (
         <form className={classes.container} noValidate>
             <TextField
-                id="datetime-local"
+                id={`datetime-local ${placeholder}`}
                 label={placeholder}
                 type="datetime-local"
                 defaultValue={new Date()}

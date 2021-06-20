@@ -23,7 +23,7 @@ func BitStatusQuery(w http.ResponseWriter, r *http.Request) {
 
 	req.URL.RawQuery = params.Encode()
 
-	bitStatusQueryHandler(w, req, "bit_status", userGroup)
+	QueryHandler(w, req, "bit_status", userGroup)
 }
 
 func ReportQuery(w http.ResponseWriter, r *http.Request) {
@@ -36,12 +36,12 @@ func ReportQuery(w http.ResponseWriter, r *http.Request) {
 	filter := r.URL.Query()["filter"][0]
 
 	params := req.URL.Query()
-	params.Add("report", "")
+	params.Add("reports", "")
 	params.Add("filter", filter)
 
 	paramsHandler(r, params, filter)
 
 	req.URL.RawQuery = params.Encode()
 
-	bitStatusQueryHandler(w, req, "report", "")
+	QueryHandler(w, req, "reports", "")
 }

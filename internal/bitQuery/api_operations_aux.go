@@ -3,6 +3,7 @@ package bitQuery
 import (
 	. "../../configs/rafael.com/bina/bit"
 	. "../apiResponseHandlers"
+	. "../models"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -12,7 +13,7 @@ import (
 
 const storageDataReadURL = "http://localhost:8082/data/read"
 
-func bitStatusQueryHandler(w http.ResponseWriter, req *http.Request, requestedData string, userGroup string) {
+func QueryHandler(w http.ResponseWriter, req *http.Request, requestedData string, userGroup string) {
 	client := &http.Client{}
 	fmt.Println(req.URL.String())
 
@@ -41,14 +42,20 @@ func bitStatusQueryHandler(w http.ResponseWriter, req *http.Request, requestedDa
 			log.Println(err)
 		}
 		w.WriteHeader(http.StatusOK)
-	case "report":
-		report := TestResult{}
-		err = json.NewDecoder(resp.Body).Decode(&report)
+	case "reports":
+		var reports []TestReport
+		err = json.NewDecoder(resp.Body).Decode(&reports)
 		if err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
-		ApiResponseHandler(w, resp.StatusCode, report.String(), nil)
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		err = json.NewEncoder(w).Encode(&reports)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusOK)
 	}
 
 	err = resp.Body.Close()
@@ -61,9 +68,10 @@ func paramsHandler(r *http.Request, params url.Values, filter string) {
 	switch filter {
 	// cases are almost identical, query keys and var names are different for readability - need support on client side
 	case "time":
-		timestamps := r.URL.Query()["timestamps"]
-		params.Add("start", timestamps[0])
-		params.Add("end", timestamps[1])
+		start := r.URL.Query()["start"]
+		end := r.URL.Query()["end"]
+		params.Add("start", start[0])
+		params.Add("end", end[0])
 	case "tag":
 		tag := r.URL.Query()["tag"]
 		params.Add("tag_key", tag[0])

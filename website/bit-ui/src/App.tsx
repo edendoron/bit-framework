@@ -1,7 +1,8 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import './App.css';
 import {getReports, getBitStatus} from './utils/queryAPI';
 import {Box, Button, Card, CardContent, CardHeader, createStyles, Grid, makeStyles, Paper} from '@material-ui/core'
+import ReactJson from 'react-json-view';
 import {Selector} from "./components/Selector";
 import {DatePicker} from "./components/DatePicker";
 
@@ -18,9 +19,14 @@ const useStyles = makeStyles(() =>
             width: '50%',
             marginLeft: '25%',
             marginTop: 20,
-        }
+        },
+        sendButton: {
+            border: '3px solid #D48166 ',
+            marginBottom: '10px',
+        },
     },
 ));
+
 
 export const App = () => {
     const classes = useStyles();
@@ -31,11 +37,12 @@ export const App = () => {
     const [isDisabled, setDisabled] = useState(true);
     const [startTime, setStartTime] = useState(new Date());
     const [endTime, setEndTime] = useState(new Date());
-    const [data, setData] = useState('');
+    const [data, setData] = useState<object>();
 
     const changeQueryType = (event: React.ChangeEvent<{ value: unknown }>) => {
         setQueryType(event.target.value as string);
         setFilter('');
+        setData({});
     }
 
     const changeUserGroup = (event: React.ChangeEvent<{ value: unknown }>) => {
@@ -93,11 +100,12 @@ export const App = () => {
                         />
                     </Grid>}
                 </CardContent>
-                <Button onClick={renderData}>
-                    send
+                <Button className={classes.sendButton} onClick={renderData}>
+                    Send
                 </Button>
             </Card>
-            <Paper className={classes.paper}>{JSON.stringify(data)}</Paper>
+            {data &&
+                <ReactJson src={data} theme='monokai' displayDataTypes={false} quotesOnKeys={false}/>}
         </Box>
     </Box>
     );

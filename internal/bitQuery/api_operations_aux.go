@@ -68,10 +68,10 @@ func paramsHandler(r *http.Request, params url.Values, filter string) {
 	switch filter {
 	// cases are almost identical, query keys and var names are different for readability - need support on client side
 	case "time":
-		start := r.URL.Query()["start"]
-		end := r.URL.Query()["end"]
-		params.Add("start", start[0])
-		params.Add("end", end[0])
+		start := r.URL.Query()["start"][0]
+		end := r.URL.Query()["end"][0]
+		params.Add("start", start)
+		params.Add("end", end)
 	case "tag":
 		tag := r.URL.Query()["tag"]
 		params.Add("tag_key", tag[0])

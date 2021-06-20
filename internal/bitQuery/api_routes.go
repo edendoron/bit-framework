@@ -36,7 +36,7 @@ var QueryRoutes = Routes{
 	Route{
 		Name:        "ReportQuery",
 		Method:      strings.ToUpper("Get"),
-		Pattern:     "/report",
+		Pattern:     "/reports",
 		HandlerFunc: ReportQuery,
 	},
 }

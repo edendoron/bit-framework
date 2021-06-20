@@ -1,47 +1,72 @@
-import React, {useEffect, useState} from 'react';
-import Axios from 'axios';
+import React, {useCallback, useEffect, useState} from 'react';
 import './App.css';
-import {Box, Card, CardContent, CardHeader} from '@material-ui/core'
+import {getReports, getBitStatus} from './utils/queryAPI';
+import {Box, Button, Card, CardContent, CardHeader, createStyles, Grid, makeStyles, Paper} from '@material-ui/core'
 import {Selector} from "./components/Selector";
+import {DatePicker} from "./components/DatePicker";
 
-const STORAGE_DATA_READ_URL = 'http://localhost:8082/data/read'
-const queryTypes = ['Reports', 'BIT Status', 'Config Failures']
-const userGroups = ['group1', 'group2', 'group3', 'group4', 'groupRafael', 'TemperatureCelsius group', 'group general', 'groupField']
+const queryTypes = ['Reports', 'BIT Status'];
+const userGroups = ['group1', 'group2', 'group3', 'group4', 'groupRafael', 'TemperatureCelsius group', 'group general', 'groupField'];
+const filterOptions = ['time', 'tag', 'field'];
+
+const useStyles = makeStyles(() =>
+    createStyles({
+        dateGrid: {
+            marginTop: 20,
+        },
+        paper: {
+            width: '50%',
+            marginLeft: '25%',
+            marginTop: 20,
+        }
+    },
+));
 
 export const App = () => {
+    const classes = useStyles();
+
     const [queryType, setQueryType] = useState('');
     const [userGroup, setUserGroup] = useState('');
-    const [data, setData] = useState();
+    const [filter, setFilter] = useState('');
+    const [isDisabled, setDisabled] = useState(true);
+    const [startTime, setStartTime] = useState(new Date());
+    const [endTime, setEndTime] = useState(new Date());
+    const [data, setData] = useState('');
 
     const changeQueryType = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setQueryType(event.target.value as string)
+        setQueryType(event.target.value as string);
+        setFilter('');
     }
 
     const changeUserGroup = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setUserGroup(event.target.value as string)
+        setUserGroup(event.target.value as string);
+        setFilter('');
+        setQueryType('');
+        setDisabled(false);
     }
 
-    useEffect(() => {
-        Axios.get(STORAGE_DATA_READ_URL + '?config_failures').then((res) => {
-            setData(res.data)
-        })
-    }, [queryType]);
+    const changeFilter = (event: React.ChangeEvent<{ value: unknown }>) => {
+        setFilter((event.target.value as string));
+    }
 
-    const renderData = () => {
+    const changeStartTime = (event: React.ChangeEvent<{ value: unknown }>) => {
+        setStartTime(event.target.value as Date)
+    }
+
+    const changeEndTime = (event: React.ChangeEvent<{ value: unknown }>) => {
+        setEndTime(event.target.value as Date)
+    }
+
+    const renderData = async () => {
         switch (queryType){
             case 'Reports':
+                setData(await getReports(filter, startTime, endTime));
                 break;
             case 'BIT Status':
+                setData(await getBitStatus(userGroup, startTime, endTime, filter));
                 break;
-            case 'Config Files':
-                // fetchFilteringRules()
         }
-        return <div/>;
     }
-
-    // const renderSearch = () => {
-    //
-    // }
 
     return (
     <Box bgcolor="#373A36" minHeight="100vh" textAlign="center">
@@ -49,12 +74,30 @@ export const App = () => {
             <Card>
                 <CardHeader title="BIT Framework Query System"/>
                 <CardContent>
-                    <Selector menuItems={userGroups} queryType={userGroup} onChange={changeUserGroup}/>
-                    {userGroup !== '' && <Selector menuItems={queryTypes} queryType={queryType} onChange={changeQueryType}/>}
-
-                    {renderData()}
+                    <Grid container justify='space-evenly'>
+                        <Selector menuItems={userGroups} currentValue={userGroup} onChange={changeUserGroup} isDisabled={false}/>
+                        <Selector menuItems={queryTypes} currentValue={queryType} onChange={changeQueryType} isDisabled={isDisabled}/>
+                        <Selector menuItems={filterOptions} currentValue={filter} onChange={changeFilter} isDisabled={isDisabled}/>
+                    </Grid>
+                    {filter === 'time' &&
+                    <Grid className={classes.dateGrid} container justify='space-evenly'>
+                        <DatePicker
+                            currentDate={startTime}
+                            onChange={changeStartTime}
+                            placeholder='start time'
+                        />
+                        <DatePicker
+                            currentDate={endTime}
+                            onChange={changeEndTime}
+                            placeholder={'end time'}
+                        />
+                    </Grid>}
                 </CardContent>
+                <Button onClick={renderData}>
+                    send
+                </Button>
             </Card>
+            <Paper className={classes.paper}>{JSON.stringify(data)}</Paper>
         </Box>
     </Box>
     );

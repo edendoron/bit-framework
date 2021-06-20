@@ -5,6 +5,7 @@ import (
 	. "../models"
 	"bytes"
 	"encoding/json"
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"net/http"
@@ -14,71 +15,24 @@ import (
 
 type BitAnalyzer struct {
 	ConfigFailures []Failure
-	Reports        []TestResult
-	SavedFailures  []extendedFailure
+	Reports        []TestReport
+	SavedFailures  []ExtendedFailure
 	Status         BitStatus
 }
 
-type extendedFailure struct {
-	failure Failure
+type ExtendedFailure struct {
+	Failure Failure
 	time    time.Time
 	count   uint64
 }
 
-// exported methods
+func (e *ExtendedFailure) Reset() { *e = ExtendedFailure{} }
 
-//func (a *BitAnalyzer) ReadFailureFromLocalConfigFile() {
-//	failure := Failure{}
-//	content, err := ioutil.ReadFile("./configs/config_failures/voltage_failure.json")
-//	if err != nil {
-//		//TODO: handle error
-//	}
-//	err = json.Unmarshal(content, &failure)
-//	if err != nil {
-//		//TODO: handle error
-//	}
-//	failure.ExaminationRule.MatchingTag.Key = []byte("zone")
-//	failure.ExaminationRule.MatchingTag.Value = []byte("north")
-//
-//	a.ConfigFailures = append(a.ConfigFailures, failure)
-//}
-//
-//func (a *BitAnalyzer) ReadReportsFromLocalConfigFile() {
-//	reportBody := TestReport{}
-//	content, err := ioutil.ReadFile("./storage/reports/reports.json")
-//	if err != nil {
-//		//TODO: handle error
-//	}
-//	err = json.Unmarshal(content, &reportBody)
-//	if err != nil {
-//		//TODO: handle error
-//	}
-//	tagset1 := KeyValuePair{
-//		Key:   []byte("zone"),
-//		Value: []byte("north"),
-//	}
-//	tagset2 := KeyValuePair{
-//		Key:   []byte("hostname"),
-//		Value: []byte("server02"),
-//	}
-//	fieldset1 := KeyValuePair{
-//		Key:   []byte("TemperatureCelsius"),
-//		Value: []byte("-40.8"),
-//	}
-//	fieldset2 := KeyValuePair{
-//		Key:   []byte("volts"),
-//		Value: []byte("7.8"),
-//	}
-//	testResult := TestResult{
-//		TestId:         uint64(reportBody.TestId),
-//		Timestamp:      timestamppb.New(reportBody.Timestamp),
-//		TagSet:         []*KeyValuePair{&tagset1, &tagset2},
-//		FieldSet:       []*KeyValuePair{&fieldset1, &fieldset2},
-//		ReportPriority: uint32(reportBody.ReportPriority),
-//	}
-//	a.Reports = append(a.Reports, testResult)
-//
-//}
+func (e *ExtendedFailure) String() string { return proto.CompactTextString(e) }
+
+func (e *ExtendedFailure) ProtoMessage() {}
+
+// exported methods
 
 const layout = "2006-January-02 15:4:5"
 
@@ -97,8 +51,8 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 
 	client := &http.Client{}
 
-	storageResponse, err := client.Do(req)
-	if err != nil || storageResponse.StatusCode != http.StatusOK {
+	storageResponse, e := client.Do(req)
+	if e != nil || storageResponse.StatusCode != http.StatusOK {
 		log.Fatalln("error reading failures from storage")
 	}
 
@@ -126,8 +80,9 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 	}
 	//defer req.Body.Close()
 
-	endTime := time.Now()
-	startTime, _ := time.Parse(layout, "2021-April-15 12:00:00")
+	//TODO: update time frame according to d
+	endTime, _ := time.Parse(layout, "2021-April-15 12:00:00")
+	startTime, _ := time.Parse(layout, "2021-April-15 11:00:00")
 	params := req.URL.Query()
 	params.Add("reports", "")
 	params.Add("filter", "time")
@@ -165,14 +120,14 @@ func (a *BitAnalyzer) Crosscheck() {
 
 		if countFailed > 0 {
 			// update masked groups map
-			for _, userGroup := range failure.Dependencies.BelongsToGroup {
+			for _, userGroup := range failure.Dependencies.MasksOtherGroup {
 				maskedUserGroups[userGroup] = 1
 			}
 
 			// insert failures to SavedFailures
-			timedFailure := extendedFailure{
-				failure: failure,
-				time:    timestamp.AsTime(),
+			timedFailure := ExtendedFailure{
+				Failure: failure,
+				time:    timestamp,
 				count:   countFailed,
 			}
 			a.SavedFailures = append(a.SavedFailures, timedFailure)
@@ -225,7 +180,7 @@ func (a *BitAnalyzer) WriteBitStatus() {
 func (a *BitAnalyzer) FilterSavedFailures() {
 	n := 0
 	for _, item := range a.SavedFailures {
-		isResetIndication := item.failure.ReportDuration.Indication == FailureReportDuration_LATCH_UNTIL_RESET
+		isResetIndication := item.Failure.ReportDuration.Indication == FailureReportDuration_LATCH_UNTIL_RESET
 		if !isResetIndication {
 			// keep saved failure for next trigger check
 			a.SavedFailures[n] = item
@@ -245,12 +200,12 @@ func (a *BitAnalyzer) updateBitStatus(maskedUserGroups map[string]int) {
 	n := 0
 	for _, item := range a.SavedFailures {
 		masked := checkMasked(maskedUserGroups, item)
-		indication := item.failure.ReportDuration.Indication
+		indication := item.Failure.ReportDuration.Indication
 		switch indication {
 		case FailureReportDuration_NO_LATCH:
 			a.insertReportedFailureBitStatus(masked, item)
 		case FailureReportDuration_NUM_OF_SECONDS:
-			if uint32(time.Since(item.time)) < item.failure.ReportDuration.IndicationSeconds {
+			if uint32(time.Since(item.time)) < item.Failure.ReportDuration.IndicationSeconds {
 				//keep saved failure for next trigger check
 				a.SavedFailures[n] = item
 				n++
@@ -269,11 +224,11 @@ func (a *BitAnalyzer) updateBitStatus(maskedUserGroups map[string]int) {
 	a.SavedFailures = a.SavedFailures[:n]
 }
 
-func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item extendedFailure) {
+func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item ExtendedFailure) {
 	if !masked {
 		// insert failure to BitStatus
 		reportedFailure := &BitStatus_RportedFailure{
-			FailureData: item.failure.Description,
+			FailureData: item.Failure.Description,
 			Timestamp:   timestamppb.New(item.time),
 			Count:       item.count,
 		}
@@ -281,17 +236,18 @@ func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item extendedF
 	}
 }
 
-func checkMasked(maskedUserGroups map[string]int, item extendedFailure) bool {
+// return true iff all of the BelongsToGroup are masked by other failures
+func checkMasked(maskedUserGroups map[string]int, item ExtendedFailure) bool {
 	countBelongGroupMask := 0
-	for _, group := range item.failure.Dependencies.BelongsToGroup {
+	for _, group := range item.Failure.Dependencies.BelongsToGroup {
 		if maskedUserGroups[group] == 1 {
 			countBelongGroupMask++
 		}
 	}
-	return countBelongGroupMask == len(item.failure.Dependencies.BelongsToGroup)
+	return countBelongGroupMask == len(item.Failure.Dependencies.BelongsToGroup)
 }
 
-func (a *BitAnalyzer) checkExaminationRule(failure Failure) (uint64, *timestamppb.Timestamp) {
+func (a *BitAnalyzer) checkExaminationRule(failure Failure) (uint64, time.Time) {
 	examinationRule := failure.ExaminationRule
 	timeCriteria := examinationRule.FailureCriteria.TimeCriteria
 	// count failed tests
@@ -302,21 +258,21 @@ func (a *BitAnalyzer) checkExaminationRule(failure Failure) (uint64, *timestampp
 		// TODO: make sure that reports from storage are sorted by timestamp
 		return a.checkSlidingWindow(timeCriteria, examinationRule)
 	default:
-		return 0, timestamppb.Now()
+		return 0, time.Now()
 	}
 }
 
-func (a *BitAnalyzer) checkSlidingWindow(timeCriteria *FailureExaminationRule_FailureCriteria_FailureTimeCriteria, examinationRule *FailureExaminationRule) (uint64, *timestamppb.Timestamp) {
+func (a *BitAnalyzer) checkSlidingWindow(timeCriteria *FailureExaminationRule_FailureCriteria_FailureTimeCriteria, examinationRule *FailureExaminationRule) (uint64, time.Time) {
 	var countExaminationRuleViolation uint64 = 0
-	timestamp := timestamppb.Now()
+	timestamp := time.Now()
 	var countTimeCriteriaViolation uint32 = 0
 	begin, end := 0, 0
 	for end < len(a.Reports) {
 		startWindowTest := a.Reports[begin]
 		endWindowTest := a.Reports[end]
 
-		timeDiff := endWindowTest.Timestamp.Seconds - startWindowTest.Timestamp.Seconds
-		if timeDiff <= int64(timeCriteria.WindowSize) {
+		timeDiff := endWindowTest.Timestamp.Sub(startWindowTest.Timestamp)
+		if timeDiff.Seconds() <= float64(timeCriteria.WindowSize) {
 			if failedValueCriteria(&endWindowTest, examinationRule) {
 				countTimeCriteriaViolation++
 				timestamp = endWindowTest.Timestamp
@@ -339,9 +295,9 @@ func (a *BitAnalyzer) checkSlidingWindow(timeCriteria *FailureExaminationRule_Fa
 	return countExaminationRuleViolation, timestamp
 }
 
-func (a *BitAnalyzer) checkNoWindow(examinationRule *FailureExaminationRule, timeCriteria *FailureExaminationRule_FailureCriteria_FailureTimeCriteria) (uint64, *timestamppb.Timestamp) {
+func (a *BitAnalyzer) checkNoWindow(examinationRule *FailureExaminationRule, timeCriteria *FailureExaminationRule_FailureCriteria_FailureTimeCriteria) (uint64, time.Time) {
 	var countExaminationRuleViolation uint64 = 0
-	timestamp := timestamppb.Now()
+	timestamp := time.Now()
 	var countTimeCriteriaViolation uint32 = 0
 	for _, test := range a.Reports {
 		if failedValueCriteria(&test, examinationRule) {
@@ -355,7 +311,7 @@ func (a *BitAnalyzer) checkNoWindow(examinationRule *FailureExaminationRule, tim
 	return countExaminationRuleViolation, timestamp
 }
 
-func failedValueCriteria(test *TestResult, examinationRule *FailureExaminationRule) bool {
+func failedValueCriteria(test *TestReport, examinationRule *FailureExaminationRule) bool {
 
 	fieldValue := checkField(test, examinationRule)
 	if fieldValue == "" || !checkTag(test, examinationRule) {
@@ -366,7 +322,7 @@ func failedValueCriteria(test *TestResult, examinationRule *FailureExaminationRu
 }
 
 // check field existing
-func checkField(test *TestResult, examinationRule *FailureExaminationRule) string {
+func checkField(test *TestReport, examinationRule *FailureExaminationRule) string {
 	for _, field := range test.FieldSet {
 		if string(field.Key) == examinationRule.MatchingField {
 			return string(field.Value)
@@ -376,13 +332,14 @@ func checkField(test *TestResult, examinationRule *FailureExaminationRule) strin
 }
 
 // check tag existing
-func checkTag(test *TestResult, examinationRule *FailureExaminationRule) bool {
-	for _, tag := range test.TagSet {
-		if string(tag.Key) == string(examinationRule.MatchingTag.Key) && string(tag.Value) == string(examinationRule.MatchingTag.Value) {
-			return true
-		}
-	}
-	return false
+func checkTag(test *TestReport, examinationRule *FailureExaminationRule) bool {
+	//for _, tag := range test.TagSet {
+	//	if tag.Key == string(examinationRule.MatchingTag.Key) && tag.Value == string(examinationRule.MatchingTag.Value) {
+	//		return true
+	//	}
+	//}
+	//return false
+	return true
 }
 
 // check failure value criteria

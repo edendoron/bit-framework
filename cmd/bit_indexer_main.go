@@ -2,11 +2,14 @@ package main
 
 import (
 	indexer "../internal/bitIndexer"
+	. "../internal/models"
 	"../server"
 	"log"
 )
 
 func main() {
+
+	RedirectLogger("./internal/bitIndexer")
 
 	log.Printf("Server started - bit-indexer")
 

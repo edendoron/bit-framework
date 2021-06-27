@@ -4,8 +4,8 @@ import (
 	. "../models"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	prqueue "github.com/coraxster/PriorityQueue"
+	"log"
 	m "math"
 	"net/http"
 	"time"
@@ -193,7 +193,7 @@ func postIndexer(postBodyRef *bytes.Reader) {
 		return
 	}
 	go func() {
-		fmt.Println(time.Now(), "total size to send:", postBodyRef.Size()+indexerTotalExtraSize)
+		log.Println(time.Now(), "total size to send:", postBodyRef.Size()+indexerTotalExtraSize)
 		indexerRes, err := http.Post(postIndexerUrl, "application/json; charset=UTF-8", postBodyRef)
 		if err != nil || indexerRes.StatusCode != http.StatusOK {
 			//TODO: handle this error

@@ -5,7 +5,6 @@ import (
 	. "../apiResponseHandlers"
 	. "../models"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -15,7 +14,7 @@ const storageDataReadURL = "http://localhost:8082/data/read"
 
 func QueryHandler(w http.ResponseWriter, req *http.Request, requestedData string, userGroup string) {
 	client := &http.Client{}
-	fmt.Println(req.URL.String())
+	//fmt.Println(req.URL.String())
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {

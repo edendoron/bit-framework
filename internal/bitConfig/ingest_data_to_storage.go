@@ -5,7 +5,6 @@ import (
 	. "../models"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -22,7 +21,6 @@ func PostFailuresData() {
 		return
 	}
 	for i, f := range files {
-		fmt.Println(f.Name())
 		content, e := ioutil.ReadFile("./configs/config_failures/" + f.Name())
 		if e != nil {
 			log.Println("error reading config_failures file number ", i+1)
@@ -74,7 +72,6 @@ func PostGroupFilterData() {
 		return
 	}
 	for i, f := range files {
-		fmt.Println(f.Name())
 		content, e := ioutil.ReadFile("./configs/config_user_groups_filtering/" + f.Name())
 		if e != nil {
 			log.Println("error reading config_user_groups_filtering file number ", i+1)

@@ -2,6 +2,7 @@ package main
 
 import (
 	exporter "../internal/bitTestResultsExporter"
+	. "../internal/models"
 	"../server"
 	"fmt"
 	"log"
@@ -11,6 +12,8 @@ import (
 )
 
 func main() {
+
+	RedirectLogger("./internal/bitTestResultsExporter")
 
 	log.Printf("Server started - bit-test-result-exporter")
 

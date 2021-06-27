@@ -2,11 +2,14 @@ package main
 
 import (
 	query "../internal/bitQuery"
+	. "../internal/models"
 	"../server"
 	"log"
 )
 
 func main() {
+
+	RedirectLogger("./internal/bitQuery")
 
 	log.Printf("Server started - bit-query")
 

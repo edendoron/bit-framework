@@ -2,6 +2,7 @@ package main
 
 import (
 	handler "../internal/bitHandler"
+	. "../internal/models"
 	"../server"
 	"fmt"
 	"log"
@@ -10,6 +11,9 @@ import (
 )
 
 func main() {
+
+	RedirectLogger("./internal/bitHandler")
+
 	log.Printf("Server started - bit-handler")
 
 	os.Setenv("HANDLERTRIGGERPERIOD", "1")

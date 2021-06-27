@@ -1,8 +1,10 @@
 package models
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -20,4 +22,15 @@ func Logger(inner http.Handler, name string) http.Handler {
 			time.Since(start),
 		)
 	})
+}
+
+func RedirectLogger(servicePath string) {
+	currTime := time.Now().Format("20060102150405")
+
+	fileName := servicePath + "/log/" + currTime + "_logs.txt"
+	file, e := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if e != nil {
+		fmt.Println(e)
+	}
+	log.SetOutput(file)
 }

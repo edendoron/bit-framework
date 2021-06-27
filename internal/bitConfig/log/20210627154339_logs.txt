@@ -1,0 +1,7 @@
+2021/06/27 15:43:39 Service started - bit-config
+2021/06/27 15:43:41 error post to storage config_failures file number  1
+2021/06/27 15:43:41 Post "http://localhost:8082/data/write": dial tcp [::1]:8082: connectex: No connection could be made because the target machine actively refused it.
+2021/06/27 15:43:43 error post to storage config_user_groups_filtering file number  1
+2021/06/27 15:43:43 Post "http://localhost:8082/data/write": dial tcp [::1]:8082: connectex: No connection could be made because the target machine actively refused it.
+2021/06/27 15:43:43 Service ended - bit-config
+2021/06/27 15:43:43 http: Server closed

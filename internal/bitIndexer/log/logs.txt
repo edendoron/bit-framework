@@ -1,0 +1,4 @@
+2021/06/27 15:22:51 Server started - bit-indexer
+2021/06/27 15:22:51 another line
+2021/06/27 15:23:23 Server started - bit-indexer
+2021/06/27 15:23:23 another line

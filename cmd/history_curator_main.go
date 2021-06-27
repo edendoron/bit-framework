@@ -2,12 +2,16 @@ package main
 
 import (
 	history "../internal/bitHistoryCurator"
+	. "../internal/models"
 	"../server"
 	"context"
 	"log"
 )
 
 func main() {
+
+	RedirectLogger("./internal/bitHistoryCurator")
+
 	log.Printf("Service started - bit-history-curator")
 
 	router := history.HistoryCuratorRoutes.NewRouter()

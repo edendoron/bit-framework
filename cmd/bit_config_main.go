@@ -2,12 +2,16 @@ package main
 
 import (
 	config "../internal/bitConfig"
+	. "../internal/models"
 	"../server"
 	"context"
 	"log"
 )
 
 func main() {
+
+	RedirectLogger("./internal/bitConfig")
+
 	log.Printf("Service started - bit-config")
 
 	router := config.ConfigRoutes.NewRouter()

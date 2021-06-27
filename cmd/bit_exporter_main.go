@@ -4,7 +4,6 @@ import (
 	exporter "../internal/bitTestResultsExporter"
 	. "../internal/models"
 	"../server"
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -26,7 +25,7 @@ func main() {
 	exporter.CurrentBW.Size = float32(size)
 	exporter.CurrentBW.UnitsPerSecond = units
 
-	fmt.Println("default bandwidth size is:", exporter.CurrentBW.Size, "UPS:", exporter.CurrentBW.UnitsPerSecond)
+	log.Println("default bandwidth size is:", exporter.CurrentBW.Size, "UPS:", exporter.CurrentBW.UnitsPerSecond)
 
 	router := exporter.ExporterRoutes.NewRouter()
 

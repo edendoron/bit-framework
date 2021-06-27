@@ -4,7 +4,6 @@ import (
 	handler "../internal/bitHandler"
 	. "../internal/models"
 	"../server"
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -25,7 +24,7 @@ func main() {
 	handler.CurrentTrigger.PeriodSec = periodSec
 	handler.CurrentTrigger.BitType = bitType
 
-	fmt.Println("default trigger period per second is:", handler.CurrentTrigger.PeriodSec, "Type is:", handler.CurrentTrigger.BitType)
+	log.Println("default trigger period per second is:", handler.CurrentTrigger.PeriodSec, "Type is:", handler.CurrentTrigger.BitType)
 
 	router := handler.HandlerRoutes.NewRouter()
 

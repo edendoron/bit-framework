@@ -11,10 +11,6 @@ var TriggerChannel = make(chan TriggerBody)
 
 var ResetIndicationChannel = make(chan bool)
 
-const storageDataBaseUrl = "http://localhost:8082"
-const storageDataReadURL = storageDataBaseUrl + "/data/read"
-const storageDataWriteURL = storageDataBaseUrl + "/data/write"
-
 func StatusScheduler() {
 	d := time.Duration(CurrentTrigger.PeriodSec) * time.Second
 	var analyzer BitAnalyzer

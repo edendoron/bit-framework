@@ -5,12 +5,10 @@ import (
 	"time"
 )
 
-const bitStorageAccessUrl = "http://localhost:8082"
-
 func RemoveAgedData(agedTime time.Time) {
 	//fmt.Println(agedTime)
 
-	req, err := http.NewRequest(http.MethodDelete, bitStorageAccessUrl, nil)
+	req, err := http.NewRequest(http.MethodDelete, Configs.StorageDeleteURL, nil)
 	if err != nil {
 		//TODO: handle error
 		return

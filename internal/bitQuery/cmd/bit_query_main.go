@@ -1,21 +1,23 @@
 package main
 
 import (
-	query "../internal/bitQuery"
-	. "../internal/models"
-	"../server"
+	query ".."
+	"../../../server"
+	. "../../models"
 	"log"
 )
 
 func main() {
 
-	RedirectLogger("./internal/bitQuery")
+	query.LoadConfigs()
+
+	RedirectLogger(query.Configs.BitQueryPath)
 
 	log.Printf("Server started - bit-query")
 
 	router := query.QueryRoutes.NewRouter()
 
-	srv := server.NewServer(router, ":8085")
+	srv := server.NewServer(router, query.Configs.BitQueryPort)
 
 	//TODO: need to change to ListenAndServeTLS in order to support https
 	//err := srv.ListenAndServeTLS("../localhost.crt", "../localhost.key")

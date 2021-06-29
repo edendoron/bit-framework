@@ -1,21 +1,23 @@
 package main
 
 import (
-	storage "../internal/bitStorageAccess"
-	. "../internal/models"
-	"../server"
+	storage ".."
+	"../../../server"
+	. "../../models"
 	"log"
 )
 
 func main() {
 
-	RedirectLogger("./internal/bitStorageAccess")
+	storage.LoadConfigs()
+
+	RedirectLogger(storage.Configs.BitStoragePath)
 
 	log.Printf("Server started - bit-storage-access")
 
 	router := storage.StorageAccessRoutes.NewRouter()
 
-	srv := server.NewServer(router, ":8082")
+	srv := server.NewServer(router, storage.Configs.BitStoragePort)
 
 	//TODO: need to change to ListenAndServeTLS in order to support https
 	err := srv.ListenAndServe()

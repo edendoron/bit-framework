@@ -1,22 +1,24 @@
 package main
 
 import (
-	config "../internal/bitConfig"
-	. "../internal/models"
-	"../server"
+	config ".."
+	"../../../server"
+	. "../../models"
 	"context"
 	"log"
 )
 
 func main() {
 
-	RedirectLogger("./internal/bitConfig")
+	config.LoadConfigs()
 
-	log.Printf("Service started - bit-config")
+	RedirectLogger(config.Configs.BitConfigPath)
+
+	log.Printf("Service started - bit-config " + config.Configs.BitConfigPort)
 
 	router := config.ConfigRoutes.NewRouter()
 
-	srv := server.NewServer(router, ":8084")
+	srv := server.NewServer(router, config.Configs.BitConfigPort)
 
 	go func() {
 		config.PostFailuresData()

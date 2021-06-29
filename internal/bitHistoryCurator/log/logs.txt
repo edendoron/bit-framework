@@ -1,3 +1,0 @@
-2021/06/27 15:19:11 Service started - bit-history-curator
-2021/06/27 15:19:23 Service ended - bit-history-curator
-2021/06/27 15:19:23 http: Server closed

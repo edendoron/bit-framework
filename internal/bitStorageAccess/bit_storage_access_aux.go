@@ -3,7 +3,7 @@ package bitStorageAccess
 import (
 	. "../../configs/rafael.com/bina/bit"
 	. "../apiResponseHandlers"
-	. "../bitHandler"
+	handler "../bitHandler"
 	. "../models"
 	"encoding/json"
 	"fmt"
@@ -69,7 +69,7 @@ func writeConfigFailures(w http.ResponseWriter, failureToWrite *string) {
 }
 
 func writeExtendedFailures(w http.ResponseWriter, failureToWrite *string) {
-	failure := ExtendedFailure{}
+	failure := handler.ExtendedFailure{}
 	if err := json.Unmarshal([]byte(*failureToWrite), &failure); err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
@@ -213,7 +213,7 @@ func readConfigFailures(w http.ResponseWriter) {
 }
 
 func readExtendedFailures(w http.ResponseWriter) {
-	var foreverFailures []ExtendedFailure
+	var foreverFailures []handler.ExtendedFailure
 	files, err := ioutil.ReadDir("storage/config/perm_filtering_rules")
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
@@ -223,7 +223,7 @@ func readExtendedFailures(w http.ResponseWriter) {
 		if err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		}
-		decodedContent := ExtendedFailure{}
+		decodedContent := handler.ExtendedFailure{}
 		err = proto.Unmarshal(content, &decodedContent)
 		if err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)

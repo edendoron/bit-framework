@@ -34,11 +34,9 @@ func (e *ExtendedFailure) ProtoMessage() {}
 
 // exported methods
 
-const layout = "2006-January-02 15:4:5"
-
 func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 	// read config failures
-	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
+	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
 	if err != nil {
 		log.Printf("error create storage request")
 		return
@@ -73,13 +71,14 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 }
 
 func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
-	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
+	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
 	if err != nil {
 		log.Printf("error create storage request")
 		return
 	}
 	//defer req.Body.Close()
 
+	const layout = "2006-January-02 15:4:5"
 	//TODO: update time frame according to d
 	endTime, _ := time.Parse(layout, "2021-April-15 12:00:00")
 	startTime, _ := time.Parse(layout, "2021-April-15 11:00:00")
@@ -164,7 +163,7 @@ func (a *BitAnalyzer) WriteBitStatus() {
 
 	postBody := bytes.NewReader(jsonMessage)
 
-	storageResponse, err := http.Post(storageDataWriteURL, "application/json; charset=UTF-8", postBody)
+	storageResponse, err := http.Post(Configs.StorageWriteURL, "application/json; charset=UTF-8", postBody)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
 		log.Printf("error post bit_status to storage")
 		return
@@ -392,7 +391,7 @@ func writeForeverFailure(failure Failure) {
 	}
 	postBody := bytes.NewReader(jsonMessage)
 
-	storageResponse, err := http.Post(storageDataWriteURL, "application/json; charset=UTF-8", postBody)
+	storageResponse, err := http.Post(Configs.StorageWriteURL, "application/json; charset=UTF-8", postBody)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
 		log.Printf("error post forever_failure to storage")
 		return

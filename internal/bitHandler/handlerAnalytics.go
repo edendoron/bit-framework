@@ -5,7 +5,6 @@ import (
 	. "../models"
 	"bytes"
 	"encoding/json"
-	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"net/http"
@@ -14,23 +13,12 @@ import (
 )
 
 type BitAnalyzer struct {
-	ConfigFailures []Failure
-	Reports        []TestReport
-	SavedFailures  []ExtendedFailure
-	Status         BitStatus
+	ConfigFailures    []Failure
+	Reports           []TestReport
+	LastEpochReportId float64
+	SavedFailures     []ExtendedFailure
+	Status            BitStatus
 }
-
-type ExtendedFailure struct {
-	Failure Failure
-	time    time.Time
-	count   uint64
-}
-
-func (e *ExtendedFailure) Reset() { *e = ExtendedFailure{} }
-
-func (e *ExtendedFailure) String() string { return proto.CompactTextString(e) }
-
-func (e *ExtendedFailure) ProtoMessage() {}
 
 // exported methods
 
@@ -235,17 +223,6 @@ func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item ExtendedF
 	}
 }
 
-// return true iff all of the BelongsToGroup are masked by other failures
-func checkMasked(maskedUserGroups map[string]int, item ExtendedFailure) bool {
-	countBelongGroupMask := 0
-	for _, group := range item.Failure.Dependencies.BelongsToGroup {
-		if maskedUserGroups[group] == 1 {
-			countBelongGroupMask++
-		}
-	}
-	return countBelongGroupMask == len(item.Failure.Dependencies.BelongsToGroup)
-}
-
 func (a *BitAnalyzer) checkExaminationRule(failure Failure) (uint64, time.Time) {
 	examinationRule := failure.ExaminationRule
 	timeCriteria := examinationRule.FailureCriteria.TimeCriteria
@@ -308,6 +285,17 @@ func (a *BitAnalyzer) checkNoWindow(examinationRule *FailureExaminationRule, tim
 		}
 	}
 	return countExaminationRuleViolation, timestamp
+}
+
+// return true iff all of the BelongsToGroup are masked by other failures
+func checkMasked(maskedUserGroups map[string]int, item ExtendedFailure) bool {
+	countBelongGroupMask := 0
+	for _, group := range item.Failure.Dependencies.BelongsToGroup {
+		if maskedUserGroups[group] == 1 {
+			countBelongGroupMask++
+		}
+	}
+	return countBelongGroupMask == len(item.Failure.Dependencies.BelongsToGroup)
 }
 
 func failedValueCriteria(test *TestReport, examinationRule *FailureExaminationRule) bool {

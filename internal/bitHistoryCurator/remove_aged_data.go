@@ -1,17 +1,14 @@
 package bitHistoryCurator
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 )
 
-const bitStorageAccessUrl = "http://localhost:8082"
-
 func RemoveAgedData(agedTime time.Time) {
-	fmt.Println(agedTime)
+	//fmt.Println(agedTime)
 
-	req, err := http.NewRequest(http.MethodDelete, bitStorageAccessUrl, nil)
+	req, err := http.NewRequest(http.MethodDelete, Configs.StorageDeleteURL, nil)
 	if err != nil {
 		//TODO: handle error
 		return
@@ -25,7 +22,7 @@ func RemoveAgedData(agedTime time.Time) {
 
 	client := &http.Client{}
 
-	fmt.Println(req.URL.String())
+	//fmt.Println(req.URL.String())
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {

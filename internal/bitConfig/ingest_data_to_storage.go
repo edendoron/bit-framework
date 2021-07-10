@@ -5,25 +5,21 @@ import (
 	. "../models"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
 
-const storageURL = "http://localhost:8082/data/write"
-
 func PostFailuresData() {
 	failure := Failure{}
-	files, err := ioutil.ReadDir("./configs/config_failures")
+	files, err := ioutil.ReadDir(Configs.BitConfigFailuresPath)
 	if err != nil {
 		log.Println("error reading config_failures dir")
 		log.Println(err)
 		return
 	}
 	for i, f := range files {
-		fmt.Println(f.Name())
-		content, e := ioutil.ReadFile("./configs/config_failures/" + f.Name())
+		content, e := ioutil.ReadFile(Configs.BitConfigFailuresPath + f.Name())
 		if e != nil {
 			log.Println("error reading config_failures file number ", i+1)
 			log.Println(e)
@@ -50,7 +46,7 @@ func PostFailuresData() {
 			return
 		}
 		postBodyBuf := bytes.NewReader(postBody)
-		storageResp, e := http.Post(storageURL, "application/json; charset=UTF-8", postBodyBuf)
+		storageResp, e := http.Post(Configs.StorageWriteURL, "application/json; charset=UTF-8", postBodyBuf)
 		if e != nil || storageResp.StatusCode != http.StatusOK {
 			log.Println("error post to storage config_failures file number ", i+1)
 			log.Println(e)
@@ -67,15 +63,14 @@ func PostFailuresData() {
 
 func PostGroupFilterData() {
 	groupFilter := UserGroupsFiltering_FilteredFailures{}
-	files, err := ioutil.ReadDir("./configs/config_user_groups_filtering")
+	files, err := ioutil.ReadDir(Configs.BitConfigUserGroupPath)
 	if err != nil {
 		log.Println("error reading config_user_groups_filtering dir")
 		log.Println(err)
 		return
 	}
 	for i, f := range files {
-		fmt.Println(f.Name())
-		content, e := ioutil.ReadFile("./configs/config_user_groups_filtering/" + f.Name())
+		content, e := ioutil.ReadFile(Configs.BitConfigUserGroupPath + f.Name())
 		if e != nil {
 			log.Println("error reading config_user_groups_filtering file number ", i+1)
 			log.Println(e)
@@ -101,7 +96,7 @@ func PostGroupFilterData() {
 			return
 		}
 		postBodyBuf := bytes.NewReader(postBody)
-		storageResp, e := http.Post(storageURL, "application/json; charset=UTF-8", postBodyBuf)
+		storageResp, e := http.Post(Configs.StorageWriteURL, "application/json; charset=UTF-8", postBodyBuf)
 		if e != nil || storageResp.StatusCode != http.StatusOK {
 			log.Println("error post to storage config_user_groups_filtering file number ", i+1)
 			log.Println(e)

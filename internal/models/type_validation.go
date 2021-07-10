@@ -1,8 +1,8 @@
 package models
 
 import (
-	"fmt"
 	"github.com/go-playground/validator"
+	"log"
 )
 
 func ValidateType(response interface{}) error {
@@ -10,7 +10,7 @@ func ValidateType(response interface{}) error {
 	err := v.Struct(response)
 	if err != nil {
 		for _, e := range err.(validator.ValidationErrors) {
-			fmt.Println(e.Error())
+			log.Println(e.Error())
 		}
 		return err
 	}

@@ -6,7 +6,7 @@ import (
 )
 
 func BitStatusQuery(w http.ResponseWriter, r *http.Request) {
-	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
+	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
@@ -27,7 +27,7 @@ func BitStatusQuery(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReportQuery(w http.ResponseWriter, r *http.Request) {
-	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
+	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return

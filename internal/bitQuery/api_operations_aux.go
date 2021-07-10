@@ -5,17 +5,14 @@ import (
 	. "../apiResponseHandlers"
 	. "../models"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 )
 
-const storageDataReadURL = "http://localhost:8082/data/read"
-
 func QueryHandler(w http.ResponseWriter, req *http.Request, requestedData string, userGroup string) {
 	client := &http.Client{}
-	fmt.Println(req.URL.String())
+	//fmt.Println(req.URL.String())
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
@@ -85,7 +82,7 @@ func paramsHandler(r *http.Request, params url.Values, filter string) {
 func getUserGroupsFiltering(userGroup string) ([]uint64, error) {
 	var res []uint64
 
-	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
+	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
 	if err != nil {
 		return res, err
 	}

@@ -27,24 +27,27 @@ func PostBandwidth(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		ApiResponseHandler(w, http.StatusBadRequest, "Bad request", err)
+		return
 	}
 	// validate that data from the user is of type Bandwidth
 	err = ValidateType(request)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusBadRequest, "Bad request", err)
+		return
 	}
 
 	// update current bandwidth
 	CurrentBW = request
 
+	//validate "unitsPerSecond" units and "size" != 0
+	if calculateSizeLimit(CurrentBW) == 0 {
+		ApiResponseHandler(w, http.StatusBadRequest, "Bad request", err)
+		return
+	}
+
 	modifyBandwidthSize(&CurrentBW)
 
 	// return ApiResponse response to the user
-	//err = json.NewEncoder(w).Encode(writeBandwidth(request))
-	//if err != nil {
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//	log.Fatalln(err)
-	//}
 	ApiResponseHandler(w, http.StatusOK, "Bandwidth updated!", nil)
 }
 
@@ -53,6 +56,7 @@ func ExporterPostReport(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusBadRequest, "Bad request", err)
+		return
 	}
 	// validate that data from the user is of type ReportBody
 	err = ValidateType(request)

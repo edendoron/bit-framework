@@ -1,9 +1,11 @@
 import React, {FC} from 'react';
 import {createStyles, makeStyles, TextField, Theme} from "@material-ui/core";
+import {MuiPickersUtilsProvider, KeyboardDateTimePicker} from "@material-ui/pickers";
+import DateFnsUtils from "@date-io/date-fns";
 
 interface DatePickerProps {
     currentDate: Date,
-    onChange: (event: React.ChangeEvent<{ value: unknown }>) => void,
+    onDateChange: (date: Date) => void,
     placeholder: string,
 }
 
@@ -17,28 +19,25 @@ const useStyles = makeStyles((theme: Theme) =>
             marginLeft: theme.spacing(1),
             marginRight: theme.spacing(1),
             width: 200,
-
+            color: '#D48166',
         },
     }),
 );
 
-export const DatePicker: FC<DatePickerProps> = ({currentDate, onChange, placeholder}) => {
+export const DatePicker: FC<DatePickerProps> = ({currentDate, onDateChange, placeholder}) => {
     const classes = useStyles();
 
     return (
-        <form className={classes.container} noValidate>
-            <TextField
-                id={`datetime-local ${placeholder}`}
+        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+            <KeyboardDateTimePicker
+                variant="inline"
+                ampm={false}
                 label={placeholder}
-                type="datetime-local"
-                defaultValue={new Date()}
-                className={classes.textField}
-                InputLabelProps={{
-                    shrink: true,
-                }}
                 value={currentDate}
-                onChange={onChange}
+                onChange={(date) => onDateChange(date as Date)}
+                onError={console.log}
+                format="yyyy/MM/dd HH:mm:ss"
             />
-        </form>
+        </MuiPickersUtilsProvider>
     )
 }

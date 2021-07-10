@@ -9,7 +9,7 @@ export const getBitStatus = async (userGroup: string, startTime: Date, endTime: 
     const end = dayjs(endTime).format(dateFormat);
     const res = await axios.get(BIT_QUERY_URL + '/status',
         {params: {user_group: userGroup, start: start , end: end, filter: filter}})
-    return res.data;
+    return JSON.stringify(res.data);
 }
 
 export const getReports = async (filter: string, startTime?: Date, endTime?: Date) => {
@@ -17,5 +17,5 @@ export const getReports = async (filter: string, startTime?: Date, endTime?: Dat
     const end = dayjs(endTime).format(dateFormat);
     const res = await axios.get(BIT_QUERY_URL + '/reports',
         {params: {filter: filter, start: start, end: end}})
-    return res.data;
+    return JSON.stringify(res.data);
 }

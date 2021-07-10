@@ -11,7 +11,7 @@ import (
 func GetTrigger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	req, err := http.NewRequest(http.MethodGet, storageDataReadURL, nil)
+	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Error creating request for storage access", err)
 		return

@@ -1,10 +1,22 @@
 import React, {useState} from 'react';
 import './App.css';
 import {getReports, getBitStatus} from './utils/queryAPI';
-import {Box, Button, Card, CardContent, CardHeader, createStyles, Grid, makeStyles, Paper} from '@material-ui/core'
+import {
+    Box,
+    Button,
+    Card,
+    CardContent,
+    CardHeader,
+    createMuiTheme,
+    createStyles,
+    Grid,
+    makeStyles, MuiThemeProvider,
+} from '@material-ui/core'
 import ReactJson from 'react-json-view';
 import {Selector} from "./components/Selector";
 import {DatePicker} from "./components/DatePicker";
+import {ReportTable} from "./components/ReportTable";
+import {stringify} from "querystring";
 
 const queryTypes = ['Reports', 'BIT Status'];
 const userGroups = ['group1', 'group2', 'group3', 'group4', 'groupRafael', 'TemperatureCelsius group', 'group general', 'groupField'];
@@ -37,12 +49,12 @@ export const App = () => {
     const [isDisabled, setDisabled] = useState(true);
     const [startTime, setStartTime] = useState(new Date());
     const [endTime, setEndTime] = useState(new Date());
-    const [data, setData] = useState<object>();
+    const [data, setData] = useState<string>();
 
     const changeQueryType = (event: React.ChangeEvent<{ value: unknown }>) => {
         setQueryType(event.target.value as string);
         setFilter('');
-        setData({});
+        setData('');
     }
 
     const changeUserGroup = (event: React.ChangeEvent<{ value: unknown }>) => {
@@ -56,12 +68,12 @@ export const App = () => {
         setFilter((event.target.value as string));
     }
 
-    const changeStartTime = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setStartTime(event.target.value as Date)
+    const changeStartTime = (date: Date) => {
+        setStartTime(date)
     }
 
-    const changeEndTime = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setEndTime(event.target.value as Date)
+    const changeEndTime = (date: Date) => {
+        setEndTime(date)
     }
 
     const renderData = async () => {
@@ -75,39 +87,129 @@ export const App = () => {
         }
     }
 
+    const theme = createMuiTheme({
+        overrides: {
+            MuiFilledInput: {
+                root: {
+                    backgroundColor: 'unset'
+                }
+            }
+        }
+    })
+    // const theme = createMuiTheme({
+    //     palette: {
+    //         primary: {
+    //             main: CURRENT_THEME.main
+    //         }
+    //     },
+    //     overrides: {
+    //         MuiPickersToolbar: {
+    //             toolbar: {
+    //                 backgroundColor: CURRENT_THEME.el3
+    //             }
+    //         },
+    //         MuiPickersCalendarHeader: {
+    //             iconButton: {
+    //                 backgroundColor: "transparent",
+    //                 color: CURRENT_THEME.main
+    //             },
+    //             dayLabel: {
+    //                 color: CURRENT_THEME.textInv //days in calendar
+    //             },
+    //             transitionContainer: {
+    //                 color: CURRENT_THEME.textInv
+    //             }
+    //         },
+    //         MuiPickersBasePicker: {
+    //             pickerView: {
+    //                 backgroundColor: CURRENT_THEME.background
+    //             }
+    //             //   backgroundColor: CURRENT_THEME.el3,
+    //         },
+    //         MuiPickersDay: {
+    //             day: {
+    //                 color: CURRENT_THEME.textInv //days in calendar
+    //             }
+    //             //   daySelected: {
+    //             //     backgroundColor: CURRENT_THEME.main, //calendar circle
+    //             //   },
+    //             //   dayDisabled: {
+    //             //     color: CURRENT_THEME.main, // current day
+    //             //   },
+    //             //   current: {
+    //             //     color: CURRENT_THEME.main,
+    //             //   },
+    //         },
+    //         // MuiButton:{
+    //         //   textPrimary:{
+    //         //     color: CURRENT_THEME.main,
+    //         //   }
+    //         // },
+    //
+    //         MuiDialogActions: {
+    //             root: {
+    //                 backgroundColor: CURRENT_THEME.background
+    //             }
+    //         },
+    //         MuiPickersClock: {
+    //             clock: {
+    //                 backgroundColor: CURRENT_THEME.el2
+    //             }
+    //             //   pin:{
+    //             //     backgroundColor: CURRENT_THEME.main,
+    //             //   },
+    //             // },
+    //             // MuiPickersClockPointer:{
+    //             //   pointer:{
+    //             //     backgroundColor: CURRENT_THEME.main,
+    //             //   },
+    //         },
+    //         MuiPickersClockNumber: {
+    //             clockNumber: {
+    //                 color: CURRENT_THEME.textInv
+    //             }
+    //             //   numberSelected: {
+    //             //     backgroundColor: CURRENT_THEME.main, //calendar circle
+    //             //   },
+    //         }
+    //     }
+    // })
+
     return (
-    <Box bgcolor="#373A36" minHeight="100vh" textAlign="center">
-        <Box bgcolor="#D48166" minHeight="100vh" marginRight="150px" marginLeft="150px">
-            <Card>
-                <CardHeader title="BIT Framework Query System"/>
-                <CardContent>
-                    <Grid container justify='space-evenly'>
-                        <Selector menuItems={userGroups} currentValue={userGroup} onChange={changeUserGroup} isDisabled={false}/>
-                        <Selector menuItems={queryTypes} currentValue={queryType} onChange={changeQueryType} isDisabled={isDisabled}/>
-                        <Selector menuItems={filterOptions} currentValue={filter} onChange={changeFilter} isDisabled={isDisabled}/>
-                    </Grid>
-                    {filter === 'time' &&
-                    <Grid className={classes.dateGrid} container justify='space-evenly'>
-                        <DatePicker
-                            currentDate={startTime}
-                            onChange={changeStartTime}
-                            placeholder='start time'
-                        />
-                        <DatePicker
-                            currentDate={endTime}
-                            onChange={changeEndTime}
-                            placeholder={'end time'}
-                        />
-                    </Grid>}
-                </CardContent>
-                <Button className={classes.sendButton} onClick={renderData}>
-                    Send
-                </Button>
-            </Card>
-            {data &&
-                <ReactJson src={data} theme='monokai' displayDataTypes={false} quotesOnKeys={false}/>}
+    <MuiThemeProvider theme={theme}>
+        <Box bgcolor="#373A36" minHeight="100vh" textAlign="center">
+            <Box bgcolor="#D48166" minHeight="100vh" marginRight="150px" marginLeft="150px">
+                <Card>
+                    <CardHeader title="BIT Framework Query System"/>
+                    <CardContent>
+                        <Grid container justify='space-evenly'>
+                            <Selector menuItems={userGroups} currentValue={userGroup} onChange={changeUserGroup} isDisabled={false}/>
+                            <Selector menuItems={queryTypes} currentValue={queryType} onChange={changeQueryType} isDisabled={isDisabled}/>
+                            <Selector menuItems={filterOptions} currentValue={filter} onChange={changeFilter} isDisabled={isDisabled}/>
+                        </Grid>
+                        {filter === 'time' &&
+                        <Grid className={classes.dateGrid} container justify='space-evenly'>
+                            <DatePicker
+                                currentDate={startTime}
+                                onDateChange={changeStartTime}
+                                placeholder='start time'
+                            />
+                            <DatePicker
+                                currentDate={endTime}
+                                onDateChange={changeEndTime}
+                                placeholder={'end time'}
+                            />
+                        </Grid>}
+                    </CardContent>
+                    <Button className={classes.sendButton} onClick={renderData}>
+                        Send
+                    </Button>
+                </Card>
+                {!! data && <ReportTable data={JSON.parse(data)}/>}
+            </Box>
         </Box>
-    </Box>
+    </MuiThemeProvider>
+
     );
 }
 

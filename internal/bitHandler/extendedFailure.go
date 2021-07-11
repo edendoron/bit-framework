@@ -8,10 +8,10 @@ import (
 )
 
 type ExtendedFailure struct {
-	failure       Failure
+	Failure       Failure
 	time          time.Time
 	failureCount  uint64
-	reportsCount  uint64
+	reportsCount  uint32
 	startReportId float64
 	endReportId   float64
 }
@@ -24,16 +24,26 @@ func (e *ExtendedFailure) ProtoMessage() {}
 
 func (e *ExtendedFailure) extendedFailureToBitStatusReportedFailure() BitStatus_RportedFailure {
 	return BitStatus_RportedFailure{
-		FailureData: e.failure.Description,
+		FailureData: e.Failure.Description,
 		Timestamp:   timestamppb.New(e.time),
 		Count:       e.failureCount,
 	}
 }
 
-func failureToExtendedFailure(failure Failure, timestamp time.Time, countFailed uint64) ExtendedFailure {
+func failuresSliceToExtendedFailuresSlice(failures []Failure) []ExtendedFailure {
+	var extendedFailures []ExtendedFailure
+	for _, fail := range failures {
+		extendedFailures = append(extendedFailures, failureToExtendedFailure(fail))
+	}
+	return extendedFailures
+}
+
+func failureToExtendedFailure(failure Failure) ExtendedFailure {
 	return ExtendedFailure{
-		failure:      failure,
-		time:         timestamp,
-		failureCount: countFailed,
+		Failure:       failure,
+		failureCount:  0,
+		reportsCount:  0,
+		startReportId: 0,
+		endReportId:   0,
 	}
 }

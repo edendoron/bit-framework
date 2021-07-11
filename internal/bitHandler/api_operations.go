@@ -82,6 +82,6 @@ func PutResetIndications(w http.ResponseWriter, r *http.Request) {
 	ResetIndicationChannel <- true
 
 	// return ApiResponse response to the user
-	ApiResponseHandler(w, http.StatusOK, "Trigger updated!", nil)
+	ApiResponseHandler(w, http.StatusOK, "Reset indications!", nil)
 	w.WriteHeader(http.StatusOK)
 }

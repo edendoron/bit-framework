@@ -27,7 +27,7 @@ func StatusScheduler() {
 				ticker.Reset(d)
 			}
 		case <-ResetIndicationChannel:
-			analyzer.FilterSavedFailures()
+			analyzer.ResetSavedFailures()
 		case epoch := <-ticker.C:
 			//fmt.Println(epoch)
 			go func() {

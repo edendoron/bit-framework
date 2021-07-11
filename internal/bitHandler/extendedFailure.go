@@ -22,7 +22,7 @@ func (e *ExtendedFailure) String() string { return proto.CompactTextString(e) }
 
 func (e *ExtendedFailure) ProtoMessage() {}
 
-func (e *ExtendedFailure) extendedFailureToBitStatusReportedFailure() BitStatus_RportedFailure {
+func (e *ExtendedFailure) ExtendedFailureToBitStatusReportedFailure() BitStatus_RportedFailure {
 	return BitStatus_RportedFailure{
 		FailureData: e.Failure.Description,
 		Timestamp:   timestamppb.New(e.time),
@@ -30,15 +30,15 @@ func (e *ExtendedFailure) extendedFailureToBitStatusReportedFailure() BitStatus_
 	}
 }
 
-func failuresSliceToExtendedFailuresSlice(failures []Failure) []ExtendedFailure {
+func FailuresSliceToExtendedFailuresSlice(failures []Failure) []ExtendedFailure {
 	var extendedFailures []ExtendedFailure
 	for _, fail := range failures {
-		extendedFailures = append(extendedFailures, failureToExtendedFailure(fail))
+		extendedFailures = append(extendedFailures, FailureToExtendedFailure(fail))
 	}
 	return extendedFailures
 }
 
-func failureToExtendedFailure(failure Failure) ExtendedFailure {
+func FailureToExtendedFailure(failure Failure) ExtendedFailure {
 	return ExtendedFailure{
 		Failure:       failure,
 		failureCount:  0,

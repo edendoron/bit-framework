@@ -341,7 +341,7 @@ func TestDependencies(t *testing.T) {
 	testTime := time.Now()
 	expectedResult := BitStatus{}
 
-	// test for masking groups, group1 should be masked
+	// test for masking groups, group1 should be masked, failure2 belongs to another group so it will be reported
 	a.ConfigFailures = []ExtendedFailure{failure1, failure2}
 	a.Reports = []TestReport{report3, report4, report5, report6}
 	expectedResult = BitStatus{
@@ -361,19 +361,21 @@ func TestDependencies(t *testing.T) {
 	a.Crosscheck(testTime)
 	if !reflect.DeepEqual(a.Status, expectedResult) {
 		t.Errorf("test failure OUT_OF range threshold, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
-		if !reflect.DeepEqual(a.Status.Failures, expectedResult.Failures) {
-			t.Errorf("test failure OUT_OF range threshold, found failures diff")
-		}
 	}
 	clearBitStatus(&a)
 
-	// test failure VALUE Exceeding type + NO_WINDOW - multiple reports violation
-	a.ConfigFailures = []ExtendedFailure{failure1}
+	// test for masking groups, "group1", "group temp" are masked, failure2 should not be reported
+	tempFailure := failure1
+	tempFailure.Failure.Dependencies.MasksOtherGroup = []string{
+		"group temp",
+		"group1",
+	}
+	a.ConfigFailures = []ExtendedFailure{tempFailure, failure2}
 	a.Reports = []TestReport{report3, report4, report5, report6}
 	expectedResult = BitStatus{
 		Failures: []*BitStatus_RportedFailure{
 			{
-				FailureData: failure1.Failure.Description,
+				FailureData: tempFailure.Failure.Description,
 				Timestamp:   timestamppb.New(testTime),
 				Count:       3,
 			},
@@ -381,13 +383,7 @@ func TestDependencies(t *testing.T) {
 	}
 	a.Crosscheck(testTime)
 	if !reflect.DeepEqual(a.Status, expectedResult) {
-		t.Errorf("test failure VALUE Exceeding type, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
-		if !reflect.DeepEqual(a.Status.Failures, expectedResult.Failures) {
-			t.Errorf("test failure VALUE Exceeding type, found failures diff")
-			if len(a.Status.Failures) > 0 && a.Status.Failures[0].Count != 3 {
-				t.Errorf("test failure count for NO_WINDOW, , expected 3, got %v", a.Status.Failures[0].Count)
-			}
-		}
+		t.Errorf("test failure OUT_OF range threshold, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
 	}
 	clearBitStatus(&a)
 }
@@ -398,6 +394,8 @@ func clearBitStatus(a *BitAnalyzer) {
 	a.Status = BitStatus{}
 	a.Reports = []TestReport{}
 }
+
+// temp variables for tests
 
 var failure0 = ExtendedFailure{
 	Failure: Failure{
@@ -586,9 +584,10 @@ var failure2 = ExtendedFailure{
 		Dependencies: &Failure_FailureDependencies{
 			BelongsToGroup: []string{
 				"group temp",
+				"group1",
 			},
 			MasksOtherGroup: []string{
-				"group1",
+				"group2",
 			},
 		},
 	},

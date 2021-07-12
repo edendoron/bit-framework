@@ -78,7 +78,7 @@ func PostTrigger(w http.ResponseWriter, r *http.Request) {
 func PutResetIndications(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	// remove un-relevant indications
+	// remove irrelevant indications
 	ResetIndicationChannel <- true
 
 	// return ApiResponse response to the user

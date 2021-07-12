@@ -178,7 +178,7 @@ func (a *BitAnalyzer) WriteBitStatus() {
 		log.Printf("error close storage response body")
 	}
 
-	a.cleanBitStatus()
+	a.CleanBitStatus()
 }
 
 func (a *BitAnalyzer) ResetSavedFailures() {
@@ -194,11 +194,11 @@ func (a *BitAnalyzer) ResetSavedFailures() {
 	a.SavedFailures = a.SavedFailures[:n]
 }
 
-// internal methods
-
-func (a *BitAnalyzer) cleanBitStatus() {
+func (a *BitAnalyzer) CleanBitStatus() {
 	a.Status = BitStatus{}
 }
+
+// internal methods
 
 func (a *BitAnalyzer) filterSavedFailures() {
 	n := 0
@@ -207,7 +207,7 @@ func (a *BitAnalyzer) filterSavedFailures() {
 		switch indication {
 		case FailureReportDuration_NO_LATCH:
 		case FailureReportDuration_NUM_OF_SECONDS:
-			if uint32(time.Since(item.time)) < item.Failure.ReportDuration.IndicationSeconds {
+			if uint32(time.Since(item.time).Seconds()) < item.Failure.ReportDuration.IndicationSeconds {
 				//keep saved failure for next trigger check
 				a.SavedFailures[n] = item
 				n++
@@ -274,7 +274,7 @@ func (a *BitAnalyzer) checkSlidingWindow(i int) uint64 {
 	}
 	end := len(a.Reports) + 1
 	for idx := range a.Reports {
-		if a.Reports[i].TestId == extFailure.endReportId {
+		if a.Reports[idx].TestId == extFailure.endReportId {
 			end = idx + 1
 			break
 		}
@@ -330,7 +330,7 @@ func (a *BitAnalyzer) checkNoWindow(i int) uint64 {
 	var countExaminationRuleViolation uint64 = 0
 	begin := len(a.Reports) + 1
 	for idx := range a.Reports {
-		if a.Reports[i].TestId == extFailure.endReportId {
+		if a.Reports[idx].TestId == extFailure.endReportId {
 			begin = idx + 1
 			break
 		}
@@ -363,6 +363,7 @@ func (a *BitAnalyzer) UpdateReports(reports []TestReport) {
 	n := sort.Search(len(a.Reports), func(i int) bool { return !a.Reports[i].Timestamp.Before(a.LastEpochReportTime) })
 	a.Reports = append(a.Reports[n:], reports...)
 	sort.Stable(ByTime(a.Reports))
+	a.LastEpochReportTime = a.Reports[len(a.Reports)-1].Timestamp
 }
 
 // return true iff all of the BelongsToGroup are masked by other failures
@@ -436,9 +437,9 @@ func calculateThreshold(minimum float64, maximum float64, criteria *FailureExami
 		deviation *= 0.01 * (maximum - minimum)
 	}
 	if criteria.ThresholdMode == FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF {
-		return minimum + deviation, maximum - deviation
-	} else {
 		return minimum - deviation, maximum + deviation
+	} else {
+		return minimum + deviation, maximum - deviation
 	}
 }
 

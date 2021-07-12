@@ -28,6 +28,7 @@ func StatusScheduler() {
 			}
 		case <-ResetIndicationChannel:
 			analyzer.ResetSavedFailures()
+			analyzer.CleanBitStatus()
 		case epoch := <-ticker.C:
 			//fmt.Println(epoch)
 			go func() {

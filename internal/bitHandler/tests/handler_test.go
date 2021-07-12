@@ -189,25 +189,207 @@ func TestExaminationRule(t *testing.T) {
 	}
 	clearBitStatus(&a)
 
-	// test failure SLIDING - multiple reports violation, reports meet the requirements between time ranges
-	// test failure SLIDING - multiple reports violation, trigger larger than window
-	// test failure SLIDING - multiple reports violation, trigger smaller than window
+	// test failure SLIDING - multiple reports violation, reports meet the requirements between time ranges + trigger smaller than window
+	a.ConfigFailures = []ExtendedFailure{failure2}
+	a.Reports = []TestReport{report3, report5, report6}
+	expectedResult = BitStatus{}
+	// only 2 violations in 0-3 sec window, failure not found
+	a.Crosscheck(testTime)
+	if !reflect.DeepEqual(a.Status, expectedResult) {
+		t.Errorf("test failure SLIDING - multiple reports violation between time ranges, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
+	}
+	time.Sleep(2 * time.Second)
+	// another violation in 0-3 sec window, and 3 violation between 1-4 sec window, failure count should be 2
+	reports := []TestReport{report10, report9}
+	a.UpdateReports(reports)
+	expectedResult = BitStatus{
+		Failures: []*BitStatus_RportedFailure{
+			{
+				FailureData: failure2.Failure.Description,
+				Timestamp:   timestamppb.New(testTime),
+				Count:       2,
+			},
+		},
+	}
+	a.Crosscheck(testTime)
+	if !reflect.DeepEqual(a.Status, expectedResult) {
+		t.Errorf("test failure SLIDING - multiple reports violation between time ranges, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
+	}
+	clearBitStatus(&a)
 
 }
 
 // test for report duration, reliability of Duration method
 func TestReportDuration(t *testing.T) {
-	// test for LATCH_UNTIL_RESET indication
+	var a BitAnalyzer
+
+	testTime := time.Now()
+	expectedResult := BitStatus{}
+
+	// test for NO_LATCH indication
+	a.ConfigFailures = []ExtendedFailure{failure0}
+	a.Reports = []TestReport{report0}
+	// failure is reported in bit status after first crosscheck
+	a.Crosscheck(testTime)
+	// failure should disappear after CleanBitStatus which happens in the end of WriteBitStatus
+	a.CleanBitStatus()
+	expectedResult = BitStatus{}
+	if !reflect.DeepEqual(a.Status, expectedResult) {
+		t.Errorf("test for NO_LATCH indication, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
+	}
+	clearBitStatus(&a)
+
+	// test for LATCH_UNTIL_RESET + LATCH_FOREVER indication
+
+	a.ConfigFailures = []ExtendedFailure{failure1}
+	a.Reports = []TestReport{report3, report4, report5, report6}
+	a.Crosscheck(testTime)
+	// bitStatus contains 1 failure with count 3
+
+	a.CleanBitStatus()
+	a.Reports = []TestReport{}
+	// bitStatus is empty, analyzer should keep UNTIL_RESET failure
+	a.Crosscheck(testTime.Add(time.Second))
+	expectedResult = BitStatus{
+		Failures: []*BitStatus_RportedFailure{
+			{
+				FailureData: failure1.Failure.Description,
+				Timestamp:   timestamppb.New(testTime),
+				Count:       3,
+			},
+		},
+	}
+	if !reflect.DeepEqual(a.Status, expectedResult) {
+		t.Errorf("test for LATCH_UNTIL_RESET indication, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
+	}
+	// filter LATCH_UNTIL_RESET indication failures
+	a.ResetSavedFailures()
+	a.CleanBitStatus()
+
+	expectedResult = BitStatus{}
+	if !reflect.DeepEqual(a.Status, expectedResult) {
+		t.Errorf("test for LATCH_UNTIL_RESET indication, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
+	}
+	clearBitStatus(&a)
 
 	// test for LATCH_FOREVER indication
+	a.ConfigFailures = []ExtendedFailure{failure2}
+	a.Reports = []TestReport{report3, report4, report5, report6}
+	a.Crosscheck(testTime)
+	// bitStatus contains 1 failure
+
+	a.CleanBitStatus()
+	a.Reports = []TestReport{}
+	// bitStatus is empty, analyzer should keep forever failure
+	a.Crosscheck(testTime.Add(time.Second))
+	expectedResult = BitStatus{
+		Failures: []*BitStatus_RportedFailure{
+			{
+				FailureData: failure2.Failure.Description,
+				Timestamp:   timestamppb.New(testTime),
+				Count:       1,
+			},
+		},
+	}
+	if !reflect.DeepEqual(a.Status, expectedResult) {
+		t.Errorf("test for LATCH_FOREVER indication, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
+	}
+
+	clearBitStatus(&a)
 
 	// test for NUM_OF_SECONDS indication
+	a.ConfigFailures = []ExtendedFailure{failure3}
+	a.Reports = []TestReport{report1, report6, report7, report8, report9}
+	expectedResult = BitStatus{
+		Failures: []*BitStatus_RportedFailure{
+			{
+				FailureData: failure3.Failure.Description,
+				Timestamp:   timestamppb.New(testTime),
+				Count:       2,
+			},
+		},
+	}
+	a.Crosscheck(testTime)
+	// bitStatus contains 1 failure with count 2
+	a.CleanBitStatus()
+	a.Reports = []TestReport{}
+	// bitStatus is empty, analyzer should keep failure for 3 more seconds
+	time.Sleep(time.Second)
+	// bitStatus is empty, analyzer should keep failure for 2 more seconds
+	a.Crosscheck(testTime)
+	// bitStatus should contain 1 failure
+	if !reflect.DeepEqual(a.Status, expectedResult) {
+		t.Errorf("test for NUM_OF_SECONDS indication, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
+	}
+
+	a.CleanBitStatus()
+	a.Reports = []TestReport{}
+	time.Sleep(3 * time.Second)
+	a.Crosscheck(testTime)
+	// bitStatus should be empty
+	expectedResult = BitStatus{}
+	if !reflect.DeepEqual(a.Status, expectedResult) {
+		t.Errorf("test for NUM_OF_SECONDS indication, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
+	}
+	clearBitStatus(&a)
 }
 
 // test for Dependencies, reliability of masking
 func TestDependencies(t *testing.T) {
-	// test for masking groups, group1 should be masked
+	var a BitAnalyzer
 
+	testTime := time.Now()
+	expectedResult := BitStatus{}
+
+	// test for masking groups, group1 should be masked
+	a.ConfigFailures = []ExtendedFailure{failure1, failure2}
+	a.Reports = []TestReport{report3, report4, report5, report6}
+	expectedResult = BitStatus{
+		Failures: []*BitStatus_RportedFailure{
+			{
+				FailureData: failure1.Failure.Description,
+				Timestamp:   timestamppb.New(testTime),
+				Count:       3,
+			},
+			{
+				FailureData: failure2.Failure.Description,
+				Timestamp:   timestamppb.New(testTime),
+				Count:       1,
+			},
+		},
+	}
+	a.Crosscheck(testTime)
+	if !reflect.DeepEqual(a.Status, expectedResult) {
+		t.Errorf("test failure OUT_OF range threshold, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
+		if !reflect.DeepEqual(a.Status.Failures, expectedResult.Failures) {
+			t.Errorf("test failure OUT_OF range threshold, found failures diff")
+		}
+	}
+	clearBitStatus(&a)
+
+	// test failure VALUE Exceeding type + NO_WINDOW - multiple reports violation
+	a.ConfigFailures = []ExtendedFailure{failure1}
+	a.Reports = []TestReport{report3, report4, report5, report6}
+	expectedResult = BitStatus{
+		Failures: []*BitStatus_RportedFailure{
+			{
+				FailureData: failure1.Failure.Description,
+				Timestamp:   timestamppb.New(testTime),
+				Count:       3,
+			},
+		},
+	}
+	a.Crosscheck(testTime)
+	if !reflect.DeepEqual(a.Status, expectedResult) {
+		t.Errorf("test failure VALUE Exceeding type, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
+		if !reflect.DeepEqual(a.Status.Failures, expectedResult.Failures) {
+			t.Errorf("test failure VALUE Exceeding type, found failures diff")
+			if len(a.Status.Failures) > 0 && a.Status.Failures[0].Count != 3 {
+				t.Errorf("test failure count for NO_WINDOW, , expected 3, got %v", a.Status.Failures[0].Count)
+			}
+		}
+	}
+	clearBitStatus(&a)
 }
 
 func clearBitStatus(a *BitAnalyzer) {
@@ -462,7 +644,7 @@ var failure3 = ExtendedFailure{
 		},
 		ReportDuration: &FailureReportDuration{
 			Indication:        FailureReportDuration_NUM_OF_SECONDS,
-			IndicationSeconds: 600,
+			IndicationSeconds: 3,
 		},
 		Dependencies: &Failure_FailureDependencies{
 			BelongsToGroup: []string{
@@ -483,7 +665,7 @@ var report0 = TestReport{
 		{Key: "hostname", Value: "server02"},
 	},
 	FieldSet: []KeyValue{
-		{Key: "volts", Value: "7"},
+		{Key: "volts", Value: "6.5"},
 	},
 }
 
@@ -523,8 +705,8 @@ var report3 = TestReport{
 		{Key: "hostname", Value: "server02"},
 	},
 	FieldSet: []KeyValue{
-		{Key: "AirPressure", Value: "3.1"},
-		{Key: "TemperatureCelsius", Value: "52"},
+		{Key: "AirPressure", Value: "-3.3"},
+		{Key: "TemperatureCelsius", Value: "68"},
 	},
 }
 
@@ -539,26 +721,11 @@ var report4 = TestReport{
 	},
 	FieldSet: []KeyValue{
 		{Key: "AirPressure", Value: "50"},
-		{Key: "TemperatureCelsius", Value: "50"},
-	},
-}
-
-var report5 = TestReport{
-	TestId:         128,
-	ReportPriority: 12,
-	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
-		{Key: "hostname123", Value: "north"},
-		{Key: "host", Value: "north east"},
-		{Key: "hostname", Value: "server02"},
-	},
-	FieldSet: []KeyValue{
-		{Key: "AirPressure", Value: "16.9"},
 		{Key: "TemperatureCelsius", Value: "60"},
 	},
 }
 
-var report6 = TestReport{
+var report5 = TestReport{
 	TestId:         129,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
@@ -569,7 +736,22 @@ var report6 = TestReport{
 	},
 	FieldSet: []KeyValue{
 		{Key: "AirPressure", Value: "10"},
-		{Key: "TemperatureCelsius", Value: "88"},
+		{Key: "TemperatureCelsius", Value: "72"},
+	},
+}
+
+var report6 = TestReport{
+	TestId:         128,
+	ReportPriority: 12,
+	Timestamp:      time.Now().Add(time.Second),
+	TagSet: []KeyValue{
+		{Key: "hostname123", Value: "north"},
+		{Key: "host", Value: "north east"},
+		{Key: "hostname", Value: "server02"},
+	},
+	FieldSet: []KeyValue{
+		{Key: "AirPressure", Value: "23.25"},
+		{Key: "TemperatureCelsius", Value: "70"},
 	},
 }
 
@@ -581,7 +763,7 @@ var report7 = TestReport{
 		{Key: "ss", Value: "longstanding"},
 	},
 	FieldSet: []KeyValue{
-		{Key: "oil", Value: "9"},
+		{Key: "oil", Value: "8"},
 	},
 }
 
@@ -593,7 +775,7 @@ var report8 = TestReport{
 		{Key: "ss", Value: "longstanding"},
 	},
 	FieldSet: []KeyValue{
-		{Key: "oil", Value: "0"},
+		{Key: "oil", Value: "2"},
 	},
 }
 
@@ -603,16 +785,26 @@ var report9 = TestReport{
 	Timestamp:      time.Now().Add(2 * time.Second),
 	TagSet: []KeyValue{
 		{Key: "ss", Value: "longstanding"},
+		{Key: "hostname123", Value: "north"},
 	},
 	FieldSet: []KeyValue{
-		{Key: "oil", Value: "2"},
+		{Key: "oil", Value: "4.4"},
+		{Key: "AirPressure", Value: "40.4"},
 	},
 }
 
 var report10 = TestReport{
 	TestId:         133,
 	ReportPriority: 12,
-	Timestamp:      time.Now().Add(3 * time.Second),
+	Timestamp:      time.Now().Add(4 * time.Second),
+	TagSet: []KeyValue{
+		{Key: "ss", Value: "longstanding"},
+		{Key: "hostname123", Value: "north"},
+	},
+	FieldSet: []KeyValue{
+		{Key: "oil", Value: "4.4"},
+		{Key: "AirPressure", Value: "35"},
+	},
 }
 
 var report11 = TestReport{

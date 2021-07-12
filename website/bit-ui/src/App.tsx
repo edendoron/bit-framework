@@ -87,92 +87,13 @@ export const App = () => {
     }
 
     const theme = createMuiTheme({
-        overrides: {
-            MuiFilledInput: {
-                root: {
-                    backgroundColor: 'unset'
-                }
-            }
+        palette: {
+            primary: {
+                main: '#D48166'
+            },
+
         }
     })
-    // const theme = createMuiTheme({
-    //     palette: {
-    //         primary: {
-    //             main: CURRENT_THEME.main
-    //         }
-    //     },
-    //     overrides: {
-    //         MuiPickersToolbar: {
-    //             toolbar: {
-    //                 backgroundColor: CURRENT_THEME.el3
-    //             }
-    //         },
-    //         MuiPickersCalendarHeader: {
-    //             iconButton: {
-    //                 backgroundColor: "transparent",
-    //                 color: CURRENT_THEME.main
-    //             },
-    //             dayLabel: {
-    //                 color: CURRENT_THEME.textInv //days in calendar
-    //             },
-    //             transitionContainer: {
-    //                 color: CURRENT_THEME.textInv
-    //             }
-    //         },
-    //         MuiPickersBasePicker: {
-    //             pickerView: {
-    //                 backgroundColor: CURRENT_THEME.background
-    //             }
-    //             //   backgroundColor: CURRENT_THEME.el3,
-    //         },
-    //         MuiPickersDay: {
-    //             day: {
-    //                 color: CURRENT_THEME.textInv //days in calendar
-    //             }
-    //             //   daySelected: {
-    //             //     backgroundColor: CURRENT_THEME.main, //calendar circle
-    //             //   },
-    //             //   dayDisabled: {
-    //             //     color: CURRENT_THEME.main, // current day
-    //             //   },
-    //             //   current: {
-    //             //     color: CURRENT_THEME.main,
-    //             //   },
-    //         },
-    //         // MuiButton:{
-    //         //   textPrimary:{
-    //         //     color: CURRENT_THEME.main,
-    //         //   }
-    //         // },
-    //
-    //         MuiDialogActions: {
-    //             root: {
-    //                 backgroundColor: CURRENT_THEME.background
-    //             }
-    //         },
-    //         MuiPickersClock: {
-    //             clock: {
-    //                 backgroundColor: CURRENT_THEME.el2
-    //             }
-    //             //   pin:{
-    //             //     backgroundColor: CURRENT_THEME.main,
-    //             //   },
-    //             // },
-    //             // MuiPickersClockPointer:{
-    //             //   pointer:{
-    //             //     backgroundColor: CURRENT_THEME.main,
-    //             //   },
-    //         },
-    //         MuiPickersClockNumber: {
-    //             clockNumber: {
-    //                 color: CURRENT_THEME.textInv
-    //             }
-    //             //   numberSelected: {
-    //             //     backgroundColor: CURRENT_THEME.main, //calendar circle
-    //             //   },
-    //         }
-    //     }
-    // })
 
     return (
     <MuiThemeProvider theme={theme}>
@@ -204,8 +125,8 @@ export const App = () => {
                         Send
                     </Button>
                 </Card>
-                {!! data && queryType == 'Reports' && <ReportTable data={JSON.parse(data)}/>}
-                {!! data && queryType == 'BIT Status' && <StatusTable data={JSON.parse(data)}/>}
+                {!! data && queryType === 'Reports' && <ReportTable data={JSON.parse(data)}/>}
+                {!! data && queryType === 'BIT Status' && <StatusTable data={JSON.parse(data)}/>}
             </Box>
         </Box>
     </MuiThemeProvider>

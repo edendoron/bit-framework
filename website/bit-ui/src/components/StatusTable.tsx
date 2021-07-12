@@ -15,9 +15,6 @@ import {
 } from "@material-ui/core";
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
-import dayjs from "dayjs";
-
-const dateFormat = 'YYYY-MMMM-DD HH:mm:s';
 
 interface failureObject {
     failure_data: {
@@ -68,7 +65,6 @@ const compareDate = (report1: failureObject, report2: failureObject) => {
 
 const FailureRow = (failure: failureObject) => {
     const [open, setOpen] = React.useState(false);
-    const classes = useRowStyles();
 
     const timestamp = new Date(failure.timestamp.seconds * 1000).toLocaleString()
 

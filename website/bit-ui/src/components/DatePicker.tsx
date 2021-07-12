@@ -9,23 +9,7 @@ interface DatePickerProps {
     placeholder: string,
 }
 
-const useStyles = makeStyles((theme: Theme) =>
-    createStyles({
-        container: {
-            display: 'flex',
-            flexWrap: 'wrap',
-        },
-        textField: {
-            marginLeft: theme.spacing(1),
-            marginRight: theme.spacing(1),
-            width: 200,
-            color: '#D48166',
-        },
-    }),
-);
-
 export const DatePicker: FC<DatePickerProps> = ({currentDate, onDateChange, placeholder}) => {
-    const classes = useStyles();
 
     return (
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
@@ -37,6 +21,9 @@ export const DatePicker: FC<DatePickerProps> = ({currentDate, onDateChange, plac
                 onChange={(date) => onDateChange(date as Date)}
                 onError={console.log}
                 format="yyyy/MM/dd HH:mm:ss"
+                autoOk={true}
+                disableFuture={true}
+                disableToolbar={true}
             />
         </MuiPickersUtilsProvider>
     )

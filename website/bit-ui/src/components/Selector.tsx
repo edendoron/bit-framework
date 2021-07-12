@@ -15,9 +15,6 @@ const useStyles = makeStyles(() =>
             alignSelf: 'center',
         },
         select: {
-            '&:before': {
-                borderColor: '#D48166',
-            },
             '&:after': {
                 borderColor: '#373A36',
             }

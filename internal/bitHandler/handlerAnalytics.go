@@ -5,32 +5,29 @@ import (
 	. "../models"
 	"bytes"
 	"encoding/json"
-	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 )
 
 type BitAnalyzer struct {
-	ConfigFailures []Failure
-	Reports        []TestReport
-	SavedFailures  []ExtendedFailure
-	Status         BitStatus
+	ConfigFailures      []ExtendedFailure
+	Reports             []TestReport
+	LastEpochReportTime time.Time
+	SavedFailures       []ExtendedFailure
+	Status              BitStatus
 }
 
-type ExtendedFailure struct {
-	Failure Failure
-	time    time.Time
-	count   uint64
-}
+// ByTime implements sort.Interface for []TestReport based on the timestamp field.
 
-func (e *ExtendedFailure) Reset() { *e = ExtendedFailure{} }
+type ByTime []TestReport
 
-func (e *ExtendedFailure) String() string { return proto.CompactTextString(e) }
-
-func (e *ExtendedFailure) ProtoMessage() {}
+func (a ByTime) Len() int           { return len(a) }
+func (a ByTime) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByTime) Less(i, j int) bool { return a[i].Timestamp.Before(a[j].Timestamp) }
 
 // exported methods
 
@@ -56,7 +53,9 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 
 	switch keyValue {
 	case "config_failures":
-		err = json.NewDecoder(storageResponse.Body).Decode(&a.ConfigFailures)
+		var configFails []Failure
+		err = json.NewDecoder(storageResponse.Body).Decode(&configFails)
+		a.ConfigFailures = FailuresSliceToExtendedFailuresSlice(configFails)
 	case "forever_failures":
 		err = json.NewDecoder(storageResponse.Body).Decode(&a.SavedFailures)
 	}
@@ -97,11 +96,16 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 		return
 	}
 
-	err = json.NewDecoder(storageResponse.Body).Decode(&a.Reports)
+	var storageReports []TestReport
+	err = json.NewDecoder(storageResponse.Body).Decode(&storageReports)
 	if err != nil {
 		log.Printf("error decode storage response body")
 		return
 	}
+
+	// remove unnecessary reports and sort all reports by time
+	a.UpdateReports(storageReports)
+
 	err = storageResponse.Body.Close()
 	if err != nil {
 		log.Printf("error close storage response body")
@@ -109,36 +113,37 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 
 }
 
-func (a *BitAnalyzer) Crosscheck() {
+func (a *BitAnalyzer) Crosscheck(epoch time.Time) {
 
 	// generate map of masked groups
 	maskedUserGroups := make(map[string]int)
 
-	for _, failure := range a.ConfigFailures {
-		countFailed, timestamp := a.checkExaminationRule(failure)
+	// filter saved failures (remove NO_LATCH and NUM_OF_SECONDS if needed)
+	a.filterSavedFailures()
+
+	for idx, confFailure := range a.ConfigFailures {
+		countFailed := a.checkExaminationRule(idx)
 
 		if countFailed > 0 {
 			// update masked groups map
-			for _, userGroup := range failure.Dependencies.MasksOtherGroup {
+			for _, userGroup := range confFailure.Failure.Dependencies.MasksOtherGroup {
 				maskedUserGroups[userGroup] = 1
 			}
 
 			// insert failures to SavedFailures
-			timedFailure := ExtendedFailure{
-				Failure: failure,
-				time:    timestamp,
-				count:   countFailed,
-			}
-			a.SavedFailures = append(a.SavedFailures, timedFailure)
+			extFailure := confFailure
+			extFailure.failureCount = countFailed
+			extFailure.time = epoch
+			a.SavedFailures = append(a.SavedFailures, extFailure)
 
 			// post forever failures to storage in order to restore it later if needed
-			if failure.ReportDuration.Indication == FailureReportDuration_LATCH_FOREVER {
-				writeForeverFailure(failure)
+			if extFailure.Failure.ReportDuration.Indication == FailureReportDuration_LATCH_FOREVER {
+				writeForeverFailure(extFailure)
 			}
 		}
 	}
 
-	// filter saved failures and update BitStatus (timed failures and masked groups)
+	// update BitStatus (masked groups)
 	a.updateBitStatus(maskedUserGroups)
 }
 
@@ -173,10 +178,10 @@ func (a *BitAnalyzer) WriteBitStatus() {
 		log.Printf("error close storage response body")
 	}
 
-	a.cleanBitStatus()
+	a.CleanBitStatus()
 }
 
-func (a *BitAnalyzer) FilterSavedFailures() {
+func (a *BitAnalyzer) ResetSavedFailures() {
 	n := 0
 	for _, item := range a.SavedFailures {
 		isResetIndication := item.Failure.ReportDuration.Indication == FailureReportDuration_LATCH_UNTIL_RESET
@@ -189,38 +194,38 @@ func (a *BitAnalyzer) FilterSavedFailures() {
 	a.SavedFailures = a.SavedFailures[:n]
 }
 
-// internal methods
-
-func (a *BitAnalyzer) cleanBitStatus() {
+func (a *BitAnalyzer) CleanBitStatus() {
 	a.Status = BitStatus{}
 }
 
-func (a *BitAnalyzer) updateBitStatus(maskedUserGroups map[string]int) {
+// internal methods
+
+func (a *BitAnalyzer) filterSavedFailures() {
 	n := 0
 	for _, item := range a.SavedFailures {
-		masked := checkMasked(maskedUserGroups, item)
 		indication := item.Failure.ReportDuration.Indication
 		switch indication {
 		case FailureReportDuration_NO_LATCH:
-			a.insertReportedFailureBitStatus(masked, item)
 		case FailureReportDuration_NUM_OF_SECONDS:
-			if uint32(time.Since(item.time)) < item.Failure.ReportDuration.IndicationSeconds {
+			if uint32(time.Since(item.time).Seconds()) < item.Failure.ReportDuration.IndicationSeconds {
 				//keep saved failure for next trigger check
 				a.SavedFailures[n] = item
 				n++
-
-				a.insertReportedFailureBitStatus(masked, item)
 			}
 		default:
-			// for until_reset and forever failures
-			//keep saved failure for next trigger check
+			// for until_reset and forever failures, keep saved failure for next trigger check
 			a.SavedFailures[n] = item
 			n++
-
-			a.insertReportedFailureBitStatus(masked, item)
 		}
 	}
 	a.SavedFailures = a.SavedFailures[:n]
+}
+
+func (a *BitAnalyzer) updateBitStatus(maskedUserGroups map[string]int) {
+	for _, item := range a.SavedFailures {
+		masked := checkMasked(maskedUserGroups, item)
+		a.insertReportedFailureBitStatus(masked, item)
+	}
 }
 
 func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item ExtendedFailure) {
@@ -229,43 +234,56 @@ func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item ExtendedF
 		reportedFailure := &BitStatus_RportedFailure{
 			FailureData: item.Failure.Description,
 			Timestamp:   timestamppb.New(item.time),
-			Count:       item.count,
+			Count:       item.failureCount,
 		}
 		a.Status.Failures = append(a.Status.Failures, reportedFailure)
 	}
 }
 
-// return true iff all of the BelongsToGroup are masked by other failures
-func checkMasked(maskedUserGroups map[string]int, item ExtendedFailure) bool {
-	countBelongGroupMask := 0
-	for _, group := range item.Failure.Dependencies.BelongsToGroup {
-		if maskedUserGroups[group] == 1 {
-			countBelongGroupMask++
-		}
-	}
-	return countBelongGroupMask == len(item.Failure.Dependencies.BelongsToGroup)
-}
-
-func (a *BitAnalyzer) checkExaminationRule(failure Failure) (uint64, time.Time) {
-	examinationRule := failure.ExaminationRule
+func (a *BitAnalyzer) checkExaminationRule(i int) uint64 {
+	examinationRule := a.ConfigFailures[i].Failure.ExaminationRule
 	timeCriteria := examinationRule.FailureCriteria.TimeCriteria
+	if len(a.Reports) == 0 {
+		return 0
+	}
 	// count failed tests
 	switch timeCriteria.WindowType {
 	case FailureExaminationRule_FailureCriteria_FailureTimeCriteria_NO_WINDOW:
-		return a.checkNoWindow(examinationRule, timeCriteria)
+		return a.checkNoWindow(i)
 	case FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING:
-		// TODO: make sure that reports from storage are sorted by timestamp
-		return a.checkSlidingWindow(timeCriteria, examinationRule)
+		return a.checkSlidingWindow(i)
 	default:
-		return 0, time.Now()
+		return 0
 	}
 }
 
-func (a *BitAnalyzer) checkSlidingWindow(timeCriteria *FailureExaminationRule_FailureCriteria_FailureTimeCriteria, examinationRule *FailureExaminationRule) (uint64, time.Time) {
+func (a *BitAnalyzer) checkSlidingWindow(i int) uint64 {
+
+	extFailure := &a.ConfigFailures[i]
+	examinationRule := extFailure.Failure.ExaminationRule
+	timeCriteria := examinationRule.FailureCriteria.TimeCriteria
 	var countExaminationRuleViolation uint64 = 0
-	timestamp := time.Now()
-	var countTimeCriteriaViolation uint32 = 0
-	begin, end := 0, 0
+	countTimeCriteriaViolation := extFailure.reportsCount
+
+	begin := len(a.Reports)
+	for idx := range a.Reports {
+		if a.Reports[idx].TestId == extFailure.startReportId {
+			begin = idx
+			break
+		}
+	}
+	end := len(a.Reports) + 1
+	for idx := range a.Reports {
+		if a.Reports[idx].TestId == extFailure.endReportId {
+			end = idx + 1
+			break
+		}
+	}
+
+	if begin == len(a.Reports) || end == len(a.Reports)+1 {
+		begin = 0
+		end = 0
+	}
 	for end < len(a.Reports) {
 		startWindowTest := a.Reports[begin]
 		endWindowTest := a.Reports[end]
@@ -274,7 +292,6 @@ func (a *BitAnalyzer) checkSlidingWindow(timeCriteria *FailureExaminationRule_Fa
 		if timeDiff.Seconds() <= float64(timeCriteria.WindowSize) {
 			if failedValueCriteria(&endWindowTest, examinationRule) {
 				countTimeCriteriaViolation++
-				timestamp = endWindowTest.Timestamp
 			}
 			end++
 		} else {
@@ -291,23 +308,73 @@ func (a *BitAnalyzer) checkSlidingWindow(timeCriteria *FailureExaminationRule_Fa
 	if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
 		countExaminationRuleViolation++
 	}
-	return countExaminationRuleViolation, timestamp
+
+	end--
+	//set new fields in order to continue from the same point in the next epoch
+	extFailure.startReportId = a.Reports[begin].TestId
+	extFailure.endReportId = a.Reports[end].TestId
+	extFailure.reportsCount = countTimeCriteriaViolation
+
+	// set new LastEpochReportTime
+	if a.Reports[begin].Timestamp.Before(a.LastEpochReportTime) {
+		a.LastEpochReportTime = a.Reports[begin].Timestamp
+	}
+
+	return countExaminationRuleViolation
 }
 
-func (a *BitAnalyzer) checkNoWindow(examinationRule *FailureExaminationRule, timeCriteria *FailureExaminationRule_FailureCriteria_FailureTimeCriteria) (uint64, time.Time) {
+func (a *BitAnalyzer) checkNoWindow(i int) uint64 {
+	extFailure := &a.ConfigFailures[i]
+	examinationRule := extFailure.Failure.ExaminationRule
+
 	var countExaminationRuleViolation uint64 = 0
-	timestamp := time.Now()
-	var countTimeCriteriaViolation uint32 = 0
-	for _, test := range a.Reports {
-		if failedValueCriteria(&test, examinationRule) {
-			countTimeCriteriaViolation++
-			timestamp = test.Timestamp
-		}
-		if countTimeCriteriaViolation > timeCriteria.FailuresCCount {
-			countExaminationRuleViolation = 1
+	begin := len(a.Reports) + 1
+	for idx := range a.Reports {
+		if a.Reports[idx].TestId == extFailure.endReportId {
+			begin = idx + 1
+			break
 		}
 	}
-	return countExaminationRuleViolation, timestamp
+	if begin == len(a.Reports)+1 {
+		begin = 0
+	}
+	for begin < len(a.Reports) {
+		if failedValueCriteria(&a.Reports[begin], examinationRule) {
+			countExaminationRuleViolation++
+		}
+		begin++
+		//TODO: do we need to check if counter greater than timeCriteria.FailuresCCount?
+	}
+
+	begin--
+	// set start and end report Id's to last report in order to avoid duplicates on the next epoch, note that reportsCount is always 0 for noWindow failures
+	extFailure.startReportId = a.Reports[len(a.Reports)-1].TestId
+	extFailure.endReportId = extFailure.startReportId
+
+	// set new LastEpochReportTime
+	if a.Reports[begin].Timestamp.Before(a.LastEpochReportTime) {
+		a.LastEpochReportTime = a.Reports[begin].Timestamp
+	}
+
+	return countExaminationRuleViolation
+}
+
+func (a *BitAnalyzer) UpdateReports(reports []TestReport) {
+	n := sort.Search(len(a.Reports), func(i int) bool { return !a.Reports[i].Timestamp.Before(a.LastEpochReportTime) })
+	a.Reports = append(a.Reports[n:], reports...)
+	sort.Stable(ByTime(a.Reports))
+	a.LastEpochReportTime = a.Reports[len(a.Reports)-1].Timestamp
+}
+
+// return true iff all of the BelongsToGroup are masked by other failures
+func checkMasked(maskedUserGroups map[string]int, item ExtendedFailure) bool {
+	countBelongGroupMask := 0
+	for _, group := range item.Failure.Dependencies.BelongsToGroup {
+		if maskedUserGroups[group] == 1 {
+			countBelongGroupMask++
+		}
+	}
+	return countBelongGroupMask == len(item.Failure.Dependencies.BelongsToGroup)
 }
 
 func failedValueCriteria(test *TestReport, examinationRule *FailureExaminationRule) bool {
@@ -332,18 +399,22 @@ func checkField(test *TestReport, examinationRule *FailureExaminationRule) strin
 
 // check tag existing
 func checkTag(test *TestReport, examinationRule *FailureExaminationRule) bool {
-	//for _, tag := range test.TagSet {
-	//	if tag.Key == string(examinationRule.MatchingTag.Key) && tag.Value == string(examinationRule.MatchingTag.Value) {
-	//		return true
-	//	}
-	//}
-	//return false
-	return true
+	//TODO: fix tag problem
+	for _, tag := range test.TagSet {
+		if tag.Key == string(examinationRule.MatchingTag.Key) && tag.Value == string(examinationRule.MatchingTag.Value) {
+			return true
+		}
+	}
+	return false
+	//return true
 }
 
-// check failure value criteria
+// check failure value criteria, return true if value of test violates rule, false otherwise
 func checkFailedValue(value string, criteria *FailureExaminationRule_FailureCriteria_FailureValueCriteria) bool {
-	min, max := calculateThreshold(criteria.Minimum, criteria.Miximum, criteria.Exceeding)
+	min, max := calculateThreshold(criteria.Minimum, criteria.Miximum, criteria)
+	if min >= max {
+		return false
+	}
 	floatValue, err := strconv.ParseFloat(value, 64)
 	if err != nil {
 		//TODO: handle error
@@ -352,27 +423,27 @@ func checkFailedValue(value string, criteria *FailureExaminationRule_FailureCrit
 	valueWithin := floatValue >= min && floatValue <= max
 	switch criteria.ThresholdMode {
 	case FailureExaminationRule_FailureCriteria_FailureValueCriteria_WITHIN:
-		return !valueWithin
-	case FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF:
 		return valueWithin
-	default:
+	case FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF:
 		return !valueWithin
-	}
-}
-
-func calculateThreshold(minimum float64, maximum float64, exceeding *FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding) (float64, float64) {
-	switch exceeding.Type {
-	case FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_VALUE:
-		return minimum - exceeding.Value, maximum + exceeding.Value
-	case FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_PERCENT:
-		percent := exceeding.Value * 0.01
-		return minimum * (1 - percent), maximum * (1 + percent)
 	default:
-		return minimum, maximum
+		return valueWithin
 	}
 }
 
-func writeForeverFailure(failure Failure) {
+func calculateThreshold(minimum float64, maximum float64, criteria *FailureExaminationRule_FailureCriteria_FailureValueCriteria) (float64, float64) {
+	deviation := criteria.Exceeding.Value
+	if criteria.Exceeding.Type == FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_PERCENT {
+		deviation *= 0.01 * (maximum - minimum)
+	}
+	if criteria.ThresholdMode == FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF {
+		return minimum - deviation, maximum + deviation
+	} else {
+		return minimum + deviation, maximum - deviation
+	}
+}
+
+func writeForeverFailure(failure ExtendedFailure) {
 	jsonForeverFailure, err := json.MarshalIndent(failure, "", " ")
 	if err != nil {
 		log.Printf("error marshal forever_failure")

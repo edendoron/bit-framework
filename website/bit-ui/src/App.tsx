@@ -206,11 +206,9 @@ export const App = () => {
                 </Card>
                 {!! data && queryType == 'Reports' && <ReportTable data={JSON.parse(data)}/>}
                 {!! data && queryType == 'BIT Status' && <StatusTable data={JSON.parse(data)}/>}
-
             </Box>
         </Box>
     </MuiThemeProvider>
-
     );
 }
 

@@ -15,6 +15,7 @@ import {
 } from "@material-ui/core";
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
+
 const dateFormat = 'YYYY-MMMM-DD HH:mm:s';
 
 interface reportObject{
@@ -42,6 +43,7 @@ const useRowStyles = makeStyles({
         fontWeight: 'bold',
     }
 });
+
 
 const SubTable = (arr: Array<{key: string, value: string}>) => {
     const classes = useRowStyles();

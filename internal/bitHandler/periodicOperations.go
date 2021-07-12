@@ -27,12 +27,13 @@ func StatusScheduler() {
 				ticker.Reset(d)
 			}
 		case <-ResetIndicationChannel:
-			analyzer.FilterSavedFailures()
-		case <-ticker.C:
+			analyzer.ResetSavedFailures()
+			analyzer.CleanBitStatus()
+		case epoch := <-ticker.C:
 			//fmt.Println(epoch)
 			go func() {
 				analyzer.ReadReportsFromStorage(d)
-				analyzer.Crosscheck()
+				analyzer.Crosscheck(epoch)
 				analyzer.WriteBitStatus()
 			}()
 		}

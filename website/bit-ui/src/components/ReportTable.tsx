@@ -1,4 +1,5 @@
 import React, {FC} from 'react';
+import dayjs from "dayjs";
 import {
     Box,
     Collapse, IconButton,
@@ -14,6 +15,8 @@ import {
 } from "@material-ui/core";
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
+
+const dateFormat = 'YYYY-MMMM-DD HH:mm:s';
 
 interface reportObject{
     testId: number,
@@ -41,6 +44,34 @@ const useRowStyles = makeStyles({
     }
 });
 
+
+const SubTable = (arr: Array<{key: string, value: string}>) => {
+    const classes = useRowStyles();
+
+    return (
+        <Table size="small" aria-label="purchases">
+            <TableHead>
+                <TableRow>
+                    {arr.map((item) => (
+                        <TableCell className={classes.tableHeader}>
+                            {item.key}
+                        </TableCell>
+                    ))}
+                </TableRow>
+            </TableHead>
+            <TableBody>
+                <TableRow>
+                    {arr.map((item) => (
+                        <TableCell component="th" scope="row">
+                            {item.value}
+                        </TableCell>
+                    ))}
+                </TableRow>
+            </TableBody>
+        </Table>
+        )
+}
+
 const Row = (props: {row : reportObject}) => {
     const { row } = props;
     const [open, setOpen] = React.useState(false);
@@ -54,8 +85,8 @@ const Row = (props: {row : reportObject}) => {
                         {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                     </IconButton>
                 </TableCell>
-                <TableCell component="th" scope="row">{row.testId}</TableCell>
-                <TableCell align="center">{row.timestamp}</TableCell>
+                <TableCell component="th" scope="row" align="center">{row.testId}</TableCell>
+                <TableCell align="center">{dayjs(row.timestamp).format(dateFormat)}</TableCell>
                 <TableCell align="center">{row.reportPriority}</TableCell>
             </TableRow>
             <TableRow>
@@ -65,45 +96,11 @@ const Row = (props: {row : reportObject}) => {
                             <Typography variant="h6" gutterBottom component="div">
                                 Fields
                             </Typography>
-                            <Table size="small" aria-label="purchases">
-                                <TableHead>
-                                    <TableRow>
-                                        {row.fieldSet.map((field) => (
-                                            <TableCell className={classes.tableHeader}>{field.key}</TableCell>
-                                        ))}
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    <TableRow>
-                                    {row.fieldSet.map((field) => (
-                                            <TableCell component="th" scope="row">
-                                                {field.value}
-                                            </TableCell>
-                                    ))}
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
+                            {SubTable(row.fieldSet)}
                             <Typography variant="h6" gutterBottom component="div">
                                 Tags
                             </Typography>
-                            <Table size="small" aria-label="purchases">
-                                <TableHead>
-                                    <TableRow>
-                                        {row.tagSet.map((tag) => (
-                                            <TableCell className={classes.tableHeader}>{tag.key}</TableCell>
-                                        ))}
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    <TableRow>
-                                        {row.tagSet.map((tag) => (
-                                            <TableCell component="th" scope="row">
-                                                {tag.value}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
+                            {SubTable(row.tagSet)}
                         </Box>
                     </Collapse>
                 </TableCell>
@@ -126,7 +123,7 @@ export const ReportTable: FC<ReportTableProps> = ({data}) => {
                 <TableHead>
                     <TableRow>
                         <TableCell />
-                        <TableCell>Test ID</TableCell>
+                        <TableCell align="center">Test ID</TableCell>
                         <TableCell align="center">Timestamp</TableCell>
                         <TableCell align="center">Report Priority</TableCell>
                     </TableRow>

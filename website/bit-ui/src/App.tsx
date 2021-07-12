@@ -12,11 +12,10 @@ import {
     Grid,
     makeStyles, MuiThemeProvider,
 } from '@material-ui/core'
-import ReactJson from 'react-json-view';
 import {Selector} from "./components/Selector";
 import {DatePicker} from "./components/DatePicker";
 import {ReportTable} from "./components/ReportTable";
-import {stringify} from "querystring";
+import {StatusTable} from "./components/StatusTable";
 
 const queryTypes = ['Reports', 'BIT Status'];
 const userGroups = ['group1', 'group2', 'group3', 'group4', 'groupRafael', 'TemperatureCelsius group', 'group general', 'groupField'];
@@ -205,11 +204,11 @@ export const App = () => {
                         Send
                     </Button>
                 </Card>
-                {!! data && <ReportTable data={JSON.parse(data)}/>}
+                {!! data && queryType == 'Reports' && <ReportTable data={JSON.parse(data)}/>}
+                {!! data && queryType == 'BIT Status' && <StatusTable data={JSON.parse(data)}/>}
             </Box>
         </Box>
     </MuiThemeProvider>
-
     );
 }
 

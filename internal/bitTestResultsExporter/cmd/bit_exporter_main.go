@@ -24,7 +24,7 @@ func main() {
 	go exporter.ReportsScheduler(time.Second)
 
 	//TODO: need to change to ListenAndServeTLS in order to support https
-	//err := srv.ListenAndServeTLS("../localhost.crt", "../localhost.key")
+	//err := srv.ListenAndServeTLS(exporter.Configs.SSHCertPath, exporter.Configs.SSHKeyPath)
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)

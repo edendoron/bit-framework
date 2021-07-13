@@ -26,4 +26,7 @@ type ProgConfigs struct {
 	BitHandlerTriggerPeriod     float64 `conf:"handler_trigger_period" help:"A message to print."`
 	BitHandlerTriggerType       string  `conf:"handler_trigger_type" help:"A message to print."`
 	BitHistoryCuratorAgedDate   string  `conf:"bit_history_curator_aged_date" help:"A message to print."`
+	SSHKeyPath					string	`conf:"ssh_key" help:"The SSH key used for HTTPS."`
+	SSHCertPath					string	`conf:"ssh_cert" help:"The SSH certificate used for HTTPS."`
+	SSHCsrPath					string	`conf:"ssh_csr" help:"The SSH csr file used for HTTPS."`
 }

@@ -406,14 +406,14 @@ func checkField(test *TestReport, examinationRule *FailureExaminationRule) strin
 
 // check tag existing
 func checkTag(test *TestReport, examinationRule *FailureExaminationRule) bool {
-	//TODO: fix tag problem
-	//for _, tag := range test.TagSet {
-	//	if tag.Key == string(examinationRule.MatchingTag.Key) && tag.Value == string(examinationRule.MatchingTag.Value) {
-	//		return true
-	//	}
-	//}
-	//return false
-	return true
+	for _, tag := range test.TagSet {
+		key, _ := json.MarshalIndent(examinationRule.MatchingTag.Key, "", " ")
+		value, _ := json.MarshalIndent(examinationRule.MatchingTag.Value, "", " ")
+		if tag.Key == string(key) && tag.Value == string(value) {
+			return true
+		}
+	}
+	return false
 }
 
 // check failure value criteria, return true if value of test violates rule, false otherwise

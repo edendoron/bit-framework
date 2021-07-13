@@ -12,12 +12,11 @@ func LoadConfigs() {
 	conf.Load(&Configs)
 }
 
-func GetCuratorTimeConfig() time.Time {
-	const layout = "2006-January-02 15:4:5"
-	t, err := time.Parse(layout, Configs.BitHistoryCuratorAgedDate)
+func GetCuratorTimeConfig() time.Duration {
+	t, err := time.ParseDuration(Configs.BitHistoryCuratorAgedDataLimit)
 	if err != nil {
 		//TODO: handle error
-		return time.Now()
+		return 2.628e+6
 	}
 	return t
 }

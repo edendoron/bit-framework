@@ -9,7 +9,7 @@ import (
 
 type ExtendedFailure struct {
 	Failure       Failure
-	time          time.Time
+	Time          time.Time
 	failureCount  uint64
 	reportsCount  uint32
 	startReportId float64
@@ -25,7 +25,7 @@ func (e *ExtendedFailure) ProtoMessage() {}
 func (e *ExtendedFailure) ExtendedFailureToBitStatusReportedFailure() BitStatus_RportedFailure {
 	return BitStatus_RportedFailure{
 		FailureData: e.Failure.Description,
-		Timestamp:   timestamppb.New(e.time),
+		Timestamp:   timestamppb.New(e.Time),
 		Count:       e.failureCount,
 	}
 }

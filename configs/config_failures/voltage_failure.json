@@ -8,7 +8,7 @@
     ],
     "description": "this is a mock failure to test services",
     "additional_info": "the failure finds voltage problem",
-    "purpose": "check voltage is within 1-7 range, with a deviation of 10%",
+    "purpose": "check voltage is not within 1-7 range, with a deviation of 10%",
     "severity": 1,
     "operator_failure": [
       "unable to start",
@@ -48,7 +48,7 @@
     }
   },
   "report_duration": {
-    "indication": 0,
+    "indication": 2,
     "indication_seconds": 600
   },
   "dependencies": {

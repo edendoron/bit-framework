@@ -20,7 +20,7 @@ func main() {
 
 	srv := server.NewServer(router, exporter.Configs.BitExporterPort)
 
-	// NOTE: requests may be sent in 0.04 of a second deviation of the requested duration
+	// NOTE: requests may be sent in 0.1 second deviation of the requested duration
 	go exporter.ReportsScheduler(time.Second)
 
 	//TODO: need to change to ListenAndServeTLS in order to support https

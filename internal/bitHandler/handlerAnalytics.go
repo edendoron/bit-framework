@@ -79,7 +79,7 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 
 	const layout = "2006-January-02 15:4:5"
 	//TODO: update time frame according to d
-	endTime, _ := time.Parse(layout, "2021-April-15 12:00:00")
+	endTime, _ := time.Parse(layout, "2021-April-20 12:00:00")
 	startTime, _ := time.Parse(layout, "2021-April-15 11:00:00")
 	params := req.URL.Query()
 	params.Add("reports", "")
@@ -133,10 +133,10 @@ func (a *BitAnalyzer) Crosscheck(epoch time.Time) {
 			// insert failures to SavedFailures
 			extFailure := confFailure
 			extFailure.failureCount = countFailed
-			extFailure.time = epoch
+			extFailure.Time = epoch
 			a.SavedFailures = append(a.SavedFailures, extFailure)
 
-			// post forever failures to storage in order to restore it later if needed
+			//// post forever failures to storage in order to restore it later if needed
 			if extFailure.Failure.ReportDuration.Indication == FailureReportDuration_LATCH_FOREVER {
 				writeForeverFailure(extFailure)
 			}
@@ -148,6 +148,11 @@ func (a *BitAnalyzer) Crosscheck(epoch time.Time) {
 }
 
 func (a *BitAnalyzer) WriteBitStatus() {
+
+	if len(a.Status.Failures) == 0 {
+		a.CleanBitStatus()
+		return
+	}
 
 	jsonStatus, err := json.MarshalIndent(a.Status, "", " ")
 	if err != nil {
@@ -207,7 +212,7 @@ func (a *BitAnalyzer) filterSavedFailures() {
 		switch indication {
 		case FailureReportDuration_NO_LATCH:
 		case FailureReportDuration_NUM_OF_SECONDS:
-			if uint32(time.Since(item.time).Seconds()) < item.Failure.ReportDuration.IndicationSeconds {
+			if uint32(time.Since(item.Time).Seconds()) < item.Failure.ReportDuration.IndicationSeconds {
 				//keep saved failure for next trigger check
 				a.SavedFailures[n] = item
 				n++
@@ -233,7 +238,7 @@ func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item ExtendedF
 		// insert failure to BitStatus
 		reportedFailure := &BitStatus_RportedFailure{
 			FailureData: item.Failure.Description,
-			Timestamp:   timestamppb.New(item.time),
+			Timestamp:   timestamppb.New(item.Time),
 			Count:       item.failureCount,
 		}
 		a.Status.Failures = append(a.Status.Failures, reportedFailure)
@@ -363,7 +368,9 @@ func (a *BitAnalyzer) UpdateReports(reports []TestReport) {
 	n := sort.Search(len(a.Reports), func(i int) bool { return !a.Reports[i].Timestamp.Before(a.LastEpochReportTime) })
 	a.Reports = append(a.Reports[n:], reports...)
 	sort.Stable(ByTime(a.Reports))
-	a.LastEpochReportTime = a.Reports[len(a.Reports)-1].Timestamp
+	if len(a.Reports) > 0 {
+		a.LastEpochReportTime = a.Reports[len(a.Reports)-1].Timestamp
+	}
 }
 
 // return true iff all of the BelongsToGroup are masked by other failures
@@ -400,13 +407,13 @@ func checkField(test *TestReport, examinationRule *FailureExaminationRule) strin
 // check tag existing
 func checkTag(test *TestReport, examinationRule *FailureExaminationRule) bool {
 	//TODO: fix tag problem
-	for _, tag := range test.TagSet {
-		if tag.Key == string(examinationRule.MatchingTag.Key) && tag.Value == string(examinationRule.MatchingTag.Value) {
-			return true
-		}
-	}
-	return false
-	//return true
+	//for _, tag := range test.TagSet {
+	//	if tag.Key == string(examinationRule.MatchingTag.Key) && tag.Value == string(examinationRule.MatchingTag.Value) {
+	//		return true
+	//	}
+	//}
+	//return false
+	return true
 }
 
 // check failure value criteria, return true if value of test violates rule, false otherwise

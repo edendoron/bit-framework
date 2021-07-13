@@ -45,3 +45,19 @@ func ReportQuery(w http.ResponseWriter, r *http.Request) {
 
 	QueryHandler(w, req, "reports", "")
 }
+
+func UserGroupQuery(w http.ResponseWriter, r *http.Request) {
+	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	params := req.URL.Query()
+	params.Add("user_groups", "")
+
+	req.URL.RawQuery = params.Encode()
+
+	QueryHandler(w, req, "user_groups", "")
+}

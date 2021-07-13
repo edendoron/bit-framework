@@ -55,6 +55,8 @@ func TestExaminationRule(t *testing.T) {
 
 	var a BitAnalyzer
 
+	TestingFlag = true
+
 	testTime := time.Now()
 	expectedResult := BitStatus{}
 

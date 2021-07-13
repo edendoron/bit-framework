@@ -39,4 +39,11 @@ var QueryRoutes = Routes{
 		Pattern:     "/reports",
 		HandlerFunc: ReportQuery,
 	},
+
+	Route{
+		Name:        "UserGroupQuery",
+		Method:      strings.ToUpper("Get"),
+		Pattern:     "/userGroups",
+		HandlerFunc: UserGroupQuery,
+	},
 }

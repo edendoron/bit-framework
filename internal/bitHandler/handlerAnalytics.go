@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+var TestingFlag = false
+
 type BitAnalyzer struct {
 	ConfigFailures      []ExtendedFailure
 	Reports             []TestReport
@@ -397,8 +399,8 @@ func failedValueCriteria(test *TestReport, examinationRule *FailureExaminationRu
 // check field existing
 func checkField(test *TestReport, examinationRule *FailureExaminationRule) string {
 	for _, field := range test.FieldSet {
-		if string(field.Key) == examinationRule.MatchingField {
-			return string(field.Value)
+		if field.Key == examinationRule.MatchingField {
+			return field.Value
 		}
 	}
 	return ""
@@ -406,9 +408,14 @@ func checkField(test *TestReport, examinationRule *FailureExaminationRule) strin
 
 // check tag existing
 func checkTag(test *TestReport, examinationRule *FailureExaminationRule) bool {
+	// fixes problem of base64 encoding of protobuf
+	key, _ := json.MarshalIndent(examinationRule.MatchingTag.Key, "", " ")
+	value, _ := json.MarshalIndent(examinationRule.MatchingTag.Value, "", " ")
+	if TestingFlag {
+		key = examinationRule.MatchingTag.Key
+		value = examinationRule.MatchingTag.Value
+	}
 	for _, tag := range test.TagSet {
-		key, _ := json.MarshalIndent(examinationRule.MatchingTag.Key, "", " ")
-		value, _ := json.MarshalIndent(examinationRule.MatchingTag.Value, "", " ")
 		if tag.Key == string(key) && tag.Value == string(value) {
 			return true
 		}
@@ -451,6 +458,9 @@ func calculateThreshold(minimum float64, maximum float64, criteria *FailureExami
 }
 
 func writeForeverFailure(failure ExtendedFailure) {
+	if TestingFlag {
+		return
+	}
 	jsonForeverFailure, err := json.MarshalIndent(failure, "", " ")
 	if err != nil {
 		log.Printf("error marshal forever_failure")

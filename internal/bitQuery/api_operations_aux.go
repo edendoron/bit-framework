@@ -55,6 +55,20 @@ func QueryHandler(w http.ResponseWriter, req *http.Request, requestedData string
 			log.Println(err)
 		}
 		w.WriteHeader(http.StatusOK)
+	case "user_groups":
+		var userGroups []string
+		err = json.NewDecoder(resp.Body).Decode(&userGroups)
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		err = json.NewEncoder(w).Encode(&userGroups)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusOK)
 	}
 
 	err = resp.Body.Close()

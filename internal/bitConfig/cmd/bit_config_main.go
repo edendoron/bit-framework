@@ -24,8 +24,10 @@ func main() {
 		config.PostFailuresData()
 		config.PostGroupFilterData()
 		log.Printf("Service ended - bit-config")
-		//TODO: handle error
-		srv.Shutdown(context.Background())
+		err := srv.Shutdown(context.Background())
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}()
 
 	//TODO: need to change to ListenAndServeTLS in order to support https

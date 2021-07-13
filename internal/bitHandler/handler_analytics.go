@@ -37,10 +37,11 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 	// read config failures
 	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
 	if err != nil {
-		log.Printf("error create storage request")
+		log.Printf("error create storage request. %v", err)
 		return
 	}
-	//TODO: defer req.Body.Close()
+	//TODO: check when to close request/response body and handle error
+	//defer req.Body.Close()
 
 	params := req.URL.Query()
 	params.Add(keyValue, "")
@@ -62,21 +63,22 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 		err = json.NewDecoder(storageResponse.Body).Decode(&a.SavedFailures)
 	}
 	if err != nil {
-		log.Println("error reading " + keyValue + " from storage")
+		log.Printf("error reading %v from storage. %v", keyValue, err)
 	}
 
 	err = storageResponse.Body.Close()
 	if err != nil {
-		log.Printf("error close storage response body")
+		log.Printf("error close storage response body. %v", err)
 	}
 }
 
 func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
 	if err != nil {
-		log.Printf("error create storage request")
+		log.Printf("error create storage request %v", err)
 		return
 	}
+	//TODO: check when to close request/response body and handle error
 	//defer req.Body.Close()
 
 	const layout = "2006-January-02 15:4:5"
@@ -94,14 +96,14 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 
 	storageResponse, err := client.Do(req)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
-		// TODO: handle error
+		log.Printf("error execute storage request. %v", err)
 		return
 	}
 
 	var storageReports []TestReport
 	err = json.NewDecoder(storageResponse.Body).Decode(&storageReports)
 	if err != nil {
-		log.Printf("error decode storage response body")
+		log.Printf("error decode storage response body. %v", err)
 		return
 	}
 
@@ -110,7 +112,7 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 
 	err = storageResponse.Body.Close()
 	if err != nil {
-		log.Printf("error close storage response body")
+		log.Printf("error close storage response body. %v", err)
 	}
 
 }
@@ -158,7 +160,7 @@ func (a *BitAnalyzer) WriteBitStatus() {
 
 	jsonStatus, err := json.MarshalIndent(a.Status, "", " ")
 	if err != nil {
-		log.Printf("error marshal bit_status")
+		log.Printf("error marshal bit_status. %v", err)
 		return
 	}
 
@@ -169,7 +171,7 @@ func (a *BitAnalyzer) WriteBitStatus() {
 
 	jsonMessage, err := json.MarshalIndent(message, "", " ")
 	if err != nil {
-		log.Printf("error marshal bit_status")
+		log.Printf("error marshal bit_status. %v", err)
 		return
 	}
 
@@ -177,12 +179,12 @@ func (a *BitAnalyzer) WriteBitStatus() {
 
 	storageResponse, err := http.Post(Configs.StorageWriteURL, "application/json; charset=UTF-8", postBody)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
-		log.Printf("error post bit_status to storage")
+		log.Printf("error post bit_status to storage. %v", err)
 		return
 	}
 	err = storageResponse.Body.Close()
 	if err != nil {
-		log.Printf("error close storage response body")
+		log.Printf("error close storage response body. %v", err)
 	}
 
 	a.CleanBitStatus()
@@ -350,7 +352,6 @@ func (a *BitAnalyzer) checkNoWindow(i int) uint64 {
 			countExaminationRuleViolation++
 		}
 		begin++
-		//TODO: do we need to check if counter greater than timeCriteria.FailuresCCount?
 	}
 
 	begin--
@@ -463,7 +464,7 @@ func writeForeverFailure(failure ExtendedFailure) {
 	}
 	jsonForeverFailure, err := json.MarshalIndent(failure, "", " ")
 	if err != nil {
-		log.Printf("error marshal forever_failure")
+		log.Printf("error marshal forever_failure. %v", err)
 		return
 	}
 
@@ -474,18 +475,19 @@ func writeForeverFailure(failure ExtendedFailure) {
 
 	jsonMessage, err := json.MarshalIndent(message, "", " ")
 	if err != nil {
-		log.Printf("error marshal forever_failure")
+		log.Printf("error marshal forever_failure message. %v", err)
 		return
 	}
 	postBody := bytes.NewReader(jsonMessage)
 
 	storageResponse, err := http.Post(Configs.StorageWriteURL, "application/json; charset=UTF-8", postBody)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
-		log.Printf("error post forever_failure to storage")
+		log.Printf("error post forever_failure to storage. %v", err)
 		return
 	}
+	//TODO: check when to close request/response body and handle error
 	err = storageResponse.Body.Close()
 	if err != nil {
-		log.Printf("error close storage response body")
+		log.Printf("error close storage response body. %v", err)
 	}
 }

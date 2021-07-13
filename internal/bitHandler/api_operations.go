@@ -16,6 +16,7 @@ func GetTrigger(w http.ResponseWriter, r *http.Request) {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Error creating request for storage access", err)
 		return
 	}
+	//TODO: check when to close request/response body and handle error
 	//defer req.Body.Close()
 
 	params := req.URL.Query()
@@ -28,6 +29,7 @@ func GetTrigger(w http.ResponseWriter, r *http.Request) {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Storage Access Error", err)
 		return
 	}
+	//TODO: check when to close request/response body and handle error
 	defer storageResponse.Body.Close()
 
 	respBody, err := ioutil.ReadAll(storageResponse.Body)
@@ -42,6 +44,7 @@ func GetTrigger(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	//TODO: check when to close request/response body and handle error
 	r.Body.Close()
 }
 

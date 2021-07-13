@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-func RemoveAgedData(agedTime time.Time) {
-	//fmt.Println(agedTime)
+func RemoveAgedData(agedTimeDuration time.Duration) {
+	//fmt.Println(agedTimeDuration)
 
 	req, err := http.NewRequest(http.MethodDelete, Configs.StorageDeleteURL, nil)
 	if err != nil {
@@ -16,13 +16,15 @@ func RemoveAgedData(agedTime time.Time) {
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 	params := req.URL.Query()
-	params.Add("timestamp", agedTime.String())
+
+	timestamp := time.Now().Add(-agedTimeDuration)
+	const layout = "2006-January-02 15:4:5"
+	timestampStr := timestamp.Format(layout)
+	params.Add("timestamp", timestampStr)
 
 	req.URL.RawQuery = params.Encode()
 
 	client := &http.Client{}
-
-	//fmt.Println(req.URL.String())
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {

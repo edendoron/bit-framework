@@ -24,6 +24,7 @@ func main() {
 	go handler.StatusScheduler()
 
 	//TODO: need to change to ListenAndServeTLS in order to support https
+	//err := srv.ListenAndServeTLS(handler.Configs.SSHCertPath, handler.Configs.SSHKeyPath)
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)

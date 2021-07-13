@@ -26,4 +26,7 @@ type ProgConfigs struct {
 	BitHandlerTriggerPeriod        float64 `conf:"handler_trigger_period" help:"Interval size of the bit_handler trigger in seconds. BitStatus is written to storage every triggerPeriod seconds."`
 	BitHandlerTriggerType          string  `conf:"handler_trigger_type" help:"Type of bit_handler trigger (CBIT, PBIT, IBIT...)."`
 	BitHistoryCuratorAgedDataLimit string  `conf:"bit_history_curator_aged_data_limit" help:"Limit of time for bit_history_curator. every report or bitStatus reported prior to that duration will be deleted from storage. Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'."`
+	SSHKeyPath					           string	`conf:"ssh_key" help:"The SSH key used for HTTPS."`
+	SSHCertPath					           string	`conf:"ssh_cert" help:"The SSH certificate used for HTTPS."`
+	SSHCsrPath					           string	`conf:"ssh_csr" help:"The SSH csr file used for HTTPS."`
 }

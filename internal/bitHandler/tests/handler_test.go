@@ -591,6 +591,7 @@ var failure2 = ExtendedFailure{
 			},
 		},
 	},
+	Time: time.Now(),
 }
 
 var failure3 = ExtendedFailure{

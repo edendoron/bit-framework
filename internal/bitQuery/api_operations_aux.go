@@ -27,11 +27,13 @@ func QueryHandler(w http.ResponseWriter, req *http.Request, requestedData string
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
-		e := filterBitStatus(&bitStatusList, userGroup)
+		maskedTestIds, e := getUserGroupsFiltering(userGroup)
 		if e != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
+		FilterBitStatus(&bitStatusList, maskedTestIds)
+
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		err = json.NewEncoder(w).Encode(&bitStatusList)
 		if err != nil {
@@ -114,12 +116,8 @@ func getUserGroupsFiltering(userGroup string) ([]uint64, error) {
 	return res, nil
 }
 
-func filterBitStatus(statusList *[]BitStatus, userGroup string) error {
-	maskedTestIds, err := getUserGroupsFiltering(userGroup)
-	if err != nil {
-		return err
-	}
-
+func FilterBitStatus(statusList *[]BitStatus, maskedTestIds []uint64) {
+	idx := 0
 	for _, status := range *statusList {
 		n := 0
 		found := false
@@ -134,8 +132,13 @@ func filterBitStatus(statusList *[]BitStatus, userGroup string) error {
 				status.Failures[n] = failure
 				n++
 			}
+			found = false
 		}
-		status.Failures = status.Failures[:n]
+		if n == 0 {
+			*statusList = append((*statusList)[:idx], (*statusList)[idx+1:]...)
+		} else {
+			(*statusList)[idx].Failures = status.Failures[:n]
+			idx++
+		}
 	}
-	return nil
 }

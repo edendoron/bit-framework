@@ -72,17 +72,18 @@ func writeExtendedFailures(w http.ResponseWriter, failureToWrite *string) {
 	failure := handler.ExtendedFailure{}
 	if err := json.Unmarshal([]byte(*failureToWrite), &failure); err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
 	}
 	filename := failure.Failure.Description.UnitName + "_" + failure.Failure.Description.TestName + "_" + strconv.FormatUint(failure.Failure.Description.TestId, 10)
 	f, err := os.OpenFile("storage/config/perm_filtering_rules/"+filename+".txt", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	failureToProto, err := proto.Marshal(&failure)
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-	}
-	if _, err = f.Write(failureToProto); err != nil {
+	//failureToProto, err := proto.Marshal(&failure)
+	//if err != nil {
+	//	ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	//}
+	if _, err = f.Write([]byte(*failureToWrite)); err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	w.WriteHeader(http.StatusOK)

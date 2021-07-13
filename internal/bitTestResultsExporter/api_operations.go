@@ -40,7 +40,7 @@ func PostBandwidth(w http.ResponseWriter, r *http.Request) {
 	CurrentBW = request
 
 	//validate "unitsPerSecond" units and "size" != 0
-	if calculateSizeLimit(CurrentBW) == 0 {
+	if CalculateSizeLimit(CurrentBW) == 0 {
 		ApiResponseHandler(w, http.StatusBadRequest, "Bad request", err)
 		return
 	}
@@ -75,7 +75,7 @@ func ExporterPostReport(w http.ResponseWriter, r *http.Request) {
 		// TODO: handle error
 		ReportsQueue.Push(report, int(report.ReportPriority))
 	}
-	queueChannel <- ReportsQueue.Len()
+	QueueChannel <- ReportsQueue.Len()
 
 	ApiResponseHandler(w, http.StatusOK, "Report received!", nil)
 }

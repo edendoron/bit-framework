@@ -116,6 +116,7 @@ const compareDate = (report1: reportObject, report2: reportObject) => {
 }
 
 export const ReportTable: FC<ReportTableProps> = ({data}) => {
+    if (data.length === 0) return <div>No Reports Found.</div>
 
     return(
         <TableContainer component={Paper}>

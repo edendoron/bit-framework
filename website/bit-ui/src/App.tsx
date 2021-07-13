@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import './App.css';
-import {getReports, getBitStatus} from './utils/queryAPI';
+import {getBitStatus, getReports} from './utils/queryAPI';
 import {
     Box,
     Button,
@@ -10,7 +10,8 @@ import {
     createMuiTheme,
     createStyles,
     Grid,
-    makeStyles, MuiThemeProvider,
+    makeStyles,
+    MuiThemeProvider,
 } from '@material-ui/core'
 import {Selector} from "./components/Selector";
 import {DatePicker} from "./components/DatePicker";
@@ -23,20 +24,20 @@ const filterOptions = ['time', 'tag', 'field'];
 
 const useStyles = makeStyles(() =>
     createStyles({
-        dateGrid: {
-            marginTop: 20,
+            dateGrid: {
+                marginTop: 20,
+            },
+            paper: {
+                width: '50%',
+                marginLeft: '25%',
+                marginTop: 20,
+            },
+            sendButton: {
+                border: '3px solid #D48166 ',
+                marginBottom: '10px',
+            },
         },
-        paper: {
-            width: '50%',
-            marginLeft: '25%',
-            marginTop: 20,
-        },
-        sendButton: {
-            border: '3px solid #D48166 ',
-            marginBottom: '10px',
-        },
-    },
-));
+    ));
 
 
 export const App = () => {
@@ -49,6 +50,7 @@ export const App = () => {
     const [startTime, setStartTime] = useState(new Date());
     const [endTime, setEndTime] = useState(new Date());
     const [data, setData] = useState<string>();
+    const [error, setError] = useState(null);
 
     const changeQueryType = (event: React.ChangeEvent<{ value: unknown }>) => {
         setQueryType(event.target.value as string);
@@ -75,13 +77,39 @@ export const App = () => {
         setEndTime(date)
     }
 
-    const renderData = async () => {
-        switch (queryType){
+    const getData = async () => {
+        switch (queryType) {
             case 'Reports':
-                setData(await getReports(filter, startTime, endTime));
+                try {
+                    setData(await getReports(filter, startTime, endTime));
+                    setError(null);
+                } catch (e) {
+                    setError(e);
+                }
                 break;
             case 'BIT Status':
-                setData(await getBitStatus(userGroup, startTime, endTime, filter));
+                try {
+                    setData(await getBitStatus(userGroup, startTime, endTime, filter));
+                    setError(null);
+                } catch (e) {
+                    setError(e);
+                }
+                break;
+        }
+    }
+
+    const renderData = () => {
+        if (error) return <div>Network error. Please try again.</div>
+        switch (queryType) {
+            case 'Reports':
+                if (!!data) {
+                    return <ReportTable data={JSON.parse(data)}/>
+                }
+                break;
+            case 'BIT Status':
+                if (!!data) {
+                    return <StatusTable data={JSON.parse(data)}/>
+                }
                 break;
         }
     }
@@ -96,40 +124,42 @@ export const App = () => {
     })
 
     return (
-    <MuiThemeProvider theme={theme}>
-        <Box bgcolor="#373A36" minHeight="100vh" textAlign="center">
-            <Box bgcolor="#D48166" minHeight="100vh" marginRight="150px" marginLeft="150px">
-                <Card>
-                    <CardHeader title="BIT Framework Query System"/>
-                    <CardContent>
-                        <Grid container justify='space-evenly'>
-                            <Selector menuItems={userGroups} currentValue={userGroup} onChange={changeUserGroup} isDisabled={false}/>
-                            <Selector menuItems={queryTypes} currentValue={queryType} onChange={changeQueryType} isDisabled={isDisabled}/>
-                            <Selector menuItems={filterOptions} currentValue={filter} onChange={changeFilter} isDisabled={isDisabled}/>
-                        </Grid>
-                        {filter === 'time' &&
-                        <Grid className={classes.dateGrid} container justify='space-evenly'>
-                            <DatePicker
-                                currentDate={startTime}
-                                onDateChange={changeStartTime}
-                                placeholder='start time'
-                            />
-                            <DatePicker
-                                currentDate={endTime}
-                                onDateChange={changeEndTime}
-                                placeholder={'end time'}
-                            />
-                        </Grid>}
-                    </CardContent>
-                    <Button className={classes.sendButton} onClick={renderData}>
-                        Send
-                    </Button>
-                </Card>
-                {!! data && queryType === 'Reports' && <ReportTable data={JSON.parse(data)}/>}
-                {!! data && queryType === 'BIT Status' && <StatusTable data={JSON.parse(data)}/>}
+        <MuiThemeProvider theme={theme}>
+            <Box bgcolor="#373A36" minHeight="100vh" textAlign="center">
+                <Box bgcolor="#D48166" minHeight="100vh" marginRight="150px" marginLeft="150px">
+                    <Card>
+                        <CardHeader title="BIT Framework Query System"/>
+                        <CardContent>
+                            <Grid container justify='space-evenly'>
+                                <Selector menuItems={userGroups} currentValue={userGroup} onChange={changeUserGroup}
+                                          isDisabled={false}/>
+                                <Selector menuItems={queryTypes} currentValue={queryType} onChange={changeQueryType}
+                                          isDisabled={isDisabled}/>
+                                <Selector menuItems={filterOptions} currentValue={filter} onChange={changeFilter}
+                                          isDisabled={isDisabled}/>
+                            </Grid>
+                            {filter === 'time' &&
+                            <Grid className={classes.dateGrid} container justify='space-evenly'>
+                                <DatePicker
+                                    currentDate={startTime}
+                                    onDateChange={changeStartTime}
+                                    placeholder='start time'
+                                />
+                                <DatePicker
+                                    currentDate={endTime}
+                                    onDateChange={changeEndTime}
+                                    placeholder={'end time'}
+                                />
+                            </Grid>}
+                        </CardContent>
+                        <Button className={classes.sendButton} onClick={getData}>
+                            Send
+                        </Button>
+                    </Card>
+                    {renderData()}
+                </Box>
             </Box>
-        </Box>
-    </MuiThemeProvider>
+        </MuiThemeProvider>
     );
 }
 

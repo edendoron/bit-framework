@@ -65,6 +65,7 @@ const compareDate = (report1: failureObject, report2: failureObject) => {
 
 const FailureRow = (failure: failureObject) => {
     const [open, setOpen] = React.useState(false);
+    const classes = useRowStyles();
 
     const timestamp = new Date(failure.timestamp.seconds * 1000).toLocaleString()
 
@@ -87,19 +88,19 @@ const FailureRow = (failure: failureObject) => {
                 <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={6}>
                     <Collapse in={open} timeout="auto" unmountOnExit>
                         <Box margin={1}>
-                            <div>Description: "{failure.failure_data.description}"</div>
+                            <div><span className={classes.tableHeader}>Description:</span> "{failure.failure_data.description}"</div>
 
-                            <div>Additional Info: "{failure.failure_data.additional_info}"</div>
+                            <div><span className={classes.tableHeader}>Additional Info:</span> "{failure.failure_data.additional_info}"</div>
 
-                            <div>purpose: "{failure.failure_data.purpose}"</div>
+                            <div><span className={classes.tableHeader}>Purpose:</span> "{failure.failure_data.purpose}"</div>
 
-                            <div>Operator Failure: "{failure.failure_data.operator_failure}"</div>
+                            <div><span className={classes.tableHeader}>Operator Failure:</span> "{failure.failure_data.operator_failure}"</div>
 
-                            <div>Line Replacement Units:
+                            <div><span className={classes.tableHeader}>Line Replacement Units:</span>
                                 "{failure.failure_data.line_replacent_units.map((unit) => unit + ', ')}"
                             </div>
 
-                            <div>Field Replacement Units:
+                            <div><span className={classes.tableHeader}>Field Replacement Units:</span>
                                 "{failure.failure_data.field_replacemnt_units.map((unit) => unit + ', ')}"
                             </div>
                         </Box>
@@ -163,7 +164,7 @@ const StatusRow = (props: { status: statusObject, index: number }) => {
 }
 
 export const StatusTable: FC<StatusTableProps> = ({data}) => {
-    if(data === null) return <div/>
+    if(data.length === 0) return <div>No Statuses Found.</div>
 
     return (
         <TableContainer component={Paper}>

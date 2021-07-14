@@ -85,7 +85,7 @@ const Row = (props: {row : reportObject}) => {
                         {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                     </IconButton>
                 </TableCell>
-                <TableCell component="th" scope="row" align="center">{row.testId}</TableCell>
+                <TableCell component="th" scope="row" align="center" sortDirection={'asc'}>{row.testId}</TableCell>
                 <TableCell align="center">{dayjs(row.timestamp).format(dateFormat)}</TableCell>
                 <TableCell align="center">{row.reportPriority}</TableCell>
             </TableRow>

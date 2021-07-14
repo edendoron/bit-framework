@@ -106,7 +106,7 @@ func (a *BitAnalyzer) ReadReportsFromStorage() {
 }
 
 // Crosscheck examine reports and checks for failures violations
-func (a *BitAnalyzer) Crosscheck() {
+func (a *BitAnalyzer) Crosscheck(examinationTime time.Time) {
 
 	// generate map of masked groups
 	maskedUserGroups := make(map[string]int)
@@ -126,7 +126,7 @@ func (a *BitAnalyzer) Crosscheck() {
 			// insert failures to SavedFailures
 			extFailure := confFailure
 			extFailure.failureCount = countFailed
-			extFailure.Time = epoch
+			extFailure.Time = examinationTime
 			a.SavedFailures = append(a.SavedFailures, extFailure)
 
 			//// post forever failures to storage in order to restore it later if needed

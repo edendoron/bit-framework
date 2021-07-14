@@ -39,7 +39,7 @@ func StatusScheduler() {
 		case epoch = <-ticker.C:
 			go func() {
 				analyzer.ReadReportsFromStorage()
-				analyzer.Crosscheck()
+				analyzer.Crosscheck(epoch)
 				analyzer.WriteBitStatus()
 			}()
 		}

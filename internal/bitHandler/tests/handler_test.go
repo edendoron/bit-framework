@@ -235,7 +235,6 @@ func TestReportDuration(t *testing.T) {
 	a.Crosscheck(testTime)
 	// failure should disappear after CleanBitStatus which happens in the end of WriteBitStatus
 	a.CleanBitStatus()
-	expectedResult = BitStatus{}
 	if !reflect.DeepEqual(a.Status, expectedResult) {
 		t.Errorf("test for NO_LATCH indication, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
 	}
@@ -341,12 +340,11 @@ func TestDependencies(t *testing.T) {
 	var a BitAnalyzer
 
 	testTime := time.Now()
-	expectedResult := BitStatus{}
 
 	// test for masking groups, group1 should be masked, failure2 belongs to another group so it will be reported
 	a.ConfigFailures = []ExtendedFailure{failure1, failure2}
 	a.Reports = []TestReport{report3, report4, report5, report6}
-	expectedResult = BitStatus{
+	expectedResult := BitStatus{
 		Failures: []*BitStatus_RportedFailure{
 			{
 				FailureData: failure1.Failure.Description,

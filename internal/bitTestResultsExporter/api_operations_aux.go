@@ -19,6 +19,8 @@ var QueueChannel = make(chan int, 1000)
 
 var CurrentBW = Bandwidth{}
 
+var TestingFlag = false
+
 const KiB = 1024
 const MiB = KiB * 1024
 const GiB = MiB * 1024
@@ -162,7 +164,7 @@ func postReportUpdateEpoch(indexerReport *bytes.Reader, status ReportStatus, epo
 
 // post reports collected under bandwidth limitations to bit-indexer service, if failed tries to post the reports back in order to insert all reports back to queue and re-send them.
 func postIndexer(postBodyRef *bytes.Reader) {
-	if postBodyRef.Size() < 1 {
+	if postBodyRef.Size() < 1 || TestingFlag {
 		return
 	}
 	go func() {
@@ -171,7 +173,7 @@ func postIndexer(postBodyRef *bytes.Reader) {
 			log.Printf("error posting request to indexer, error: %v", err)
 			exporterRes, e := http.Post(Configs.ExporterUrl, "application/json; charset=UTF-8", postBodyRef)
 			if e != nil || exporterRes.StatusCode != http.StatusOK {
-				log.Printf("error posting reports back to indexer")
+				log.Printf("error posting reports back to exporter")
 				log.Fatal(e)
 			}
 			exporterRes.Body.Close()

@@ -23,8 +23,13 @@ func main() {
 	// NOTE: requests may be sent in 0.1 second deviation of the requested duration
 	go exporter.ReportsScheduler(time.Second)
 
-	//TODO: need to change to ListenAndServeTLS in order to support https
-	//err := srv.ListenAndServeTLS(exporter.Configs.SSHCertPath, exporter.Configs.SSHKeyPath)
+	if exporter.Configs.UseHTTPS {
+		err := srv.ListenAndServeTLS(exporter.Configs.SSHCertPath, exporter.Configs.SSHKeyPath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)

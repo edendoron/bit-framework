@@ -27,3 +27,4 @@ bit_history_curator_aged_data_limit: "72h"
 ssh_key: "C:/Users/Eden/Documents/bit-framework/configs/prog_configs/sshConfigs/localhost.key"
 ssh_cert: "C:/Users/Eden/Documents/bit-framework/configs/prog_configs/sshConfigs/localhost.crt"
 ssh_csr: "C:/Users/Eden/Documents/bit-framework/configs/prog_configs/sshConfigs/localhost.csr"
+use_https: false

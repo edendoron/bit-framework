@@ -136,7 +136,7 @@ func DeleteData(w http.ResponseWriter, r *http.Request) {
 						ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 					}
 					currentDir, _ := os.Getwd()
-					for true {
+					for {
 						if currentDir == "storage" {
 							break
 						}

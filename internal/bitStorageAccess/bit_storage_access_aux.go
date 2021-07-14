@@ -66,6 +66,50 @@ func writeConfigFailures(w http.ResponseWriter, failureToWrite *string) {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	w.WriteHeader(http.StatusOK)
+
+	writeUserGroups(w, failure)
+}
+
+func writeUserGroups(w http.ResponseWriter, failure Failure) {
+	var content []byte
+	if _, err := os.Stat("storage/config/user_groups/user_groups.txt"); err == nil {
+		content, err = ioutil.ReadFile("storage/config/user_groups/user_groups.txt")
+		if err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			return
+		}
+	}
+
+	userGroups := make(map[string]int)
+	var groups []string
+	if len(content) > 0 {
+		groups = strings.Split(string(content), "\n")
+	}
+	for _, group := range groups{
+		userGroups[group] = 1
+	}
+	for _, group := range failure.Dependencies.BelongsToGroup {
+		userGroups[group] = 1
+	}
+	for _, group := range failure.Dependencies.MasksOtherGroup {
+		userGroups[group] = 1
+	}
+	f, err := os.OpenFile("storage/config/user_groups/user_groups.txt", os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0755)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+	i := 0
+	for group, _ := range userGroups {
+		if _, err = f.WriteString(group); err != nil {
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			return
+		}
+		if i != len(userGroups)-1 {
+			f.WriteString("\n")
+		}
+		i++
+	}
 }
 
 func writeExtendedFailures(w http.ResponseWriter, failureToWrite *string) {
@@ -291,6 +335,20 @@ func readUserGroupMaskedTestIds(w http.ResponseWriter, userGroup string) {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	err = json.NewEncoder(w).Encode(&decodedContent.MaskedTestIds)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func readUserGroups(w http.ResponseWriter) {
+	content, err := ioutil.ReadFile("storage/config/user_groups/user_groups.txt")
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+	groups := strings.Split(string(content), "\n")
+	err = json.NewEncoder(w).Encode(&groups)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}

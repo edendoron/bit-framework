@@ -23,8 +23,10 @@ func main() {
 	go func() {
 		history.RemoveAgedData(history.GetCuratorTimeConfig())
 		log.Printf("Service ended - bit-history-curator")
-		//TODO: handle error
-		srv.Shutdown(context.Background())
+		err := srv.Shutdown(context.Background())
+		if err != nil {
+			log.Fatal(err)
+		}
 	}()
 
 	if history.Configs.UseHTTPS {

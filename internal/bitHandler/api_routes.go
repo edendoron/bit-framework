@@ -3,12 +3,16 @@ package bitHandler
 import (
 	. "../models"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 )
 
 func HandlerIndex(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello bit-handler!")
+	_, err := fmt.Fprintf(w, "Hello bit-handler!")
+	if err != nil {
+		log.Printf("error in index route: %v", err)
+	}
 }
 
 var HandlerRoutes = Routes{

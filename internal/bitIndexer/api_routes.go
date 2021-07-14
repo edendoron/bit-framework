@@ -3,12 +3,16 @@ package bitIndexer
 import (
 	. "../models"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 )
 
 func IndexerIndex(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello bit-indexer!")
+	_, err := fmt.Fprintf(w, "Hello bit-indexer!")
+	if err != nil {
+		log.Printf("error in index route: %v", err)
+	}
 }
 
 var IndexerRoutes = Routes{

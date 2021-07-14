@@ -16,12 +16,6 @@ type ExtendedFailure struct {
 	endReportId   float64
 }
 
-func (e *ExtendedFailure) Reset() { *e = ExtendedFailure{} }
-
-func (e *ExtendedFailure) String() string { return proto.CompactTextString(e) }
-
-func (e *ExtendedFailure) ProtoMessage() {}
-
 func (e *ExtendedFailure) ExtendedFailureToBitStatusReportedFailure() BitStatus_RportedFailure {
 	return BitStatus_RportedFailure{
 		FailureData: e.Failure.Description,
@@ -47,3 +41,11 @@ func FailureToExtendedFailure(failure Failure) ExtendedFailure {
 		endReportId:   0,
 	}
 }
+
+// function to support protobuf
+
+func (e *ExtendedFailure) Reset() { *e = ExtendedFailure{} }
+
+func (e *ExtendedFailure) String() string { return proto.CompactTextString(e) }
+
+func (e *ExtendedFailure) ProtoMessage() {}

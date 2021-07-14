@@ -22,11 +22,12 @@ type ProgConfigs struct {
 	BitConfigUserGroupPath         string  `conf:"config_user_group_path" help:"The path in which bit_config service expects to find configuration user_groups_filtering in order to post to storage"`
 	BitExporterDefaultBWSize       float32 `conf:"exporter_default_bw_size" help:"bit_exporter default bandwidth size"`
 	BitExporterDefaultBWUnits      string  `conf:"exporter_default_bw_units" help:"bit_exporter default bandwidth units (KiB, Mib, MB...)"`
-	BitExporterPostToIndexerUrl    string  `conf:"exporter_post_to_indexer_url" help:"URL used in bit_exporter in order to create a write request to storage through indexer service (POST, PUT)."`
+	IndexerUrl                     string  `conf:"indexer_url" help:"URL used in order to create a write request to storage through indexer service (POST, PUT)."`
+	ExporterUrl                    string  `conf:"exporter_url" help:"URL used in order to create a write request to storage through exporter service (POST, PUT)."`
 	BitHandlerTriggerPeriod        float64 `conf:"handler_trigger_period" help:"Interval size of the bit_handler trigger in seconds. BitStatus is written to storage every triggerPeriod seconds."`
 	BitHandlerTriggerType          string  `conf:"handler_trigger_type" help:"Type of bit_handler trigger (CBIT, PBIT, IBIT...)."`
 	BitHistoryCuratorAgedDataLimit string  `conf:"bit_history_curator_aged_data_limit" help:"Limit of time for bit_history_curator. every report or bitStatus reported prior to that duration will be deleted from storage. Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'."`
-	SSHKeyPath					           string	`conf:"ssh_key" help:"The SSH key used for HTTPS."`
-	SSHCertPath					           string	`conf:"ssh_cert" help:"The SSH certificate used for HTTPS."`
-	SSHCsrPath					           string	`conf:"ssh_csr" help:"The SSH csr file used for HTTPS."`
+	SSHKeyPath                     string  `conf:"ssh_key" help:"The SSH key used for HTTPS."`
+	SSHCertPath                    string  `conf:"ssh_cert" help:"The SSH certificate used for HTTPS."`
+	SSHCsrPath                     string  `conf:"ssh_csr" help:"The SSH csr file used for HTTPS."`
 }

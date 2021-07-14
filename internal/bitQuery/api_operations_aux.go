@@ -10,15 +10,16 @@ import (
 	"net/url"
 )
 
+// QueryHandler send @req to storage in order to read @requestedData, and writes it back to user through @w
 func QueryHandler(w http.ResponseWriter, req *http.Request, requestedData string, userGroup string) {
 	client := &http.Client{}
-	//fmt.Println(req.URL.String())
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
+	defer resp.Body.Close()
 	switch requestedData {
 	case "bit_status":
 		var bitStatusList []BitStatus
@@ -29,16 +30,16 @@ func QueryHandler(w http.ResponseWriter, req *http.Request, requestedData string
 		}
 		maskedTestIds, e := getUserGroupsFiltering(userGroup)
 		if e != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-			return
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error extract user groups filtering", e)
+		} else {
+			FilterBitStatus(&bitStatusList, maskedTestIds)
 		}
-		FilterBitStatus(&bitStatusList, maskedTestIds)
 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		err = json.NewEncoder(w).Encode(&bitStatusList)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Println(err)
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			return
 		}
 		w.WriteHeader(http.StatusOK)
 	case "reports":
@@ -51,8 +52,8 @@ func QueryHandler(w http.ResponseWriter, req *http.Request, requestedData string
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		err = json.NewEncoder(w).Encode(&reports)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Println(err)
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			return
 		}
 		w.WriteHeader(http.StatusOK)
 	case "user_groups":
@@ -65,18 +66,14 @@ func QueryHandler(w http.ResponseWriter, req *http.Request, requestedData string
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		err = json.NewEncoder(w).Encode(&userGroups)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Println(err)
+			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		}
 		w.WriteHeader(http.StatusOK)
 	}
 
-	err = resp.Body.Close()
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-	}
 }
 
+// adds general query parameters to params according to param @filter and params of request @r
 func paramsHandler(r *http.Request, params url.Values, filter string) {
 	switch filter {
 	// cases are almost identical, query keys and var names are different for readability - need support on client side
@@ -95,6 +92,10 @@ func paramsHandler(r *http.Request, params url.Values, filter string) {
 	}
 }
 
+/*
+send request of user groups filtering rules to storage
+return masked tests ID's according to @param userGroup, and error if occur
+*/
 func getUserGroupsFiltering(userGroup string) ([]uint64, error) {
 	var res []uint64
 
@@ -102,7 +103,6 @@ func getUserGroupsFiltering(userGroup string) ([]uint64, error) {
 	if err != nil {
 		return res, err
 	}
-	//TODO: defer req.Body.Close()
 
 	params := req.URL.Query()
 	params.Add("config_user_groups_filtering", "")
@@ -116,20 +116,18 @@ func getUserGroupsFiltering(userGroup string) ([]uint64, error) {
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
 		return res, err
 	}
+	defer storageResponse.Body.Close()
 
 	err = json.NewDecoder(storageResponse.Body).Decode(&res)
 	if err != nil {
 		log.Printf("error decode storage response body")
 		return res, err
 	}
-	err = storageResponse.Body.Close()
-	if err != nil {
-		log.Printf("error close storage response body")
-		return res, err
-	}
+
 	return res, nil
 }
 
+// FilterBitStatus filter failures from @param statusList according to @param maskedTestIds
 func FilterBitStatus(statusList *[]BitStatus, maskedTestIds []uint64) {
 	idx := 0
 	for _, status := range *statusList {

@@ -15,6 +15,7 @@ import (
 
 var TestingFlag = false
 
+// BitAnalyzer extract data from storage and creates bitStatus
 type BitAnalyzer struct {
 	ConfigFailures      []ExtendedFailure
 	Reports             []TestReport
@@ -24,12 +25,14 @@ type BitAnalyzer struct {
 }
 
 // ByTime implements sort.Interface for []TestReport based on the timestamp field.
-
 type ByTime []TestReport
 
 func (a ByTime) Len() int           { return len(a) }
 func (a ByTime) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByTime) Less(i, j int) bool { return a[i].Timestamp.Before(a[j].Timestamp) }
+
+// constant date layout used in storage
+const layout = "2006-January-02 15:4:5"
 
 // exported methods
 
@@ -40,8 +43,6 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 		log.Printf("error create storage request. %v", err)
 		return
 	}
-	//TODO: check when to close request/response body and handle error
-	//defer req.Body.Close()
 
 	params := req.URL.Query()
 	params.Add(keyValue, "")
@@ -53,6 +54,7 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 	if e != nil || storageResponse.StatusCode != http.StatusOK {
 		log.Fatalln("error reading failures from storage")
 	}
+	defer storageResponse.Body.Close()
 
 	switch keyValue {
 	case "config_failures":
@@ -65,31 +67,22 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 	if err != nil {
 		log.Printf("error reading %v from storage. %v", keyValue, err)
 	}
-
-	err = storageResponse.Body.Close()
-	if err != nil {
-		log.Printf("error close storage response body. %v", err)
-	}
 }
 
-func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
+func (a *BitAnalyzer) ReadReportsFromStorage() {
 	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
 	if err != nil {
 		log.Printf("error create storage request %v", err)
 		return
 	}
-	//TODO: check when to close request/response body and handle error
-	//defer req.Body.Close()
 
-	const layout = "2006-January-02 15:4:5"
-	//TODO: update time frame according to d
-	endTime, _ := time.Parse(layout, "2021-April-20 12:00:00")
-	startTime, _ := time.Parse(layout, "2021-April-15 11:00:00")
+	endTime := epoch.Format(layout)
+	startTime := epoch.Add(-time.Second).Format(layout)
 	params := req.URL.Query()
 	params.Add("reports", "")
 	params.Add("filter", "time")
-	params.Add("start", startTime.Format(layout))
-	params.Add("end", endTime.Format(layout))
+	params.Add("start", startTime)
+	params.Add("end", endTime)
 	req.URL.RawQuery = params.Encode()
 
 	client := &http.Client{}
@@ -99,6 +92,7 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 		log.Printf("error execute storage request. %v", err)
 		return
 	}
+	defer storageResponse.Body.Close()
 
 	var storageReports []TestReport
 	err = json.NewDecoder(storageResponse.Body).Decode(&storageReports)
@@ -109,15 +103,10 @@ func (a *BitAnalyzer) ReadReportsFromStorage(d time.Duration) {
 
 	// remove unnecessary reports and sort all reports by time
 	a.UpdateReports(storageReports)
-
-	err = storageResponse.Body.Close()
-	if err != nil {
-		log.Printf("error close storage response body. %v", err)
-	}
-
 }
 
-func (a *BitAnalyzer) Crosscheck(epoch time.Time) {
+// Crosscheck examine reports and checks for failures violations
+func (a *BitAnalyzer) Crosscheck() {
 
 	// generate map of masked groups
 	maskedUserGroups := make(map[string]int)
@@ -151,6 +140,7 @@ func (a *BitAnalyzer) Crosscheck(epoch time.Time) {
 	a.updateBitStatus(maskedUserGroups)
 }
 
+// WriteBitStatus reports last interval bitStatus to storage
 func (a *BitAnalyzer) WriteBitStatus() {
 
 	if len(a.Status.Failures) == 0 {
@@ -180,16 +170,13 @@ func (a *BitAnalyzer) WriteBitStatus() {
 	storageResponse, err := http.Post(Configs.StorageWriteURL, "application/json; charset=UTF-8", postBody)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
 		log.Printf("error post bit_status to storage. %v", err)
-		return
 	}
-	err = storageResponse.Body.Close()
-	if err != nil {
-		log.Printf("error close storage response body. %v", err)
-	}
+	storageResponse.Body.Close()
 
 	a.CleanBitStatus()
 }
 
+// ResetSavedFailures handles user requests to remove LATCH_UNTIL_RESET duration failures from reported failures
 func (a *BitAnalyzer) ResetSavedFailures() {
 	n := 0
 	for _, item := range a.SavedFailures {
@@ -203,12 +190,14 @@ func (a *BitAnalyzer) ResetSavedFailures() {
 	a.SavedFailures = a.SavedFailures[:n]
 }
 
+// CleanBitStatus remove last interval bitStatus from analyzer after reporting it to storage
 func (a *BitAnalyzer) CleanBitStatus() {
 	a.Status = BitStatus{}
 }
 
 // internal methods
 
+// remove NO_LATCH and NUM_OF_SECONDS (if time interval has passed) indication failures from failure's list that needs to be reported in the next interval
 func (a *BitAnalyzer) filterSavedFailures() {
 	n := 0
 	for _, item := range a.SavedFailures {
@@ -230,6 +219,7 @@ func (a *BitAnalyzer) filterSavedFailures() {
 	a.SavedFailures = a.SavedFailures[:n]
 }
 
+// checks for masked user groups in order to not report those failures in the bitStatus report.
 func (a *BitAnalyzer) updateBitStatus(maskedUserGroups map[string]int) {
 	for _, item := range a.SavedFailures {
 		masked := checkMasked(maskedUserGroups, item)
@@ -237,6 +227,7 @@ func (a *BitAnalyzer) updateBitStatus(maskedUserGroups map[string]int) {
 	}
 }
 
+// insert  un-masked failures to bitStatus report.
 func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item ExtendedFailure) {
 	if !masked {
 		// insert failure to BitStatus
@@ -249,6 +240,11 @@ func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item ExtendedF
 	}
 }
 
+/*
+checks failure violation.
+@param i is the index of the tested failure in analyzer config failures array.
+@returns the count of failure violation found in current time frame
+*/
 func (a *BitAnalyzer) checkExaminationRule(i int) uint64 {
 	examinationRule := a.ConfigFailures[i].Failure.ExaminationRule
 	timeCriteria := examinationRule.FailureCriteria.TimeCriteria
@@ -266,6 +262,11 @@ func (a *BitAnalyzer) checkExaminationRule(i int) uint64 {
 	}
 }
 
+/*
+iterate reports in order to check failure violation for SLIDING_WINDOW type of failures
+@param i is the index of the tested failure in analyzer config failures array.
+@returns the count of failure violation found in current time frame
+*/
 func (a *BitAnalyzer) checkSlidingWindow(i int) uint64 {
 
 	extFailure := &a.ConfigFailures[i]
@@ -332,6 +333,11 @@ func (a *BitAnalyzer) checkSlidingWindow(i int) uint64 {
 	return countExaminationRuleViolation
 }
 
+/*
+iterate reports in order to check failure violation for NO_WINDOW type of failures
+@param i is the index of the tested failure in analyzer config failures array.
+@returns the count of failure violation found in current time frame
+*/
 func (a *BitAnalyzer) checkNoWindow(i int) uint64 {
 	extFailure := &a.ConfigFailures[i]
 	examinationRule := extFailure.Failure.ExaminationRule
@@ -367,6 +373,11 @@ func (a *BitAnalyzer) checkNoWindow(i int) uint64 {
 	return countExaminationRuleViolation
 }
 
+/*
+UpdateReports removes previous time frame reports from analyzer reports, update it with current time frame reports and sort them by time.
+note: some of previous time frame reports may not be removed in order to keep examine failures from the last point stopped,
+and find failures that may occur between time frames (relevant for SLIDING_WINDOW failures).
+*/
 func (a *BitAnalyzer) UpdateReports(reports []TestReport) {
 	n := sort.Search(len(a.Reports), func(i int) bool { return !a.Reports[i].Timestamp.Before(a.LastEpochReportTime) })
 	a.Reports = append(a.Reports[n:], reports...)
@@ -387,6 +398,7 @@ func checkMasked(maskedUserGroups map[string]int, item ExtendedFailure) bool {
 	return countBelongGroupMask == len(item.Failure.Dependencies.BelongsToGroup)
 }
 
+// return true iff value criteria is failed due to field or tag matching problem.
 func failedValueCriteria(test *TestReport, examinationRule *FailureExaminationRule) bool {
 
 	fieldValue := checkField(test, examinationRule)
@@ -432,7 +444,7 @@ func checkFailedValue(value string, criteria *FailureExaminationRule_FailureCrit
 	}
 	floatValue, err := strconv.ParseFloat(value, 64)
 	if err != nil {
-		//TODO: handle error
+		log.Printf("error convert string value %v to number", value)
 		return false
 	}
 	valueWithin := floatValue >= min && floatValue <= max
@@ -446,6 +458,7 @@ func checkFailedValue(value string, criteria *FailureExaminationRule_FailureCrit
 	}
 }
 
+// calculate threshold after allowed deviation (by value or percent) defined in failure configuration. return (min, max) threshold
 func calculateThreshold(minimum float64, maximum float64, criteria *FailureExaminationRule_FailureCriteria_FailureValueCriteria) (float64, float64) {
 	deviation := criteria.Exceeding.Value
 	if criteria.Exceeding.Type == FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_PERCENT {
@@ -458,6 +471,7 @@ func calculateThreshold(minimum float64, maximum float64, criteria *FailureExami
 	}
 }
 
+// when analyzer finds violation of a failure defined as FOREVER_FAILURE, writeForeverFailure post this failure to storage in order to restore it even if the service is restarted
 func writeForeverFailure(failure ExtendedFailure) {
 	if TestingFlag {
 		return
@@ -483,11 +497,6 @@ func writeForeverFailure(failure ExtendedFailure) {
 	storageResponse, err := http.Post(Configs.StorageWriteURL, "application/json; charset=UTF-8", postBody)
 	if err != nil || storageResponse.StatusCode != http.StatusOK {
 		log.Printf("error post forever_failure to storage. %v", err)
-		return
 	}
-	//TODO: check when to close request/response body and handle error
-	err = storageResponse.Body.Close()
-	if err != nil {
-		log.Printf("error close storage response body. %v", err)
-	}
+	storageResponse.Body.Close()
 }

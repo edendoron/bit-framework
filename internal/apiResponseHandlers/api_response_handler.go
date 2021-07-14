@@ -17,6 +17,7 @@ func ApiResponseHandler(w http.ResponseWriter, code int, message string, e error
 		log.Println(err)
 	}
 	if code != 200 {
-		log.Println("ApiResponseHandler error is: ", e)
+		log.Printf(message)
+		log.Printf("ApiResponseHandler error is: %v", e)
 	}
 }

@@ -11,6 +11,11 @@ var TriggerChannel = make(chan TriggerBody)
 
 var ResetIndicationChannel = make(chan bool)
 
+var epoch time.Time
+
+var status string
+
+// StatusScheduler manages reading data from storage, analyze it and write bitStatus to storage according to CurrentTrigger
 func StatusScheduler() {
 	d := time.Duration(CurrentTrigger.PeriodSec) * time.Second
 	var analyzer BitAnalyzer
@@ -23,17 +28,18 @@ func StatusScheduler() {
 			d = time.Duration(CurrentTrigger.PeriodSec) * time.Second
 			if d <= 0 {
 				ticker.Stop()
+				status = "stopped"
 			} else {
 				ticker.Reset(d)
+				status = "started"
 			}
 		case <-ResetIndicationChannel:
 			analyzer.ResetSavedFailures()
 			analyzer.CleanBitStatus()
-		case epoch := <-ticker.C:
-			//fmt.Println(epoch)
+		case epoch = <-ticker.C:
 			go func() {
-				analyzer.ReadReportsFromStorage(d)
-				analyzer.Crosscheck(epoch)
+				analyzer.ReadReportsFromStorage()
+				analyzer.Crosscheck()
 				analyzer.WriteBitStatus()
 			}()
 		}

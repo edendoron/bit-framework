@@ -9,7 +9,7 @@ import (
 )
 
 func ConfigIndex(w http.ResponseWriter, r *http.Request) {
-	_, err := fmt.Println(w, "Hello bit-config!")
+	_, err := fmt.Fprintf(w, "Hello bit-config!")
 	if err != nil {
 		log.Printf("error in index route: %v", err)
 	}

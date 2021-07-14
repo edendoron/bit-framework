@@ -4,48 +4,24 @@ import (
 	. "../apiResponseHandlers"
 	. "../models"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 )
 
 func GetTrigger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Error creating request for storage access", err)
-		return
-	}
-	//TODO: check when to close request/response body and handle error
-	//defer req.Body.Close()
-
-	params := req.URL.Query()
-	params.Add("key", "BITStatus")
-
-	client := &http.Client{}
-
-	storageResponse, err := client.Do(req)
-	if err != nil || storageResponse.StatusCode != http.StatusOK {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Storage Access Error", err)
-		return
-	}
-	//TODO: check when to close request/response body and handle error
-	defer storageResponse.Body.Close()
-
-	respBody, err := ioutil.ReadAll(storageResponse.Body)
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Storage Access Error", err)
-		return
+	result := LogicStatusBody{
+		Trigger:               &CurrentTrigger,
+		LastBitStartTimestamp: epoch,
+		Status:                status,
 	}
 
-	_, err = w.Write(respBody)
+	err := json.NewEncoder(w).Encode(&result)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal Server Error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	//TODO: check when to close request/response body and handle error
-	r.Body.Close()
 }
 
 func PostTrigger(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +29,7 @@ func PostTrigger(w http.ResponseWriter, r *http.Request) {
 
 	triggerRequest := TriggerBody{}
 
-	if !handleParam(w, r, triggerRequest) {
+	if handleNonStartAction(w, r, triggerRequest) {
 		return
 	}
 

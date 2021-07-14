@@ -19,3 +19,8 @@ export const getReports = async (filter: string, startTime?: Date, endTime?: Dat
         {params: {filter: filter, start: start, end: end}})
     return JSON.stringify(res.data);
 }
+
+export const getUserGroups = async () => {
+    const res = await axios.get(BIT_QUERY_URL + '/userGroups');
+    return res.data;
+}

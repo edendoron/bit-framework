@@ -122,7 +122,6 @@ export const App = () => {
             primary: {
                 main: '#D48166'
             },
-
         }
     })
 

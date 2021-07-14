@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"io"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -137,12 +139,6 @@ func DeleteData(w http.ResponseWriter, r *http.Request) {
 					if err != nil {
 						ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 					}
-					currentDir, _ := os.Getwd()
-					for {
-						if currentDir == "storage" {
-							break
-						}
-					}
 				}
 			}
 			return nil
@@ -151,5 +147,41 @@ func DeleteData(w http.ResponseWriter, r *http.Request) {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
+	deleteEmptyDirectories(w, "storage/test_reports", 0)
 	ApiResponseHandler(w, http.StatusOK, "Old reports deleted successfully", nil)
+}
+
+func deleteEmptyDirectories(w http.ResponseWriter, path string, depth int) {
+	if depth == 3 {
+		return
+	}
+	err := filepath.Walk(path,
+		func(childPath string, info fs.FileInfo, err error) error {
+			deleteEmptyDirectories(w, childPath, depth+1)
+			if path != "storage/test_reports" && IsEmpty(path) {
+				err := os.RemoveAll(path)
+				if err != nil {
+					ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+				}
+			}
+			return nil
+		})
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+}
+
+func IsEmpty(name string) bool {
+	f, err := os.Open(name)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1)
+	if err == io.EOF {
+		return true
+	}
+	return false
 }

@@ -30,4 +30,5 @@ type ProgConfigs struct {
 	SSHKeyPath                     string  `conf:"ssh_key" help:"The SSH key used for HTTPS."`
 	SSHCertPath                    string  `conf:"ssh_cert" help:"The SSH certificate used for HTTPS."`
 	SSHCsrPath                     string  `conf:"ssh_csr" help:"The SSH csr file used for HTTPS."`
+	UseHTTPS                       bool    `conf:"use_https" help:"boolean flag for the usage of HTTPS in the different services"`
 }

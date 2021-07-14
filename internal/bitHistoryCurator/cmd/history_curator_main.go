@@ -29,8 +29,13 @@ func main() {
 		}
 	}()
 
-	//TODO: need to change to ListenAndServeTLS in order to support https
-	//err := srv.ListenAndServeTLS(history.Configs.SSHCertPath, history.Configs.SSHKeyPath)
+	if history.Configs.UseHTTPS {
+		err := srv.ListenAndServeTLS(history.Configs.SSHCertPath, history.Configs.SSHKeyPath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)

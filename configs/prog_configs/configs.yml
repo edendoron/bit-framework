@@ -17,7 +17,7 @@ storage_write_url: "http://localhost:8082/data/write"
 storage_read_url: "http://localhost:8082/data/read"
 storage_delete_url: "http://localhost:8082/data/delete"
 config_failures_path: "./configs/config_failures/"
-config_user_group_path: "./configs/config_user_groups_filtering"
+config_user_group_path: "./configs/config_user_groups_filtering/"
 exporter_default_bw_size: 20
 exporter_default_bw_units: "KiB"
 indexer_url: "http://localhost:8081/report/raw"

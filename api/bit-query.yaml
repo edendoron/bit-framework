@@ -1,0 +1,536 @@
+openapi: 3.0.0
+info:
+  contact:
+    name: BINA SW Architect
+  description: |
+    This protocol defines the API for **query** service in the **BIT** functionality.
+  license:
+    name: Apache 2.0
+  title: bit-query
+  version: 1.0.1
+  x-audience: company-internal
+servers:
+  - description: Secured production server
+    url: https://{host}:{port}/{basePath}
+    variables:
+      host:
+        default: localhost
+      port:
+        default: "8085"
+      basePath:
+        default: api
+  - description: Production server
+    url: http://{host}:{port}/{basePath}
+    variables:
+      host:
+        default: localhost
+      port:
+        default: "8085"
+      basePath:
+        default: api
+tags:
+  - description: Liveness and readyness probes
+    name: Liveness
+  - description: Functional behaviour of the microservice
+    name: Operations
+paths:
+  /ping:
+    get:
+      description: Heart beat probe
+      operationId: GetPing
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                example-1:
+                  value:
+                    timestamp: "2021-04-16T17:08:09.6729229+03:00"
+                    version: 1.2.4-rc5677
+                    host: my-server-3
+                    ready: true
+                    apiVersion: 1.0.0
+              schema:
+                $ref: '#/components/schemas/PongBody'
+          description: Pong OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Heart beat
+      tags:
+        - Liveness
+  /status:
+    get:
+      description: |
+        Get bitStatus reports reported in a specific time interval
+      operationId: GetStatus
+      parameters:
+        - in: query
+          name: start
+          description: start time interval formatted as layout = "2006-January-02 15:4:5"
+          required: true
+          schema:
+            example: 2021-July-02 15:4:5
+            type: string
+        - in: query
+          name: end
+          description: end time interval formatted as layout = "2006-January-02 15:4:5"
+          required: true
+          schema:
+            example: 2021-July-12 15:4:5
+            type: string
+        - in: query
+          name: filter
+          description: filter results by time\label
+          required: true
+          schema:
+            example: time
+            type: string
+        - in: query
+          name: user_group
+          description: specify user's user group
+          required: true
+          schema:
+            example: engine_group
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BitStatusArray'
+          description: Acknowledged
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Get bitStatus reports reported in a specific time interval
+      tags:
+        - Operations
+  /reports:
+    get:
+      description: |
+        Get reports reported in a specific time interval
+      operationId: GetReports
+      parameters:
+        - in: query
+          name: start
+          description: start time interval formatted as layout = "2006-January-02 15:4:5"
+          required: true
+          schema:
+            example: 2021-July-02 15:4:5
+            type: string
+        - in: query
+          name: end
+          description: end time interval formatted as layout = "2006-January-02 15:4:5"
+          required: true
+          schema:
+            example: 2021-July-12 15:4:5
+            type: string
+        - in: query
+          name: filter
+          description: filter results by time\label
+          required: true
+          schema:
+            example: time
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportArray'
+          description: Acknowledged
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Get reports reported in a specific time interval
+      tags:
+        - Operations
+  /userGroups:
+    get:
+      description: |
+        Get user groups in system
+      operationId: GetUserGroups
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGroups'
+          description: Acknowledged
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Get user groups in system
+      tags:
+        - Operations
+components:
+  schemas:
+    PongBody:
+      example:
+        apiVersion: apiVersion
+        ready: true
+        host: host
+        version: version
+        timestamp: "2021-04-16T17:08:09.6729229+03:00"
+      properties:
+        timestamp:
+          description: Current UTC date-time (RFC3339)
+          format: date-time
+          type: string
+        version:
+          description: Service version
+          type: string
+        host:
+          description: Host that running this service
+          type: string
+        ready:
+          description: true if operational
+          type: boolean
+        apiVersion:
+          description: API version
+          type: string
+      required:
+        - apiVersion
+        - host
+        - ready
+        - timestamp
+        - version
+    ApiResponse:
+      properties:
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+      type: object
+      x-examples:
+        example-1:
+          code: 0
+          message: string
+    ReportArray:
+      example:
+        - tagSet:
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+          reportPriority: 11
+          fieldSet:
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+          testId: 101
+          timestamp: "2021-04-16T17:08:09.6729229+03:00"
+        - tagSet:
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+          reportPriority: 11
+          fieldSet:
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+          testId: 101
+          timestamp: "2021-04-16T17:08:09.6729229+03:00"
+        - tagSet:
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+          reportPriority: 11
+          fieldSet:
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+            - value: value
+              key: key
+          testId: 101
+          timestamp: "2021-04-16T17:08:09.6729229+03:00"
+      type: array
+      description: 'Array of reported tests result'
+      maxItems: 50
+      minItems: 0
+      uniqueItems: true
+      items:
+        $ref: '#/components/schemas/TestReport'
+    TestReport:
+      example:
+        tagSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+        reportPriority: 11
+        fieldSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+        testId: 101
+        timestamp: "2021-04-16T17:08:09.6729229+03:00"
+      properties:
+        testId:
+          description: The unique ID of the performed test
+          example: 101
+          format: uint64
+          type: number
+        reportPriority:
+          description: The report priority [0 - lowest]
+          example: 11
+          format: uint32
+          type: number
+        timestamp:
+          description: UTC date-time (RFC3339) when the test was performed
+          format: date-time
+          type: string
+        tagSet:
+          description: 'set of Tags, e.g.: hostname=server02, ip=10.1.1.1, zone=north,
+            etc.'
+          items:
+            $ref: '#/components/schemas/KeyValue'
+          maxItems: 30
+          minItems: 0
+          type: array
+          uniqueItems: true
+        fieldSet:
+          description: 'set of Fields, e.g.: temperature=24.5, volts=7.1, etc.'
+          items:
+            $ref: '#/components/schemas/KeyValue'
+          maxItems: 30
+          minItems: 0
+          type: array
+          uniqueItems: true
+      required:
+        - testId
+        - timestamp
+    KeyValue:
+      example:
+        value: value
+        key: key
+      properties:
+        key:
+          description: key
+          type: string
+        value:
+          description: value
+          type: string
+      required:
+        - key
+        - value
+    UserGroups:
+      type: array
+      example:
+        - "group1"
+        - "group2"
+        - "group3"
+      format: uint64
+      items:
+        type: integer
+    BitStatusArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/BitStatus'
+
+    BitStatus:
+      properties:
+        Failures:
+          type: array
+          items:
+            $ref: '#/components/schemas/BitStatusReportedFailures'
+      example:
+        Failures:
+          - FailureData:
+              UnitName: "system test check"
+              TestName: "volts test"
+              TestId: 1
+              BitType":
+                - "CBIT"
+              Description: "this is a mock failure to test services"
+              AdditionalInfo: "the failure finds voltage problem"
+              Purpose: "check voltage is not within 1-7 range, with a deviation of 10%"
+              Severity: 1
+              OperatorFailure:
+                - "unable to start"
+                - "normal functionality is damaged"
+              LineReplacentUnits:
+                - "line1"
+                - "line2"
+              FieldReplacemntUnits:
+                - "field1"
+                - "field2"
+                - "field3"
+            Count: 3
+            Timestamp: "2021-04-16T17:08:09.6729229+03:00"
+          - FailureData:
+              UnitName: "system test check2"
+              TestName: "other test"
+              TestId: 2
+              BitType":
+                - "CBIT"
+              Description: "this is a mock failure to test services"
+              AdditionalInfo: "the failure finds oil problem"
+              Purpose: "check voltage is not within 20-30 range, with a deviation of 10%"
+              Severity: 1
+              OperatorFailure:
+                - "unable to start"
+                - "normal functionality is damaged"
+              LineReplacentUnits:
+                - "line1"
+                - "line2"
+              FieldReplacemntUnits:
+                - "field1"
+                - "field2"
+                - "field3"
+            Count: 19
+            Timestamp: "2021-04-16T17:08:09.6729229+03:00"
+
+
+    BitStatusReportedFailures:
+      properties:
+        FailuresData:
+          $ref: '#/components/schemas/FailureDescription'
+        Timestamp:
+          format: date-time
+          type: string
+        Count:
+          type: integer
+      example:
+        FailureData:
+          UnitName: "system test check"
+          TestName: "volts test"
+          TestId: 1
+          BitType":
+            - "CBIT"
+          Description: "this is a mock failure to test services"
+          AdditionalInfo: "the failure finds voltage problem"
+          Purpose: "check voltage is not within 1-7 range, with a deviation of 10%"
+          Severity: 1
+          OperatorFailure:
+            - "unable to start"
+            - "normal functionality is damaged"
+          LineReplacentUnits:
+            - "line1"
+            - "line2"
+          FieldReplacemntUnits:
+            - "field1"
+            - "field2"
+            - "field3"
+        Count: 3
+        Timestamp: "2021-04-16T17:08:09.6729229+03:00"
+
+    FailureDescription:
+      properties:
+        UnitName:
+          type: string
+        TestName:
+          type: string
+        TestId:
+          type: integer
+        BitType:
+          type: array
+          items:
+            type: string
+        Description:
+          type: string
+        AdditionalInfo:
+          type: string
+        Purpose:
+          type: string
+        Severity:
+          type: integer
+        OperatorFailure:
+          type: array
+          items:
+            type: string
+        LineReplacentUnits:
+          description: point of view that are influenced (what I cannot do in the system) in case of failure. e.g. TargetDetection
+          type: array
+          items:
+            type: string
+        FieldReplacemntUnits:
+          type: array
+          items:
+            type: string
+      example:
+        UnitName: "system test check"
+        TestName: "volts test"
+        TestId: 1
+        BitType":
+          - "CBIT"
+        Description: "this is a mock failure to test services"
+        AdditionalInfo: "the failure finds voltage problem"
+        Purpose: "check voltage is not within 1-7 range, with a deviation of 10%"
+        Severity: 1
+        OperatorFailure:
+          - "unable to start"
+          - "normal functionality is damaged"
+        LineReplacentUnits:
+          - "line1"
+          - "line2"
+        FieldReplacemntUnits:
+          - "field1"
+          - "field2"
+          - "field3"

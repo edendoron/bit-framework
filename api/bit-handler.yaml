@@ -1,0 +1,226 @@
+openapi: 3.0.0
+info:
+  contact:
+    name: BINA SW Architect
+  description: |
+    This protocol defines the API for **handler** service in the **BIT** functionality.
+  license:
+    name: Apache 2.0
+  title: bit-handler
+  version: 1.0.1
+  x-audience: company-internal
+servers:
+  - description: Secured production server
+    url: https://{host}:{port}/{basePath}
+    variables:
+      host:
+        default: localhost
+      port:
+        default: "8086"
+      basePath:
+        default: api
+  - description: Production server
+    url: http://{host}:{port}/{basePath}
+    variables:
+      host:
+        default: localhost
+      port:
+        default: "8086"
+      basePath:
+        default: api
+tags:
+  - description: Liveness and readyness probes
+    name: Liveness
+  - description: Functional
+    name: Operations
+paths:
+  /ping:
+    get:
+      description: Heart beat probe
+      operationId: GetPing
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                example-1:
+                  value:
+                    timestamp: 2019-08-24T14:15:22Z
+                    version: 1.2.4-rc5677
+                    host: my-server-3
+                    ready: true
+                    apiVersion: 1.0.0
+              schema:
+                $ref: '#/components/schemas/PongBody'
+          description: Pong OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Heart beat
+      tags:
+        - Liveness
+  /logic:
+    get:
+      description: Get trigger to BIT cyclic logic
+      operationId: GetTrigger
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogicStatusBody'
+          description: Current trigger
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Get BIT handler trigger
+      tags:
+        - Operations
+    post:
+      description: Update trigger to BIT cyclic logic
+      operationId: PostTrigger
+      parameters:
+        - description: Action for handler logic tiggering
+          in: query
+          name: action
+          schema:
+            enum:
+              - start
+              - stop
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriggerBody'
+        description: Trigger data for BIT handling
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Done OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Update BIT handler trigger
+      tags:
+        - Operations
+  /reset:
+    put:
+      description: Reset LATCH_UNTIL_RESET indication failures
+      operationId: ResetLatchUntilResetFailures
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Done OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Reset LATCH_UNTIL_RESET failures
+      tags:
+        - Operations
+components:
+  schemas:
+    PongBody:
+      example:
+        apiVersion: apiVersion
+        ready: true
+        host: host
+        version: version
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        timestamp:
+          description: Current UTC date-time (RFC3339)
+          format: date-time
+          type: string
+        version:
+          description: Service version
+          type: string
+        host:
+          description: Host that running this service
+          type: string
+        ready:
+          description: true if operational
+          type: boolean
+        apiVersion:
+          description: API version
+          type: string
+      required:
+        - apiVersion
+        - host
+        - ready
+        - timestamp
+        - version
+    ApiResponse:
+      example:
+        code: 0
+        message: message
+      properties:
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+      type: object
+      x-examples:
+        example-1:
+          code: 0
+          message: string
+    LogicStatusBody:
+      example:
+        lastBitStartTimestamp: 2000-01-23T04:56:07.000+00:00
+        trigger:
+          periodSec: 0.5
+          bitType: CBIT
+        status: started
+      properties:
+        trigger:
+          $ref: '#/components/schemas/TriggerBody'
+        status:
+          description: Period in [sec] resolution. 0 or negative stands for 'one-time
+            shot'.
+          enum:
+            - started
+            - stopped
+          type: string
+        lastBitStartTimestamp:
+          description: Last time BIT logic was initiated as UTC date-time (RFC3339)
+          format: date-time
+          type: string
+      required:
+        - status
+        - trigger
+    TriggerBody:
+      example:
+        periodSec: 0.5
+        bitType: CBIT
+      properties:
+        bitType:
+          description: Type of BIT. May be Power-On/Initiated/Continuous BIT etc.
+          example: CBIT
+          type: string
+        periodSec:
+          description: Period in [sec] resolution. 0 or negative stands for 'one-time
+            shot'.
+          example: 0.5
+          type: number
+      required:
+        - bitType
+        - periodSec

@@ -1,0 +1,277 @@
+openapi: 3.0.0
+info:
+  contact:
+    name: BINA SW Architect
+  description: This protocol defines the API for **storage-access** service in the
+    **BIT** functionality.
+  title: bit-storage-access
+  version: 1.0.1
+  x-audience: company-internal
+servers:
+  - description: Secured production server
+    url: https://{host}:{port}/{basePath}
+    variables:
+      host:
+        default: localhost
+      port:
+        default: "8082"
+      basePath:
+        default: api
+  - description: Production server
+    url: http://{host}:{port}/{basePath}
+    variables:
+      host:
+        default: localhost
+      port:
+        default: "8082"
+      basePath:
+        default: api
+tags:
+  - description: Liveness and readyness probes
+    name: Liveness
+  - description: Functional behaviour of the microservice
+    name: Operations
+paths:
+  /ping:
+    get:
+      description: Heart beat probe
+      operationId: GetPing
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                example-1:
+                  value:
+                    timestamp: 2019-08-24T14:15:22Z
+                    version: 1.2.4-rc5677
+                    host: my-server-3
+                    ready: true
+                    apiVersion: 1.0.0
+              schema:
+                $ref: '#/components/schemas/PongBody'
+          description: Pong OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Heart beat
+      tags:
+        - Liveness
+  /extended/status:
+    get:
+      description: Get the extended status of the used storage
+      operationId: GetExtendedStatus
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageExtendedStatus'
+          description: The ectended status fields
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Get the extended status of the used storage
+      tags:
+        - Liveness
+  /data/write:
+    post:
+      description: Write specified data to the storage. If data already exists it
+        is overwritten.
+      operationId: PostDataWrite
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyValueArray'
+        description: Array of reported tests result
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Done OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Overwrite data to storage
+      tags:
+        - Operations
+    put:
+      description: Write specified data to the storage but do not overwrite if already
+        exists.
+      operationId: PutDataWrite
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyValueArray'
+        description: Array of reported tests result
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Done OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Write data to storage if doesn't exists
+      tags:
+        - Operations
+  /data/read:
+    get:
+      description: Read specified data from the storage
+      operationId: GetDataRead
+      parameters:
+        - in: query
+          name: key
+          schema:
+            items:
+              type: string
+            type: array
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyValueArray'
+          description: Done OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Read specified data from the storage
+      tags:
+        - Operations
+  /data/delete:
+    delete:
+      description: Delete aged data from storage
+      operationId: DeleteData
+      parameters:
+        - in: query
+          name: timestamp
+          description: Formatted date according to layout = "2006-January-02 15:4:5". Any reports and bitStatus reported prior to that date will be deleted from storage.
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Done OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Delete aged data from storage
+      tags:
+        - Operations
+components:
+  schemas:
+    PongBody:
+      example:
+        apiVersion: apiVersion
+        ready: true
+        host: host
+        version: version
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        timestamp:
+          description: Current UTC date-time (RFC3339)
+          format: date-time
+          type: string
+        version:
+          description: Service version
+          type: string
+        host:
+          description: Host that running this service
+          type: string
+        ready:
+          description: true if operational
+          type: boolean
+        apiVersion:
+          description: API version
+          type: string
+      required:
+        - apiVersion
+        - host
+        - ready
+        - timestamp
+        - version
+    ApiResponse:
+      example:
+        code: 0
+        message: message
+      properties:
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+      type: object
+      x-examples:
+        example-1:
+          code: 0
+          message: string
+    StorageExtendedStatus:
+      example:
+        dataBase: InfluxDB
+        storageType: data_base
+      properties:
+        storageType:
+          description: The type of the concrete used storage
+          enum:
+            - file_system
+            - data_base
+          example: data_base
+          type: string
+        dataBase:
+          description: The concrete DB used as storage. Relevant only if storageType='data_base'
+          example: InfluxDB
+          type: string
+      required:
+        - storageType
+    KeyValueArray:
+      description: Array of key/value pairs
+      items:
+        $ref: '#/components/schemas/KeyValue'
+      maxItems: 50
+      minItems: 0
+      type: array
+      uniqueItems: false
+    KeyValue:
+      example:
+        value: value
+        key: key
+      properties:
+        key:
+          description: key
+          type: string
+        value:
+          description: value
+          type: string
+      required:
+        - key
+        - value

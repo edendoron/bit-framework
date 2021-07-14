@@ -39,6 +39,7 @@ func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
 	}
 	switch requestBody.Key {
 	case "reports":
@@ -47,6 +48,7 @@ func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 		writeConfigFailures(w, &requestBody.Value)
 	case "forever_failure":
 		writeExtendedFailures(w, &requestBody.Value)
+		ApiResponseHandler(w, http.StatusOK, "Failure received!", nil)
 	case "config_user_group_filtering":
 		writeUserGroupFiltering(w, &requestBody.Value)
 	case "bit_status":
@@ -147,6 +149,7 @@ func DeleteData(w http.ResponseWriter, r *http.Request) {
 		})
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
 	}
 	ApiResponseHandler(w, http.StatusOK, "Old reports deleted successfully", nil)
 }

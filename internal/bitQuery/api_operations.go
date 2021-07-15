@@ -12,18 +12,14 @@ func BitStatusQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	filter := r.URL.Query()["filter"][0]
-	userGroup := r.URL.Query()["user_group"][0]
 
-	params := req.URL.Query()
-	params.Add("bit_status", "")
-	params.Add("filter", filter)
+	failed, userGroup := bitStatusRequestHandler(r, req)
+	if failed {
+		ApiResponseHandler(w, http.StatusBadRequest, "Bad Request, check query params", err)
+		return
+	}
 
-	paramsHandler(r, params, filter)
-
-	req.URL.RawQuery = params.Encode()
-
-	QueryHandler(w, req, "bit_status", userGroup)
+	bitStatusQueryHandler(w, req, userGroup)
 }
 
 func ReportQuery(w http.ResponseWriter, r *http.Request) {
@@ -33,17 +29,14 @@ func ReportQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	filter := r.URL.Query()["filter"][0]
 
-	params := req.URL.Query()
-	params.Add("reports", "")
-	params.Add("filter", filter)
+	failed, filter, values := reportsRequestHandler(r, req)
+	if failed {
+		ApiResponseHandler(w, http.StatusBadRequest, "Bad Request, check query params", err)
+		return
+	}
 
-	paramsHandler(r, params, filter)
-
-	req.URL.RawQuery = params.Encode()
-
-	QueryHandler(w, req, "reports", "")
+	reportsQueryHandler(w, req, filter, values)
 }
 
 func UserGroupQuery(w http.ResponseWriter, r *http.Request) {
@@ -59,5 +52,5 @@ func UserGroupQuery(w http.ResponseWriter, r *http.Request) {
 
 	req.URL.RawQuery = params.Encode()
 
-	QueryHandler(w, req, "user_groups", "")
+	userGroupsQueryHandler(w, req)
 }

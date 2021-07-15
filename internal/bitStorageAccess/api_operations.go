@@ -21,7 +21,7 @@ func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	query := r.URL.Query()
 	if len(query["reports"]) > 0 {
-		readReports(w, query["start"][0], query["end"][0], query["filter"][0])
+		readReports(w, query["start"][0], query["end"][0])
 	} else if len(query["config_failures"]) > 0 {
 		readConfigFailures(w)
 	} else if len(query["forever_failure"]) > 0 {
@@ -29,7 +29,7 @@ func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	} else if len(query["config_user_groups_filtering"]) > 0 {
 		readUserGroupMaskedTestIds(w, query["id"][0])
 	} else if len(query["bit_status"]) > 0 {
-		readBitStatus(w, query["start"][0], query["end"][0], query["filter"][0])
+		readBitStatus(w, query["start"][0], query["end"][0])
 	} else if len(query["user_groups"]) > 0 {
 		readUserGroups(w)
 	}

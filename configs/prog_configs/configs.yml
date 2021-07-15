@@ -1,4 +1,7 @@
 ---
+version: "1.0.1"
+host: "localhost"
+api_version: "1.0.1"
 bit_config_port: ":8084"
 bit_handler_port: ":8086"
 bit_history_curator_port: ":8083"

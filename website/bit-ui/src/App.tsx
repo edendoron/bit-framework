@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import './App.css';
 import {getBitStatus, getReports, getUserGroups} from './utils/queryAPI';
 import {
@@ -11,7 +11,7 @@ import {
     createStyles,
     Grid,
     makeStyles,
-    MuiThemeProvider,
+    MuiThemeProvider, TextField,
 } from '@material-ui/core'
 import {Selector} from "./components/Selector";
 import {DatePicker} from "./components/DatePicker";
@@ -34,8 +34,12 @@ const useStyles = makeStyles(() =>
             },
             sendButton: {
                 border: '3px solid #D48166 ',
-                marginBottom: '10px',
+                marginBottom: 10,
             },
+            textInput: {
+                marginLeft: 20,
+                marginTop: 20
+            }
         },
     ));
 
@@ -52,8 +56,16 @@ export const App = () => {
     const [endTime, setEndTime] = useState(new Date());
     const [data, setData] = useState<string>();
     const [error, setError] = useState(null);
+    const [field, setField] = useState('');
+    const [tagKey, setTagKey] = useState('');
+    const [tagValue, setTagValue] = useState('');
 
-    getUserGroups().then((res) => setUserGroups(res));
+    useEffect(() => {
+        async function fetchUserGroups() {
+            setUserGroups(await getUserGroups())
+        }
+        fetchUserGroups()
+    }, [])
 
     const changeQueryType = (event: React.ChangeEvent<{ value: unknown }>) => {
         setQueryType(event.target.value as string);
@@ -70,6 +82,9 @@ export const App = () => {
 
     const changeFilter = (event: React.ChangeEvent<{ value: unknown }>) => {
         setFilter((event.target.value as string));
+        setTagValue('');
+        setTagKey('');
+        setField('');
     }
 
     const changeStartTime = (date: Date) => {
@@ -84,7 +99,7 @@ export const App = () => {
         switch (queryType) {
             case 'Reports':
                 try {
-                    setData(await getReports(filter, startTime, endTime));
+                    setData(await getReports(filter, startTime, endTime, field, tagKey, tagValue));
                     setError(null);
                 } catch (e) {
                     setError(e);
@@ -134,27 +149,50 @@ export const App = () => {
                         <CardContent>
                             <Grid container justify='space-evenly'>
                                 <Selector menuItems={userGroups} currentValue={userGroup} onChange={changeUserGroup}
-                                          isDisabled={false}/>
+                                          isDisabled={false} placeholder='user group'/>
                                 <Selector menuItems={queryTypes} currentValue={queryType} onChange={changeQueryType}
-                                          isDisabled={isDisabled}/>
+                                          isDisabled={isDisabled} placeholder='query type'/>
                                 <Selector menuItems={filterOptions} currentValue={filter} onChange={changeFilter}
-                                          isDisabled={isDisabled}/>
+                                          isDisabled={isDisabled} placeholder='filter'/>
                             </Grid>
-                            {filter === 'time' &&
                             <Grid className={classes.dateGrid} container justify='space-evenly'>
                                 <DatePicker
                                     currentDate={startTime}
                                     onDateChange={changeStartTime}
-                                    placeholder='start time'
+                                    label='start time'
                                 />
                                 <DatePicker
                                     currentDate={endTime}
                                     onDateChange={changeEndTime}
-                                    placeholder={'end time'}
+                                    label='end time'
                                 />
-                            </Grid>}
+                            </Grid>
+                            {filter === 'field' &&
+                                <TextField
+                                    label='field name'
+                                    onChange={(e) => setField(e.target.value)}
+                                    className={classes.textInput}
+                                    variant='filled'
+                                />
+                            }
+                            {filter === 'tag' &&
+                                <>
+                                    <TextField
+                                        label='tag key'
+                                        onChange={(e) => setTagKey(e.target.value)}
+                                        className={classes.textInput}
+                                        variant='filled'
+                                    />
+                                    <TextField
+                                        label='tag value'
+                                        onChange={(e) => setTagValue(e.target.value)}
+                                        className={classes.textInput}
+                                        variant='filled'
+                                    />
+                                </>
+                            }
                         </CardContent>
-                        <Button className={classes.sendButton} onClick={getData}>
+                        <Button className={classes.sendButton} onClick={getData} disabled={queryType === '' || filter === ''}>
                             Send
                         </Button>
                     </Card>

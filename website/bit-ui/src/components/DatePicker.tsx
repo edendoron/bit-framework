@@ -5,17 +5,17 @@ import DateFnsUtils from "@date-io/date-fns";
 interface DatePickerProps {
     currentDate: Date,
     onDateChange: (date: Date) => void,
-    placeholder: string,
+    label: string,
 }
 
-export const DatePicker: FC<DatePickerProps> = ({currentDate, onDateChange, placeholder}) => {
+export const DatePicker: FC<DatePickerProps> = ({currentDate, onDateChange, label}) => {
 
     return (
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
             <KeyboardDateTimePicker
                 variant="inline"
                 ampm={false}
-                label={placeholder}
+                label={label}
                 value={currentDate}
                 onChange={(date) => onDateChange(date as Date)}
                 onError={console.log}
@@ -23,6 +23,7 @@ export const DatePicker: FC<DatePickerProps> = ({currentDate, onDateChange, plac
                 autoOk={true}
                 disableFuture={true}
                 disableToolbar={true}
+                clearable
             />
         </MuiPickersUtilsProvider>
     )

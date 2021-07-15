@@ -1,6 +1,9 @@
 package models
 
 type ProgConfigs struct {
+	Version                        string  `conf:"version" help:"Framework version."`
+	Host                           string  `conf:"host" help:"Current host name."`
+	ApiVersion                     string  `conf:"api_version" help:"API version."`
 	BitConfigPort                  string  `conf:"bit_config_port" help:"The port of bit_config service."`
 	BitHandlerPort                 string  `conf:"bit_handler_port" help:"The port of bit_handler service."`
 	BitHistoryCuratorPort          string  `conf:"bit_history_curator_port" help:"The port of bit_history_curator service."`

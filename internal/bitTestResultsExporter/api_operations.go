@@ -4,40 +4,39 @@ import (
 	. "../apiResponseHandlers"
 	. "../models"
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
 func GetBandwidth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	// return Bandwidth response to the user
 	err := json.NewEncoder(w).Encode(&CurrentBW)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Fatalln(err)
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func PostBandwidth(w http.ResponseWriter, r *http.Request) {
-	request := Bandwidth{}
+	requestBW := Bandwidth{}
 
-	err := json.NewDecoder(r.Body).Decode(&request)
+	err := json.NewDecoder(r.Body).Decode(&requestBW)
 
 	if err != nil {
 		ApiResponseHandler(w, http.StatusBadRequest, "Bad request", err)
 		return
 	}
-	// validate that data from the user is of type Bandwidth
-	err = ValidateType(request)
+
+	// validate data from the user
+	err = ValidateType(requestBW)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusBadRequest, "Bad request", err)
 		return
 	}
 
 	// update current bandwidth
-	CurrentBW = request
+	CurrentBW = requestBW
 
 	//validate "unitsPerSecond" units and "size" != 0
 	if CalculateSizeLimit(CurrentBW) == 0 {
@@ -70,10 +69,13 @@ func ExporterPostReport(w http.ResponseWriter, r *http.Request) {
 		err = ValidateType(report)
 		if err != nil {
 			ApiResponseHandler(w, http.StatusBadRequest, "Bad request", err)
+			continue
+		}
+		_, err = ReportsQueue.Push(report, int(report.ReportPriority))
+		if err != nil {
+			ApiResponseHandler(w, http.StatusBadRequest, "Bad request - report body might be too large", err)
 			return
 		}
-		// TODO: handle error
-		ReportsQueue.Push(report, int(report.ReportPriority))
 	}
 	QueueChannel <- ReportsQueue.Len()
 

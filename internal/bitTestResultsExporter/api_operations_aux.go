@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	prqueue "github.com/coraxster/PriorityQueue"
+	"log"
 	m "math"
 	"net/http"
 	"time"
@@ -17,6 +18,8 @@ var ReportsQueue = prqueue.Build()
 var QueueChannel = make(chan int, 1000)
 
 var CurrentBW = Bandwidth{}
+
+var TestingFlag = false
 
 const KiB = 1024
 const MiB = KiB * 1024
@@ -35,6 +38,7 @@ const (
 	TimeLimit
 )
 
+// ReportsScheduler manages writing reports from priority queue to storage according to CurrentBW limitations
 func ReportsScheduler(duration time.Duration) {
 	var indexerReqEpochSize = CalculateExtraSize()
 
@@ -43,7 +47,7 @@ func ReportsScheduler(duration time.Duration) {
 		<-QueueChannel
 		for ReportsQueue.Len() > 0 {
 			indexerReqEpochSize, _ = UpdateAndSendReport(indexerReqEpochSize, epoch, duration)
-			if indexerReqEpochSize == -1 { // indicates that we reached size limit or time limit
+			if indexerReqEpochSize == -1 { // indicates that we reached size or time limit, or some error occur
 				indexerReqEpochSize = CalculateExtraSize()
 				epoch = time.Now()
 			}
@@ -73,6 +77,7 @@ func CalculateExtraSize() float32 {
 	}
 }
 
+// CalculateSizeLimit in bytes based on @param bw
 func CalculateSizeLimit(bw Bandwidth) float32 {
 	switch bw.UnitsPerSecond {
 	case "KiB":
@@ -96,8 +101,9 @@ func CalculateSizeLimit(bw Bandwidth) float32 {
 	}
 }
 
+// sets unlimited bandwidth size to @param bw if user requests to set negative size
 func modifyBandwidthSize(bw *Bandwidth) {
-	if bw.Size <= 0 {
+	if bw.Size < 0 {
 		bw.Size = m.MaxFloat32
 	}
 }
@@ -107,21 +113,26 @@ func UpdateAndSendReport(epochSentSize float32, epoch time.Time, duration time.D
 	indexerReport := ReportBody{}
 	postBodyPrev := &bytes.Reader{}
 	for ReportsQueue.Len() > 0 && time.Since(epoch) < duration {
-		//TODO: handle error
 		item, _ := ReportsQueue.Pull()
 		report := item.(TestReport)
 
 		indexerReport.Reports = append(indexerReport.Reports, report)
 
-		//TODO: handle error
-		postBody, _ := json.MarshalIndent(indexerReport, "", " ")
+		postBody, err := json.MarshalIndent(indexerReport, "", " ")
+		if err != nil {
+			log.Printf("error marshal post body to indexer, reports may be lost, error: %v", err)
+			return -1, 0
+		}
 
 		sizeLimitInBytes := CalculateSizeLimit(CurrentBW)
 		reportSize := epochSentSize + float32(len(postBody))
 
 		if reportSize > sizeLimitInBytes {
-			//TODO: handle return value
-			ReportsQueue.Push(report, int(report.ReportPriority))
+			_, err = ReportsQueue.Push(report, int(report.ReportPriority))
+			if err != nil {
+				log.Printf("error push report to queue, reports may be too large, error: %v", err)
+				return -1, 0
+			}
 			indexerReport.Reports = indexerReport.Reports[:len(indexerReport.Reports)-1]
 			return postReportUpdateEpoch(postBodyPrev, SizeLimit, epoch, duration)
 		}
@@ -134,6 +145,12 @@ func UpdateAndSendReport(epochSentSize float32, epoch time.Time, duration time.D
 	}
 }
 
+/*
+post reports collected so far (pulled from priority queue). return value depends on function execution reason @param status.
+if due to EmptyQueue, returns to ReportsScheduler size written so far in order to keep writing new requests until size limit.
+if due to SizeLimit, size limit has reached, the process will sleep for the remaining portion of the duration (1 second) and ReportsScheduler will continue to write reports in the next interval
+if due to TimeLimit, time limit has reached, size sent in the current interval will be initialize and ReportsScheduler will continue to write reports.
+*/
 func postReportUpdateEpoch(indexerReport *bytes.Reader, status ReportStatus, epoch time.Time, duration time.Duration) (float32, float32) {
 	postIndexer(indexerReport)
 	switch status {
@@ -145,18 +162,23 @@ func postReportUpdateEpoch(indexerReport *bytes.Reader, status ReportStatus, epo
 	return -1, float32(indexerReport.Size())
 }
 
+// post reports collected under bandwidth limitations to bit-indexer service, if failed tries to post the reports back in order to insert all reports back to queue and re-send them.
 func postIndexer(postBodyRef *bytes.Reader) {
-	if postBodyRef.Size() < 1 {
+	if postBodyRef.Size() < 1 || TestingFlag {
 		return
 	}
 	go func() {
-		//fmt.Println(time.Now(), "total size to send:", postBodyRef.Size())
-		//fmt.Println(time.Now(), "total size to send + extra size:", float32(postBodyRef.Size())+CalculateExtraSize())
-		indexerRes, err := http.Post(Configs.BitExporterPostToIndexerUrl, "application/json; charset=UTF-8", postBodyRef)
+		indexerRes, err := http.Post(Configs.IndexerUrl, "application/json; charset=UTF-8", postBodyRef)
 		if err != nil || indexerRes.StatusCode != http.StatusOK {
-			//TODO: handle this error
+			log.Printf("error posting request to indexer, error: %v", err)
+			exporterRes, e := http.Post(Configs.ExporterUrl, "application/json; charset=UTF-8", postBodyRef)
+			if e != nil || exporterRes.StatusCode != http.StatusOK {
+				log.Printf("error posting reports back to exporter")
+				log.Fatal(e)
+			}
+			exporterRes.Body.Close()
 			return
 		}
-		defer indexerRes.Body.Close()
+		indexerRes.Body.Close()
 	}()
 }

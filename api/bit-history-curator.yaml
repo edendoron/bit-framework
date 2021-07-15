@@ -1,0 +1,106 @@
+openapi: 3.0.0
+info:
+  contact:
+    name: BINA SW Architect
+  description: |
+    This protocol defines the API for **history-curator** service in the **BIT** functionality.
+  license:
+    name: Apache 2.0
+  title: bit-history-curator
+  version: 1.0.1
+  x-audience: company-internal
+servers:
+- description: Secured production server
+  url: https://{host}:{port}/{basePath}
+  variables:
+    host:
+      default: localhost
+    port:
+      default: "8083"
+    basePath:
+      default: api
+- description: Production server
+  url: http://{host}:{port}/{basePath}
+  variables:
+    host:
+      default: localhost
+    port:
+      default: "8083"
+    basePath:
+      default: api
+tags:
+- description: Liveness and readyness probes
+  name: Liveness
+paths:
+  /ping:
+    get:
+      description: Heart beat probe
+      operationId: GetPing
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                example-1:
+                  value:
+                    timestamp: 2019-08-24T14:15:22Z
+                    version: 1.2.4-rc5677
+                    host: my-server-3
+                    ready: true
+                    apiVersion: 1.0.0
+              schema:
+                $ref: '#/components/schemas/PongBody'
+          description: Pong OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Heart beat
+      tags:
+      - Liveness
+components:
+  schemas:
+    PongBody:
+      example:
+        apiVersion: apiVersion
+        ready: true
+        host: host
+        version: version
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        timestamp:
+          description: Current UTC date-time (RFC3339)
+          format: date-time
+          type: string
+        version:
+          description: Service version
+          type: string
+        host:
+          description: Host that running this service
+          type: string
+        ready:
+          description: true if operational
+          type: boolean
+        apiVersion:
+          description: API version
+          type: string
+      required:
+      - apiVersion
+      - host
+      - ready
+      - timestamp
+      - version
+    ApiResponse:
+      properties:
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+      type: object
+      x-examples:
+        example-1:
+          code: 0
+          message: string

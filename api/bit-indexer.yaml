@@ -1,0 +1,395 @@
+openapi: 3.0.0
+info:
+  contact:
+    name: BINA SW Architect
+  description: This protocol defines the API for **indexer** service in the **BIT**
+    functionality.
+  license:
+    name: Apache 2.0
+  title: bit-indexer
+  version: 1.0.1
+  x-audience: company-internal
+servers:
+- description: Secured production server
+  url: https://{host}:{port}/{basePath}
+  variables:
+    host:
+      default: localhost
+    port:
+      default: "8081"
+    basePath:
+      default: api
+- description: Production server
+  url: http://{host}:{port}/{basePath}
+  variables:
+    host:
+      default: localhost
+    port:
+      default: "8081"
+    basePath:
+      default: api
+tags:
+- description: Liveness and readyness probes
+  name: Liveness
+- description: Functional
+  name: Operations
+paths:
+  /ping:
+    get:
+      description: Heart beat probe
+      operationId: GetPing
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                example-1:
+                  value:
+                    timestamp: 2019-08-24T14:15:22Z
+                    version: 1.2.4-rc5677
+                    host: my-server-3
+                    ready: true
+                    apiVersion: 1.0.0
+              schema:
+                $ref: '#/components/schemas/PongBody'
+          description: Pong OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Heart beat
+      tags:
+      - Liveness
+  /report/raw:
+    post:
+      description: Report results of performed BIT tests
+      operationId: PostReport
+      requestBody:
+        content:
+          application/json:
+            examples:
+              example-single:
+                value:
+                  reports:
+                  - testId: 101
+                    reportPriority: 11
+                    timestamp: 2019-08-24T14:15:22Z
+                    tagSet:
+                    - key: zone
+                      value: north
+                    fieldSet:
+                    - key: TemperatureCelsius
+                      value: "-40.8"
+              example-multiple:
+                value:
+                  reports:
+                  - testId: 101
+                    reportPriority: 11
+                    timestamp: 2019-08-24T14:15:22Z
+                    tagSet:
+                    - key: versions
+                      value: external clients
+                    fieldSet:
+                    - key: ICD-1
+                      value: 1.2.3.4-rc5678
+                    - key: ICD-2
+                      value: 3.2.3.4-rc5678
+                    - key: ICD-3
+                      value: 3.2.3.4-rc5678
+                  - testId: 1045
+                    reportPriority: 200
+                    timestamp: 2019-08-24T14:15:22Z
+                    tagSet:
+                    - key: zone
+                      value: north
+                    - key: hostname
+                      value: server02
+                    fieldSet:
+                    - key: TemperatureCelsius
+                      value: "-40.8"
+                    - key: volts
+                      value: "7.1"
+            schema:
+              $ref: '#/components/schemas/ReportBody'
+        description: Array of reported tests result
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Done OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Unexpected error
+      summary: Report results of performed BIT tests
+      tags:
+      - Operations
+components:
+  schemas:
+    PongBody:
+      example:
+        apiVersion: apiVersion
+        ready: true
+        host: host
+        version: version
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        timestamp:
+          description: Current UTC date-time (RFC3339)
+          format: date-time
+          type: string
+        version:
+          description: Service version
+          type: string
+        host:
+          description: Host that running this service
+          type: string
+        ready:
+          description: true if operational
+          type: boolean
+        apiVersion:
+          description: API version
+          type: string
+      required:
+      - apiVersion
+      - host
+      - ready
+      - timestamp
+      - version
+    ApiResponse:
+      example:
+        code: 0
+        message: message
+      properties:
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+      type: object
+      x-examples:
+        example-1:
+          code: 0
+          message: string
+    ReportBody:
+      example:
+        reports:
+        - tagSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          reportPriority: 11
+          fieldSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          testId: 101
+          timestamp: 2000-01-23T04:56:07.000+00:00
+        - tagSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          reportPriority: 11
+          fieldSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          testId: 101
+          timestamp: 2000-01-23T04:56:07.000+00:00
+        - tagSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          reportPriority: 11
+          fieldSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          testId: 101
+          timestamp: 2000-01-23T04:56:07.000+00:00
+        - tagSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          reportPriority: 11
+          fieldSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          testId: 101
+          timestamp: 2000-01-23T04:56:07.000+00:00
+        - tagSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          reportPriority: 11
+          fieldSet:
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          - value: value
+            key: key
+          testId: 101
+          timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        reports:
+          description: Multiple tests reports set
+          items:
+            $ref: '#/components/schemas/TestReport'
+          maxItems: 50
+          minItems: 0
+          type: array
+          uniqueItems: true
+      required:
+      - reports
+    TestReport:
+      example:
+        tagSet:
+        - value: value
+          key: key
+        - value: value
+          key: key
+        - value: value
+          key: key
+        - value: value
+          key: key
+        - value: value
+          key: key
+        reportPriority: 11
+        fieldSet:
+        - value: value
+          key: key
+        - value: value
+          key: key
+        - value: value
+          key: key
+        - value: value
+          key: key
+        - value: value
+          key: key
+        testId: 101
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        testId:
+          description: The unique ID of the performed test
+          example: 101
+          format: uint64
+          type: number
+        reportPriority:
+          description: The report priority [0 - lowest]
+          example: 11
+          format: uint32
+          type: number
+        timestamp:
+          description: UTC date-time (RFC3339) when the test was performed
+          format: date-time
+          type: string
+        tagSet:
+          description: 'set of Tags, e.g.: hostname=server02, ip=10.1.1.1, zone=north,
+            etc.'
+          items:
+            $ref: '#/components/schemas/KeyValue'
+          maxItems: 30
+          minItems: 0
+          type: array
+          uniqueItems: true
+        fieldSet:
+          description: 'set of Fields, e.g.: temperature=24.5, volts=7.1, etc.'
+          items:
+            $ref: '#/components/schemas/KeyValue'
+          maxItems: 30
+          minItems: 0
+          type: array
+          uniqueItems: true
+      required:
+      - testId
+      - timestamp
+    KeyValue:
+      example:
+        value: value
+        key: key
+      properties:
+        key:
+          description: key
+          type: string
+        value:
+          description: value
+          type: string
+      required:
+      - key
+      - value

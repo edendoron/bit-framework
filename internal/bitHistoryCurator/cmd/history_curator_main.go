@@ -23,12 +23,19 @@ func main() {
 	go func() {
 		history.RemoveAgedData(history.GetCuratorTimeConfig())
 		log.Printf("Service ended - bit-history-curator")
-		//TODO: handle error
-		srv.Shutdown(context.Background())
+		err := srv.Shutdown(context.Background())
+		if err != nil {
+			log.Fatal(err)
+		}
 	}()
 
-	//TODO: need to change to ListenAndServeTLS in order to support https
-	//err := srv.ListenAndServeTLS(history.Configs.SSHCertPath, history.Configs.SSHKeyPath)
+	if history.Configs.UseHTTPS {
+		err := srv.ListenAndServeTLS(history.Configs.SSHCertPath, history.Configs.SSHKeyPath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)

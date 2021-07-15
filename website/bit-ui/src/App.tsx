@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import './App.css';
-import {getBitStatus, getReports} from './utils/queryAPI';
+import {getBitStatus, getReports, getUserGroups} from './utils/queryAPI';
 import {
     Box,
     Button,
@@ -18,8 +18,8 @@ import {DatePicker} from "./components/DatePicker";
 import {ReportTable} from "./components/ReportTable";
 import {StatusTable} from "./components/StatusTable";
 
+
 const queryTypes = ['Reports', 'BIT Status'];
-const userGroups = ['group1', 'group2', 'group3', 'group4', 'groupRafael', 'TemperatureCelsius group', 'group general', 'groupField'];
 const filterOptions = ['time', 'tag', 'field'];
 
 const useStyles = makeStyles(() =>
@@ -45,6 +45,7 @@ export const App = () => {
 
     const [queryType, setQueryType] = useState('');
     const [userGroup, setUserGroup] = useState('');
+    const [userGroups, setUserGroups] = useState(['']);
     const [filter, setFilter] = useState('');
     const [isDisabled, setDisabled] = useState(true);
     const [startTime, setStartTime] = useState(new Date());
@@ -52,13 +53,15 @@ export const App = () => {
     const [data, setData] = useState<string>();
     const [error, setError] = useState(null);
 
+    getUserGroups().then((res) => setUserGroups(res));
+
     const changeQueryType = (event: React.ChangeEvent<{ value: unknown }>) => {
         setQueryType(event.target.value as string);
         setFilter('');
         setData('');
     }
 
-    const changeUserGroup = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const changeUserGroup = async (event: React.ChangeEvent<{ value: unknown }>) => {
         setUserGroup(event.target.value as string);
         setFilter('');
         setQueryType('');
@@ -119,7 +122,6 @@ export const App = () => {
             primary: {
                 main: '#D48166'
             },
-
         }
     })
 

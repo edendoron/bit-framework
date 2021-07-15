@@ -12,27 +12,25 @@ import (
 
 func IndexerPostReport(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	//client := &http.Client{}
-	//req, err := http.NewRequest(http.MethodPut, storageDataWriteURL, r.Body)
-	//if err != nil{
-	//	ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-	//}
-	//req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	//resp, err := client.Do(req)
-	//if err != nil{
-	//	ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-	//}
-	//if resp.StatusCode == http.StatusInternalServerError{
-	//	ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-	//}
+
 	buf := new(strings.Builder)
-	io.Copy(buf, r.Body)
+	n, err := io.Copy(buf, r.Body)
+	if err != nil || n != r.ContentLength {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
 	message := KeyValue{Key: "reports", Value: buf.String()}
-	bodyRef, _ := json.MarshalIndent(message, "", " ")
-	body := bytes.NewBuffer(bodyRef)
-	resp, err := http.Post(Configs.StorageWriteURL, "application/json; charset=UTF-8", body)
+	bodyRef, err := json.MarshalIndent(message, "", " ")
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
 	}
-	ApiResponseHandler(w, resp.StatusCode, "Report sent to storage!", nil)
+	body := bytes.NewBuffer(bodyRef)
+	resp, err := http.Post(Configs.StorageWriteURL, "application/json; charset=UTF-8", body)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+	defer resp.Body.Close()
+	ApiResponseHandler(w, http.StatusOK, "Report sent to storage!", nil)
 }

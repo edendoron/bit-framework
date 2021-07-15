@@ -28,7 +28,7 @@ func TestFilterBitStatus(t *testing.T) {
 			t.Errorf("test failure filterBitStatus, expected %v statuses, got %v", len(expectedResult), len(statusSlice))
 			return
 		}
-		for i, _ := range statusSlice {
+		for i := range statusSlice {
 			if !reflect.DeepEqual(expectedResult[i].Failures, statusSlice[i].Failures) {
 				t.Errorf("test failure filterBitStatus, status array at index %v, expected %v failures, got %v", i, len(expectedResult[i].Failures), len(statusSlice[i].Failures))
 			}
@@ -54,7 +54,7 @@ func TestFilterBitStatus(t *testing.T) {
 			t.Errorf("test failure filterBitStatus, expected %v statuses, got %v", len(expectedResult), len(statusSlice))
 			return
 		}
-		for i, _ := range statusSlice {
+		for i := range statusSlice {
 			if !reflect.DeepEqual(expectedResult[i].Failures, statusSlice[i].Failures) {
 				t.Errorf("test failure filterBitStatus, status array at index %v, expected %v failures, got %v", i, len(expectedResult[i].Failures), len(statusSlice[i].Failures))
 			}
@@ -79,7 +79,7 @@ func TestFilterBitStatus(t *testing.T) {
 			t.Errorf("test failure filterBitStatus, expected %v statuses, got %v", len(expectedResult), len(statusSlice))
 			return
 		}
-		for i, _ := range statusSlice {
+		for i := range statusSlice {
 			if !reflect.DeepEqual(expectedResult[i].Failures, statusSlice[i].Failures) {
 				t.Errorf("test failure filterBitStatus, status array at index %v, expected %v failures, got %v", i, len(expectedResult[i].Failures), len(statusSlice[i].Failures))
 			}
@@ -101,7 +101,7 @@ func TestFilterBitStatus(t *testing.T) {
 			t.Errorf("test failure filterBitStatus, expected %v statuses, got %v", len(expectedResult), len(statusSlice))
 			return
 		}
-		for i, _ := range statusSlice {
+		for i := range statusSlice {
 			if !reflect.DeepEqual(expectedResult[i].Failures, statusSlice[i].Failures) {
 				t.Errorf("test failure filterBitStatus, status array at index %v, expected %v failures, got %v", i, len(expectedResult[i].Failures), len(statusSlice[i].Failures))
 			}

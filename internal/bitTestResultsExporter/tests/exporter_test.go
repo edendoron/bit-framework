@@ -40,6 +40,7 @@ func TestPriorityQueue(t *testing.T) {
 // test updateAndSendReport - send small report after size limit is reached
 func TestUpdateAndSendReportSizeLimit(t *testing.T) {
 
+	TestingFlag = true
 	CurrentBW.Size = 0.6
 	CurrentBW.UnitsPerSecond = "KiB"
 

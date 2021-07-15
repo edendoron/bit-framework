@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"io"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -28,6 +30,8 @@ func GetDataRead(w http.ResponseWriter, r *http.Request) {
 		readUserGroupMaskedTestIds(w, query["id"][0])
 	} else if len(query["bit_status"]) > 0 {
 		readBitStatus(w, query["start"][0], query["end"][0], query["filter"][0])
+	} else if len(query["user_groups"]) > 0 {
+		readUserGroups(w)
 	}
 }
 
@@ -37,6 +41,7 @@ func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
 	}
 	switch requestBody.Key {
 	case "reports":
@@ -45,6 +50,7 @@ func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 		writeConfigFailures(w, &requestBody.Value)
 	case "forever_failure":
 		writeExtendedFailures(w, &requestBody.Value)
+		ApiResponseHandler(w, http.StatusOK, "Failure received!", nil)
 	case "config_user_group_filtering":
 		writeUserGroupFiltering(w, &requestBody.Value)
 	case "bit_status":
@@ -133,18 +139,49 @@ func DeleteData(w http.ResponseWriter, r *http.Request) {
 					if err != nil {
 						ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 					}
-					currentDir, _ := os.Getwd()
-					for true {
-						if currentDir == "storage" {
-							break
-						}
-					}
 				}
 			}
 			return nil
 		})
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
 	}
+	deleteEmptyDirectories(w, "storage/test_reports", 0)
 	ApiResponseHandler(w, http.StatusOK, "Old reports deleted successfully", nil)
+}
+
+func deleteEmptyDirectories(w http.ResponseWriter, path string, depth int) {
+	if depth == 3 {
+		return
+	}
+	err := filepath.Walk(path,
+		func(childPath string, info fs.FileInfo, err error) error {
+			deleteEmptyDirectories(w, childPath, depth+1)
+			if path != "storage/test_reports" && IsEmpty(path) {
+				err := os.RemoveAll(path)
+				if err != nil {
+					ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+				}
+			}
+			return nil
+		})
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+}
+
+func IsEmpty(name string) bool {
+	f, err := os.Open(name)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1)
+	if err == io.EOF {
+		return true
+	}
+	return false
 }

@@ -3,12 +3,16 @@ package bitHistoryCurator
 import (
 	. "../models"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 )
 
 func HistoryIndex(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello bit-history-curator!")
+	_, err := fmt.Fprintf(w, "Hello bit-history-curator!")
+	if err != nil {
+		log.Printf("error in index route: %v", err)
+	}
 }
 
 var HistoryCuratorRoutes = Routes{

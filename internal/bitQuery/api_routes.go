@@ -3,12 +3,16 @@ package bitQuery
 import (
 	. "../models"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 )
 
 func QueryIndex(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello bit-query service!")
+	_, err := fmt.Fprintf(w, "Hello bit-query service!")
+	if err != nil {
+		log.Printf("error in index route: %v", err)
+	}
 }
 
 var QueryRoutes = Routes{

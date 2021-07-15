@@ -1,26 +1,25 @@
 package bitHistoryCurator
 
 import (
+	"log"
 	"net/http"
 	"time"
 )
 
+// RemoveAgedData sends a delete request to storage to delete obsolete data.
 func RemoveAgedData(agedTimeDuration time.Duration) {
-	//fmt.Println(agedTimeDuration)
-
 	req, err := http.NewRequest(http.MethodDelete, Configs.StorageDeleteURL, nil)
 	if err != nil {
-		//TODO: handle error
+		log.Printf("error creating delete request to storage: %v", err)
 		return
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 	params := req.URL.Query()
 
-	timestamp := time.Now().Add(-agedTimeDuration)
 	const layout = "2006-January-02 15:4:5"
-	timestampStr := timestamp.Format(layout)
-	params.Add("timestamp", timestampStr)
+	timestamp := time.Now().Add(-agedTimeDuration).Format(layout)
+	params.Add("timestamp", timestamp)
 
 	req.URL.RawQuery = params.Encode()
 
@@ -28,13 +27,8 @@ func RemoveAgedData(agedTimeDuration time.Duration) {
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		time.Sleep(10 * time.Second)
-		//TODO: handle error
+		log.Printf("error deleting from storage: %v", err)
 		return
 	}
-	err = resp.Body.Close()
-	if err != nil {
-		//TODO: handle error
-		return
-	}
+	resp.Body.Close()
 }

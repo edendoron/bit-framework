@@ -3,12 +3,16 @@ package bitExporter
 import (
 	. "../models"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 )
 
 func ExporterIndex(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello bitTestResultsExporter!")
+	_, err := fmt.Fprintf(w, "Hello bit Test Results Exporter!")
+	if err != nil {
+		log.Printf("error in index route: %v", err)
+	}
 }
 
 var ExporterRoutes = Routes{

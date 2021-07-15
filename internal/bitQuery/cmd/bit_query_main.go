@@ -19,8 +19,12 @@ func main() {
 
 	srv := server.NewServer(router, query.Configs.BitQueryPort)
 
-	//TODO: need to change to ListenAndServeTLS in order to support https
-	//err := srv.ListenAndServeTLS(query.Configs.SSHCertPath, query.Configs.SSHKeyPath)
+	if query.Configs.UseHTTPS {
+		err := srv.ListenAndServeTLS(query.Configs.SSHCertPath, query.Configs.SSHKeyPath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)

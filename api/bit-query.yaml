@@ -84,8 +84,7 @@ paths:
             type: string
         - in: query
           name: filter
-          description: filter results by time\label
-          required: true
+          description: filter results by time
           schema:
             example: time
             type: string
@@ -134,10 +133,28 @@ paths:
             type: string
         - in: query
           name: filter
-          description: filter results by time\label
+          description: filter results by time\tag\field
           required: true
           schema:
             example: time
+            type: string
+        - in: query
+          name: tag_key
+          description: relevant if filter is by tag
+          schema:
+            example: hostname
+            type: string
+        - in: query
+          name: tag_value
+          description: relevant if filter is by tag
+          schema:
+            example: server02
+            type: string
+        - in: query
+          name: field
+          description: relevant if filter is by tag
+          schema:
+            example: volts
             type: string
       responses:
         "200":

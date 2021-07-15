@@ -7,11 +7,10 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"net/url"
 )
 
-// QueryHandler send @req to storage in order to read @requestedData, and writes it back to user through @w
-func QueryHandler(w http.ResponseWriter, req *http.Request, requestedData string, userGroup string) {
+// bitStatusQueryHandler send @req to storage in order to read bitStatus reports, and writes it back to user through @w
+func bitStatusQueryHandler(w http.ResponseWriter, req *http.Request, userGroup string) {
 	client := &http.Client{}
 
 	resp, err := client.Do(req)
@@ -20,90 +19,137 @@ func QueryHandler(w http.ResponseWriter, req *http.Request, requestedData string
 		return
 	}
 	defer resp.Body.Close()
-	switch requestedData {
-	case "bit_status":
-		var bitStatusList []BitStatus
-		err = json.NewDecoder(resp.Body).Decode(&bitStatusList)
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-			return
-		}
-		maskedTestIds, e := getUserGroupsFiltering(userGroup)
-		if e != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error extract user groups filtering", e)
-		} else {
-			FilterBitStatus(&bitStatusList, maskedTestIds)
-		}
-
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		err = json.NewEncoder(w).Encode(&bitStatusList)
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	case "reports":
-		var reports []TestReport
-		err = json.NewDecoder(resp.Body).Decode(&reports)
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		err = json.NewEncoder(w).Encode(&reports)
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	case "user_groups":
-		var userGroups []string
-		err = json.NewDecoder(resp.Body).Decode(&userGroups)
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		err = json.NewEncoder(w).Encode(&userGroups)
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-		}
-		w.WriteHeader(http.StatusOK)
-	case "user_groups":
-		var userGroups []string
-		err = json.NewDecoder(resp.Body).Decode(&userGroups)
-		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		err = json.NewEncoder(w).Encode(&userGroups)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusOK)
+	var bitStatusList []BitStatus
+	err = json.NewDecoder(resp.Body).Decode(&bitStatusList)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
 	}
+	maskedTestIds, e := getUserGroupsFiltering(userGroup)
+	if e != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error extract user groups filtering", e)
+	} else {
+		FilterBitStatus(&bitStatusList, maskedTestIds)
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = json.NewEncoder(w).Encode(&bitStatusList)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 
 }
 
-// adds general query parameters to params according to param @filter and params of request @r
-func paramsHandler(r *http.Request, params url.Values, filter string) {
-	switch filter {
-	// cases are almost identical, query keys and var names are different for readability - need support on client side
-	case "time":
-		start := r.URL.Query()["start"][0]
-		end := r.URL.Query()["end"][0]
-		params.Add("start", start)
-		params.Add("end", end)
-	case "tag":
-		tag := r.URL.Query()["tag"]
-		params.Add("tag_key", tag[0])
-		params.Add("tag_value", tag[1])
-	case "field":
-		field := r.URL.Query()["field"]
-		params.Add("field", field[0])
+// reportsQueryHandler send @req to storage in order to read reports, and writes it back to user through @w
+func reportsQueryHandler(w http.ResponseWriter, req *http.Request, filter string, values []string) {
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
 	}
+	defer resp.Body.Close()
+	var reports []TestReport
+	err = json.NewDecoder(resp.Body).Decode(&reports)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+	FilterReports(&reports, filter, values)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = json.NewEncoder(w).Encode(&reports)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+
+}
+
+// userGroupsQueryHandler send @req to storage in order to read userGroups filtering rules, and writes it back to user through @w
+func userGroupsQueryHandler(w http.ResponseWriter, req *http.Request) {
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+	defer resp.Body.Close()
+	var userGroups []string
+	err = json.NewDecoder(resp.Body).Decode(&userGroups)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = json.NewEncoder(w).Encode(&userGroups)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+
+}
+
+// add bitStatus query parameters according to params of request @r, return userGroup of request
+func bitStatusRequestHandler(r *http.Request, req *http.Request) (bool, string) {
+
+	params := req.URL.Query()
+
+	start := r.URL.Query()["start"]
+	end := r.URL.Query()["end"]
+	userGroup := r.URL.Query()["user_group"]
+
+	if len(start) == 0 || len(end) == 0 || len(userGroup) == 0 {
+		return true, ""
+	}
+	params.Add("start", start[0])
+	params.Add("end", end[0])
+	params.Add("bit_status", "")
+
+	req.URL.RawQuery = params.Encode()
+	return false, userGroup[0]
+}
+
+// add report query parameters according to params of request @r, return filter type and values of request
+func reportsRequestHandler(r *http.Request, req *http.Request) (bool, string, []string) {
+
+	params := req.URL.Query()
+
+	start := r.URL.Query()["start"]
+	end := r.URL.Query()["end"]
+	filter := r.URL.Query()["filter"]
+	var values []string
+
+	if len(start) == 0 || len(end) == 0 || len(filter) == 0 || (filter[0] != "time" && filter[0] != "tag" && filter[0] != "field") {
+		return true, "", values
+	}
+
+	params.Add("start", start[0])
+	params.Add("end", end[0])
+	if filter[0] == "tag" {
+		tagKey := r.URL.Query()["tag_key"]
+		tagValue := r.URL.Query()["tag_value"]
+		if len(tagKey) == 0 || len(tagValue) == 0 {
+			return true, "", values
+		}
+		values = append(values, tagKey[0], tagValue[0])
+	} else if filter[0] == "field" {
+		field := r.URL.Query()["field"]
+		if len(field) == 0 {
+			return true, "", values
+		}
+		values = append(values, field[0])
+	}
+
+	params.Add("reports", "")
+
+	req.URL.RawQuery = params.Encode()
+	return false, filter[0], values
 }
 
 /*
@@ -167,4 +213,30 @@ func FilterBitStatus(statusList *[]BitStatus, maskedTestIds []uint64) {
 			idx++
 		}
 	}
+}
+
+// FilterReports filter reports from @param reportList according to @params filter, values
+func FilterReports(reportList *[]TestReport, filter string, values []string) {
+	n := 0
+	for _, report := range *reportList {
+		switch filter {
+		case "tag":
+			for _, tagSet := range report.TagSet {
+				if values[0] == tagSet.Key && values[1] == tagSet.Value {
+					(*reportList)[n] = report
+					n++
+					break
+				}
+			}
+		case "field":
+			for _, fieldSet := range report.FieldSet {
+				if values[0] == fieldSet.Key {
+					(*reportList)[n] = report
+					n++
+					break
+				}
+			}
+		}
+	}
+	*reportList = (*reportList)[:n]
 }

@@ -3,9 +3,11 @@ package bitQuery
 import (
 	. ".."
 	. "../../../configs/rafael.com/bina/bit"
+	. "../../models"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"testing"
+	"time"
 )
 
 // test filterBitStatus
@@ -105,6 +107,61 @@ func TestFilterBitStatus(t *testing.T) {
 			if !reflect.DeepEqual(expectedResult[i].Failures, statusSlice[i].Failures) {
 				t.Errorf("test failure filterBitStatus, status array at index %v, expected %v failures, got %v", i, len(expectedResult[i].Failures), len(statusSlice[i].Failures))
 			}
+		}
+	}
+}
+
+// test filterReports
+func TestFilterReports(t *testing.T) {
+
+	// filter 2 reports by tag
+	var reportSlice = []TestReport{report0, report1, report2}
+
+	var expectedResult = []TestReport{report2}
+
+	filter := "tag"
+	var values = []string{"hostname123", "north"}
+
+	FilterReports(&reportSlice, filter, values)
+
+	if !reflect.DeepEqual(reportSlice, expectedResult) {
+		if len(expectedResult) != len(reportSlice) {
+			t.Errorf("test failure filterReports, expected %v reports, got %v", len(expectedResult), len(reportSlice))
+			return
+		}
+	}
+
+	// filter all reports by field
+	reportSlice = []TestReport{report0, report1, report2}
+
+	expectedResult = []TestReport{}
+
+	filter = "field"
+	values = []string{"temp"}
+
+	FilterReports(&reportSlice, filter, values)
+
+	if !reflect.DeepEqual(reportSlice, expectedResult) {
+		if len(expectedResult) != len(reportSlice) {
+			t.Errorf("test failure filterReports, expected %v reports, got %v", len(expectedResult), len(reportSlice))
+			return
+		}
+	}
+
+	// filter no reports by tag
+	reportSlice = []TestReport{report3, report4, report5}
+
+	expectedResult = []TestReport{report3, report4, report5}
+
+	filter = "tag"
+	values = []string{"hostname", "server02"}
+
+	FilterReports(&reportSlice, filter, values)
+
+	if !reflect.DeepEqual(reportSlice, expectedResult) {
+		if len(expectedResult) != len(reportSlice) {
+			t.Errorf("test failure filterReports, expected %v reports, got %v", len(expectedResult), len(reportSlice))
+			return
 		}
 	}
 }
@@ -214,5 +271,88 @@ var failure3 = &BitStatus_RportedFailure{
 			"field2",
 			"field3",
 		},
+	},
+}
+
+var report0 = TestReport{
+	TestId:         123,
+	ReportPriority: 12,
+	Timestamp:      time.Now(),
+	TagSet: []KeyValue{
+		{Key: "hostname", Value: "server02"},
+	},
+	FieldSet: []KeyValue{
+		{Key: "volts", Value: "6.5"},
+	},
+}
+
+var report1 = TestReport{
+	TestId:         124,
+	ReportPriority: 12,
+	Timestamp:      time.Now(),
+	TagSet: []KeyValue{
+		{Key: "hostname", Value: "server01"},
+		{Key: "ss", Value: "longstanding"},
+	},
+	FieldSet: []KeyValue{
+		{Key: "volts", Value: "10"},
+		{Key: "oil", Value: "4"},
+	},
+}
+
+var report2 = TestReport{
+	TestId:         125,
+	ReportPriority: 12,
+	Timestamp:      time.Now(),
+	TagSet: []KeyValue{
+		{Key: "hostname123", Value: "north"},
+	},
+	FieldSet: []KeyValue{
+		{Key: "AirPressure", Value: "-1"},
+	},
+}
+
+var report3 = TestReport{
+	TestId:         126,
+	ReportPriority: 12,
+	Timestamp:      time.Now(),
+	TagSet: []KeyValue{
+		{Key: "hostname123", Value: "north"},
+		{Key: "host", Value: "north east"},
+		{Key: "hostname", Value: "server02"},
+	},
+	FieldSet: []KeyValue{
+		{Key: "AirPressure", Value: "-3.3"},
+		{Key: "TemperatureCelsius", Value: "68"},
+	},
+}
+
+var report4 = TestReport{
+	TestId:         127,
+	ReportPriority: 12,
+	Timestamp:      time.Now(),
+	TagSet: []KeyValue{
+		{Key: "hostname123", Value: "north"},
+		{Key: "host", Value: "north east"},
+		{Key: "hostname", Value: "server02"},
+	},
+	FieldSet: []KeyValue{
+		{Key: "AirPressure", Value: "50"},
+		{Key: "TemperatureCelsius", Value: "60"},
+	},
+}
+
+var report5 = TestReport{
+	TestId:         129,
+	ReportPriority: 12,
+	Timestamp:      time.Now(),
+	TagSet: []KeyValue{
+		{Key: "hostname123", Value: "north"},
+		{Key: "host", Value: "north east"},
+		{Key: "hostname", Value: "server02"},
+	},
+	FieldSet: []KeyValue{
+		{Key: "AirPressure", Value: "10"},
+		{Key: "TemperatureCelsius", Value: "72"},
 	},
 }

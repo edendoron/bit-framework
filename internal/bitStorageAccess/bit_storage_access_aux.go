@@ -110,7 +110,7 @@ func writeUserGroups(w http.ResponseWriter, failure Failure) {
 	if len(content) > 0 {
 		groups = strings.Split(string(content), "\n")
 	}
-	for _, group := range groups{
+	for _, group := range groups {
 		userGroups[group] = 1
 	}
 	for _, group := range failure.Dependencies.BelongsToGroup {
@@ -221,7 +221,7 @@ func writeBitStatus(w http.ResponseWriter, bitStatus *string) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func readReports(w http.ResponseWriter, start string, end string, filter string) {
+func readReports(w http.ResponseWriter, start string, end string) {
 	var reports TestResultsSet
 	const layout = "2006-January-02 15:4:5"
 	startTime, err := time.Parse(layout, start)
@@ -331,7 +331,7 @@ func readExtendedFailures(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func readBitStatus(w http.ResponseWriter, start string, end string, filter string) {
+func readBitStatus(w http.ResponseWriter, start string, end string) {
 	var statuses []BitStatus
 	const layout = "2006-January-02 15:4:5"
 	startTime, err := time.Parse(layout, start)

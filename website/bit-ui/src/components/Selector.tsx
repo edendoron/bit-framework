@@ -1,11 +1,12 @@
 import React, {FC} from 'react';
-import {createStyles, FormControl, makeStyles, MenuItem, Select} from "@material-ui/core";
+import {createStyles, FormControl, InputLabel, makeStyles, MenuItem, Select} from "@material-ui/core";
 
 interface SelectorProps {
     menuItems: string[],
     currentValue: string,
     onChange: (event: React.ChangeEvent<{ value: unknown }>) => void,
     isDisabled: boolean,
+    placeholder: string,
 }
 
 const useStyles = makeStyles(() =>
@@ -22,7 +23,7 @@ const useStyles = makeStyles(() =>
     }),
 );
 
-export const Selector: FC<SelectorProps> = ({menuItems, currentValue, onChange, isDisabled}) => {
+export const Selector: FC<SelectorProps> = ({menuItems, currentValue, onChange, isDisabled, placeholder}) => {
     const classes = useStyles();
 
     const renderMenuItems = () => {
@@ -30,6 +31,7 @@ export const Selector: FC<SelectorProps> = ({menuItems, currentValue, onChange, 
     }
     return (
         <FormControl className={classes.formControl} disabled={isDisabled}>
+            <InputLabel id="placeholder">{placeholder}</InputLabel>
             <Select
                 className={classes.select}
                 value={currentValue}

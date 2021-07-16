@@ -1,0 +1,21 @@
+{
+  "testId": 25,
+  "reportPriority": 200,
+  "timestamp": "2021-04-16T11:38:29.7987531+03:00",
+  "tagSet": [
+    {
+      "key": "zone",
+      "value": "north"
+    },
+    {
+      "key": "hostname",
+      "value": "server02"
+    }
+  ],
+  "fieldSet": [
+    {
+      "key": "volts",
+      "value": "9"
+    }
+  ]
+}

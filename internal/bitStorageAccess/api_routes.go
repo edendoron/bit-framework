@@ -1,14 +1,18 @@
 package bitStorageAccess
 
 import (
-	. "../models"
 	"fmt"
+	. "github.com/edendoron/bit-framework/internal/models"
+	"log"
 	"net/http"
 	"strings"
 )
 
 func StorageIndex(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello bit-storage-access!")
+	_, err := fmt.Fprintf(w, "Hello bit-storage-access!")
+	if err != nil {
+		log.Printf("error in index route: %v", err)
+	}
 }
 
 var StorageAccessRoutes = Routes{

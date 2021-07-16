@@ -1,10 +1,10 @@
 package bitConfig
 
 import (
-	. "../../configs/rafael.com/bina/bit"
-	. "../models"
 	"bytes"
 	"encoding/json"
+	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"io/ioutil"
 	"log"
 	"net/http"

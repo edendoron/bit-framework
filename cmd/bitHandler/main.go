@@ -1,9 +1,9 @@
 package main
 
 import (
-	handler ".."
-	"../../../server"
-	. "../../models"
+	handler "github.com/edendoron/bit-framework/internal/bitHandler"
+	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/server"
 	"log"
 )
 

@@ -1,8 +1,8 @@
 package bitExporter
 
 import (
-	. ".."
-	. "../../models"
+	. "github.com/edendoron/bit-framework/internal/bitTestResultsExporter"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"testing"
 	"time"
 )

@@ -1,9 +1,9 @@
 package bitExporter
 
 import (
-	. "../apiResponseHandlers"
-	. "../models"
 	"encoding/json"
+	. "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"net/http"
 )
 

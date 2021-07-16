@@ -1,10 +1,10 @@
 package bitExporter
 
 import (
-	. "../models"
 	"bytes"
 	"encoding/json"
 	prqueue "github.com/coraxster/PriorityQueue"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"log"
 	m "math"
 	"net/http"

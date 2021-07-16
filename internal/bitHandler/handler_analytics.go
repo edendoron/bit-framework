@@ -1,10 +1,10 @@
 package bitHandler
 
 import (
-	. "../../configs/rafael.com/bina/bit"
-	. "../models"
 	"bytes"
 	"encoding/json"
+	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"net/http"

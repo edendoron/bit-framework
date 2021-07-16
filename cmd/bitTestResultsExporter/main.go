@@ -1,9 +1,9 @@
 package main
 
 import (
-	exporter ".."
-	"../../../server"
-	. "../../models"
+	exporter "github.com/edendoron/bit-framework/internal/bitTestResultsExporter"
+	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/server"
 	"log"
 	"time"
 )

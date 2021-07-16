@@ -1,9 +1,9 @@
 package bitHandler
 
 import (
-	. "../apiResponseHandlers"
-	. "../models"
 	"errors"
+	. "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"net/http"
 )
 

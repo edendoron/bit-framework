@@ -1,10 +1,10 @@
 package main
 
 import (
-	config ".."
-	"../../../server"
-	. "../../models"
 	"context"
+	config "github.com/edendoron/bit-framework/internal/bitConfig"
+	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/server"
 	"log"
 )
 

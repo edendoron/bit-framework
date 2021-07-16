@@ -1,9 +1,9 @@
 package main
 
 import (
-	indexer ".."
-	"../../../server"
-	. "../../models"
+	indexer "github.com/edendoron/bit-framework/internal/bitIndexer"
+	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/server"
 	"log"
 )
 

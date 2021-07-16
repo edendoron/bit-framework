@@ -1,12 +1,12 @@
 package bitStorageAccess
 
 import (
-	. "../../configs/rafael.com/bina/bit"
-	. "../apiResponseHandlers"
-	handler "../bitHandler"
-	. "../models"
 	"encoding/json"
 	"fmt"
+	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	. "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
+	handler "github.com/edendoron/bit-framework/internal/bitHandler"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"io/ioutil"

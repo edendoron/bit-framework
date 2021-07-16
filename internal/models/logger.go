@@ -28,7 +28,7 @@ func RedirectLogger(servicePath string) {
 	currTime := time.Now().Format("20060102150405")
 
 	fileName := servicePath + "/log/" + currTime + "_logs.txt"
-	file, e := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	file, e := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
 	if e != nil {
 		fmt.Println(e)
 	}

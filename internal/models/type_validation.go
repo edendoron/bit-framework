@@ -10,7 +10,7 @@ func ValidateType(response interface{}) error {
 	err := v.Struct(response)
 	if err != nil {
 		for _, e := range err.(validator.ValidationErrors) {
-			log.Println(e.Error())
+			log.Println(e)
 		}
 		return err
 	}

@@ -5,6 +5,7 @@ import (
 	"log"
 )
 
+// ValidateType make sure that the type given has all required fields.
 func ValidateType(response interface{}) error {
 	v := validator.New()
 	err := v.Struct(response)

@@ -1,8 +1,15 @@
-group1
 TemperatureCelsius group
-groupField
+group1
+group 3
+TemperatureCelsius group
 group3
-group4
 groupRafael
 group 3
+group3
+group4
 group general
+group1
+groupField
+groupRafael
+group4
+groupField

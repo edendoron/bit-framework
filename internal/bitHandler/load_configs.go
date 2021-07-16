@@ -1,7 +1,7 @@
 package bitHandler
 
 import (
-	. "../models"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"github.com/segmentio/conf"
 )
 

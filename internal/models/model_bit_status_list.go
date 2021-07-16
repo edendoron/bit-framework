@@ -1,8 +1,8 @@
 package models
 
 import (
-	. "../../configs/rafael.com/bina/bit"
 	"encoding/json"
+	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
 )
 
 type BitStatusList struct {

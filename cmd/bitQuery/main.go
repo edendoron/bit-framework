@@ -1,9 +1,9 @@
 package main
 
 import (
-	query ".."
-	"../../../server"
-	. "../../models"
+	query "github.com/edendoron/bit-framework/internal/bitQuery"
+	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/server"
 	"log"
 )
 

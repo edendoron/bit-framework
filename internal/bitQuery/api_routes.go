@@ -1,8 +1,8 @@
 package bitQuery
 
 import (
-	. "../models"
 	"fmt"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"log"
 	"net/http"
 	"strings"

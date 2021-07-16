@@ -1,7 +1,7 @@
 package bitQuery
 
 import (
-	. "../apiResponseHandlers"
+	. "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
 	"net/http"
 )
 

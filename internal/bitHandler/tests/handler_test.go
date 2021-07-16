@@ -1,9 +1,9 @@
 package bitHandler
 
 import (
-	. ".."
-	. "../../../configs/rafael.com/bina/bit"
-	. "../../models"
+	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	. "github.com/edendoron/bit-framework/internal/bitHandler"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"testing"

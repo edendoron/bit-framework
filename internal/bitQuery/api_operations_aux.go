@@ -1,10 +1,10 @@
 package bitQuery
 
 import (
-	. "../../configs/rafael.com/bina/bit"
-	. "../apiResponseHandlers"
-	. "../models"
 	"encoding/json"
+	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	. "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"log"
 	"net/http"
 )

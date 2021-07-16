@@ -1,10 +1,10 @@
 package bitIndexer
 
 import (
-	. "../apiResponseHandlers"
-	. "../models"
 	"bytes"
 	"encoding/json"
+	. "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"io"
 	"net/http"
 	"strings"

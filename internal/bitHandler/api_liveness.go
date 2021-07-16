@@ -1,8 +1,8 @@
 package bitHandler
 
 import (
-	. "../models"
 	"encoding/json"
+	. "github.com/edendoron/bit-framework/internal/models"
 	"log"
 	"net/http"
 	"time"

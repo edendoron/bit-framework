@@ -1,7 +1,7 @@
 package bitHandler
 
 import (
-	. "../../configs/rafael.com/bina/bit"
+	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"

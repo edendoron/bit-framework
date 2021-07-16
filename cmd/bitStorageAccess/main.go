@@ -1,9 +1,9 @@
 package main
 
 import (
-	storage ".."
-	"../../../server"
-	. "../../models"
+	storage "../../internal/bitStorageAccess"
+	. "../../internal/models"
+	"../../server"
 	"log"
 )
 

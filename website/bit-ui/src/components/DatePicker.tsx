@@ -6,9 +6,10 @@ interface DatePickerProps {
     currentDate: Date,
     onDateChange: (date: Date) => void,
     label: string,
+    disabled: boolean,
 }
 
-export const DatePicker: FC<DatePickerProps> = ({currentDate, onDateChange, label}) => {
+export const DatePicker: FC<DatePickerProps> = ({currentDate, onDateChange, label, disabled}) => {
 
     return (
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
@@ -16,7 +17,8 @@ export const DatePicker: FC<DatePickerProps> = ({currentDate, onDateChange, labe
                 variant="inline"
                 ampm={false}
                 label={label}
-                value={currentDate}
+                value={disabled ? null : currentDate}
+                disabled={disabled}
                 onChange={(date) => onDateChange(date as Date)}
                 onError={console.log}
                 format="yyyy/MM/dd HH:mm:ss"

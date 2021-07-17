@@ -152,7 +152,7 @@ export const App = () => {
                                           isDisabled={false} placeholder='user group'/>
                                 <Selector menuItems={queryTypes} currentValue={queryType} onChange={changeQueryType}
                                           isDisabled={isDisabled} placeholder='query type'/>
-                                <Selector menuItems={filterOptions} currentValue={filter} onChange={changeFilter}
+                                <Selector menuItems={queryType === 'Reports' ? filterOptions : filterOptions.slice(0, 1)} currentValue={filter} onChange={changeFilter}
                                           isDisabled={isDisabled} placeholder='filter'/>
                             </Grid>
                             <Grid className={classes.dateGrid} container justify='space-evenly'>
@@ -160,11 +160,13 @@ export const App = () => {
                                     currentDate={startTime}
                                     onDateChange={changeStartTime}
                                     label='start time'
+                                    disabled={filter === ''}
                                 />
                                 <DatePicker
                                     currentDate={endTime}
                                     onDateChange={changeEndTime}
                                     label='end time'
+                                    disabled={filter === ''}
                                 />
                             </Grid>
                             {filter === 'field' &&

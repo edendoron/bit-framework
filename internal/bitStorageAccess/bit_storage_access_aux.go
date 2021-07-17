@@ -9,6 +9,8 @@ import (
 	. "github.com/edendoron/bit-framework/internal/models"
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"io"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -410,6 +412,70 @@ func readUserGroups(w http.ResponseWriter) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func deleteAgedData(w http.ResponseWriter, fileType string, timestamp string) {
+
+	const layout = "2006-January-02 15:4:5"
+	threshold, err := time.Parse(layout, timestamp)
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	}
+	err = filepath.Walk("storage/" +fileType,
+		func(path string, info os.FileInfo, err error) error {
+			pathToTime := strings.Split(path, "\\")
+			if len(pathToTime) >= 2 {
+				timeToCmp := strings.ReplaceAll(pathToTime[2], " ", "-") + " " + strings.Join(pathToTime[3:], ":")
+				reportTime, err := time.Parse(layout, timeToCmp)
+				if err == nil && info.IsDir() && reportTime.Before(threshold) {
+					err = os.RemoveAll(path)
+					if err != nil {
+						ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+					}
+				}
+			}
+			return nil
+		})
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+	deleteEmptyDirectories(w, "storage/" + fileType, 0, fileType)
+}
+
+func deleteEmptyDirectories(w http.ResponseWriter, path string, depth int, fileType string) {
+	if depth == 3 {
+		return
+	}
+	err := filepath.Walk(path,
+		func(childPath string, info fs.FileInfo, err error) error {
+			deleteEmptyDirectories(w, childPath, depth+1, fileType)
+			if (path != ("storage/" + fileType)) && IsEmpty(path) {
+				err := os.RemoveAll(path)
+				if err != nil {
+					ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+				}
+			}
+			return nil
+		})
+	if err != nil {
+		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		return
+	}
+}
+
+func IsEmpty(name string) bool {
+	f, err := os.Open(name)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1)
+	if err == io.EOF {
+		return true
+	}
+	return false
 }
 
 func convertToKeyValuePair(arr []KeyValue) []*KeyValuePair {

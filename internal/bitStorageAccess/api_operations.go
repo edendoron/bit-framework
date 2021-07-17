@@ -7,14 +7,10 @@ import (
 	. "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
 	. "github.com/edendoron/bit-framework/internal/models"
 	"github.com/golang/protobuf/proto"
-	"io"
-	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
-	"time"
 )
 
 func GetDataRead(w http.ResponseWriter, r *http.Request) {
@@ -123,65 +119,9 @@ func PutDataWrite(w http.ResponseWriter, r *http.Request) {
 func DeleteData(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	timestamp := r.URL.Query()["timestamp"][0]
-	const layout = "2006-January-02 15:4:5"
-	threshold, err := time.Parse(layout, timestamp)
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-	}
-	err = filepath.Walk("storage/test_reports",
-		func(path string, info os.FileInfo, err error) error {
-			pathToTime := strings.Split(path, "\\")
-			if len(pathToTime) >= 2 {
-				timeToCmp := strings.ReplaceAll(pathToTime[2], " ", "-") + " " + strings.Join(pathToTime[3:], ":")
-				reportTime, err := time.Parse(layout, timeToCmp)
-				if err == nil && info.IsDir() && reportTime.Before(threshold) {
-					err = os.RemoveAll(path)
-					if err != nil {
-						ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-					}
-				}
-			}
-			return nil
-		})
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-		return
-	}
-	deleteEmptyDirectories(w, "storage/test_reports", 0)
-	ApiResponseHandler(w, http.StatusOK, "Old reports deleted successfully", nil)
+	deleteAgedData(w, "test_reports", timestamp)
+	deleteAgedData(w, "bit_status", timestamp)
+	ApiResponseHandler(w, http.StatusOK, "Outdated data deleted successfully", nil)
 }
 
-func deleteEmptyDirectories(w http.ResponseWriter, path string, depth int) {
-	if depth == 3 {
-		return
-	}
-	err := filepath.Walk(path,
-		func(childPath string, info fs.FileInfo, err error) error {
-			deleteEmptyDirectories(w, childPath, depth+1)
-			if path != "storage/test_reports" && IsEmpty(path) {
-				err := os.RemoveAll(path)
-				if err != nil {
-					ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-				}
-			}
-			return nil
-		})
-	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
-		return
-	}
-}
 
-func IsEmpty(name string) bool {
-	f, err := os.Open(name)
-	if err != nil {
-		return false
-	}
-	defer f.Close()
-
-	_, err = f.Readdirnames(1)
-	if err == io.EOF {
-		return true
-	}
-	return false
-}

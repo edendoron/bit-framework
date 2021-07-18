@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/fs"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,6 +28,9 @@ func writeReports(w http.ResponseWriter, testReports *string) {
 		return
 	}
 	for _, report := range reports.Reports {
+		if time.Now().Sub(report.Timestamp).Seconds() >= Configs.BitHandlerTriggerPeriod {
+			log.Printf("Report %v: Timestamp is too late and bitHandler will ignore this report!", report.TestId)
+		}
 		reportToWrite := testReportToTestResult(report)
 		path := "storage/test_reports/" + fmt.Sprint(report.Timestamp.Date()) + "/" + fmt.Sprint(report.Timestamp.Hour()) +
 			"/" + fmt.Sprint(report.Timestamp.Minute()) + "/" + fmt.Sprint(report.Timestamp.Second())

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -290,9 +291,14 @@ func (a *BitAnalyzer) checkSlidingWindow(i int) uint64 {
 		}
 	}
 
+	if end == len(a.Reports) {
+		return 0
+	}
+
 	if begin == len(a.Reports) || end == len(a.Reports)+1 {
 		begin = 0
 		end = 0
+		countTimeCriteriaViolation = 0
 	}
 	for end < len(a.Reports) {
 		startWindowTest := a.Reports[begin]
@@ -422,14 +428,20 @@ func checkField(test *TestReport, examinationRule *FailureExaminationRule) strin
 // check tag existing
 func checkTag(test *TestReport, examinationRule *FailureExaminationRule) bool {
 	// fixes problem of base64 encoding of protobuf
-	key, _ := json.MarshalIndent(examinationRule.MatchingTag.Key, "", " ")
-	value, _ := json.MarshalIndent(examinationRule.MatchingTag.Value, "", " ")
+	key, err := json.MarshalIndent(examinationRule.MatchingTag.Key, "", " ")
+	if err != nil {
+		log.Printf("error mrashalling tag set of examination rule error: %v", err)
+	}
+	value, err := json.MarshalIndent(examinationRule.MatchingTag.Value, "", " ")
+	if err != nil {
+		log.Printf("error mrashalling tag set of examination rule error: %v", err)
+	}
 	if TestingFlag {
 		key = examinationRule.MatchingTag.Key
 		value = examinationRule.MatchingTag.Value
 	}
 	for _, tag := range test.TagSet {
-		if tag.Key == string(key) && tag.Value == string(value) {
+		if tag.Key == strings.ReplaceAll(string(key), "\"", "") && tag.Value == strings.ReplaceAll(string(value), "\"", "") {
 			return true
 		}
 	}

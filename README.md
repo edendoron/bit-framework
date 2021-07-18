@@ -1,6 +1,7 @@
 # BIT framework
 ![bit build](https://img.shields.io/badge/build-success-green)
-##Description
+
+## Description
 
 BIT framework is a cross-platform microservices based predictive maintenance framework which aims to enable collection of test reports from a wide range of client endpoints.
 Our goal was to build each service as simple and independent as we can. Each service has it's own purpose but may rely on other services.
@@ -47,7 +48,7 @@ And for windows:
 * We will explain about the -config-file flag later.
 
 Now you can use the 'BIT test results exporter' service in order to ingest test reports in to the system, and see the analytics results using the UI or any client request from the 'BIT query service'.
-###Usage example
+### Usage example
 
 Let's test the installation and see the flow of data between microservices.
 
@@ -185,9 +186,9 @@ Here is an example screenshot of how this data will appear in the Web-UI:
 
 ![img.png](usageExample/img.png)
 
-###Testing
+### Testing
 
-####Unit tests
+#### Unit tests
 
 Unit tests can be found under `./internal/<service-name>/tests`.
 
@@ -197,7 +198,7 @@ Unit tests can be found under `./internal/<service-name>/tests`.
 ```
 The command runs every go tests found in the working directory with the `_test.go` suffix.
 
-####Integration tests
+#### Integration tests
 
 Integration tests can be found under `./tests`
 
@@ -206,11 +207,11 @@ You can also run all tests found in the repo from the repo main directory by run
 > go test ./...
 ```
 
-##API
+## API
 
 Detailed `.yaml` API files for each service can be found in `./api`
 
-##Files structure
+## Files structure
 
 - `./cmd` directory contains all service's `main.go` files are located under `./cmd/<service-name>` and can be built and executed directly from the main directory.
 - `./config` directory is for general configurations consumed by services (will be explained in the next section).
@@ -220,13 +221,13 @@ Detailed `.yaml` API files for each service can be found in `./api`
 - `./website/bit-ui` is the root directory for the web-client service, Further details can be found under its own #README file
 - `go.mod` and `go.sum` files are required for dependency injection. Each import we make in the code using the `go get` command, will add the dependency used version to these files.
 
-##Configuration
+## Configuration
 
-###Services configurations
+### Services configurations
 
 All services configuration are loaded based on the `github.com/segmentio/conf` package. Each of the configurations can be found in the `configs.yml` file under `./configs/prog_configs`. We use the `-config-file` flag, followed by the file path in order to specify to each service the configurations' extraction method and route. The `conf` package allows setting configurations using program arguments, environment variables, and configuration file (like we did). For more information about `conf` please address to the package gitHub page.
 
-###System configurations
+### System configurations
 
 All configurations related to the functional operations of the framework are extracted by the 'Config' service and ingested to the storage using 'protobuf'.
 
@@ -235,7 +236,7 @@ User should place the configurations under the appropriate path in order for the
 - User groups filtering rules under `./configs/config_user_groups_filtering`.
 - SSH configurations (certificate and key for https configurations) under `./configs/prog_configs/sshConfigs`.
 
-###Failures
+### Failures
 
 Failures definition and explanation can be found mainly in the protobuf generated go file located in `./configs/rafael.com/bina/bit/bit.pb.go` and in the guidance presentation.
 To complete all definitions and assumptions we took, we will detail more about specific fields of a configured failure.
@@ -245,11 +246,11 @@ To complete all definitions and assumptions we took, we will detail more about s
 - `Failure.FailureExaminationRule.FailureValueCriteria.ExceedingType and ExceedingValue` - report will be considered violation of the failure if the tested field values are within or out of the range according to threshold mode, with a deviation of some value or percentage from the range allowed. For example: in our usage example, a voltage value of 12 is of course out of the range 1-7 so will be applied as violation. Voltage value of 5 is with-in the range so will not be considered violation, but also a value of 7.6 is under the limitations of 10% deviation of the configured range, and so wil also not be considered as violation. similar approach applies on 'WITHIN' exceeding type.
 - `Failure.FailureTimeCriteria` - fields 'windowSize' and 'failuresCount' are only relevant for 'SLIDING_WINDOW' type failures. 'NO_WINDOW' failures count will be documented under 'BITStatus.ReportedFailure.exactCount' of the corresponding BITStatus report failure, if found.
 
-##Resources
+## Resources
 
 
 
-##Open source packages
+## Open source packages
 
 Open source packages used in the project can be found in the go.mod file:
 ```

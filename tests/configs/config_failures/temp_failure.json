@@ -1,0 +1,64 @@
+{
+  "description": {
+    "unit_name": "system test check",
+    "test_name": "temperature test",
+    "test_id": 3,
+    "bit_type": [
+      "CBIT"
+    ],
+    "description": "this is a mock failure to test services",
+    "additional_info": "the failure finds temperature problem",
+    "purpose": "check temperature is within 60-80 range, with a deviation of 8",
+    "severity": 2,
+    "operator_failure": [
+      "can't ignite",
+      "normal functionality is damaged"
+    ],
+    "line_replacent_units": [
+      "line12",
+      "line22"
+    ],
+    "field_replacemnt_units": [
+      "field1",
+      "field2",
+      "field3"
+    ]
+  },
+  "examination_rule": {
+    "matching_field": "TemperatureCelsius",
+    "matching_tag": {
+      "key": "hostname",
+      "value": "server02"
+    },
+    "failure_criteria": {
+      "value_criteria": {
+        "minimum": 60,
+        "miximum": 80,
+        "threshold_mode": 0,
+        "exceeding": {
+          "type": 0,
+          "value": 8
+        }
+      },
+      "time_criteria": {
+        "window_type": 0,
+        "window_size": 5,
+        "failures_cCount": 2
+      }
+    }
+  },
+  "report_duration": {
+    "indication": 2,
+    "indication_seconds": 0
+  },
+  "dependencies": {
+    "belongs_to_group": [
+      "TemperatureCelsius group",
+      "groupRafael",
+      "group general"
+    ],
+    "masks_other_group": [
+      "group1"
+    ]
+  }
+}

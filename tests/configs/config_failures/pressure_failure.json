@@ -1,0 +1,64 @@
+{
+  "description": {
+    "unit_name": "system test check",
+    "test_name": "air pressure test",
+    "test_id": 2,
+    "bit_type": [
+      "CBIT"
+    ],
+    "description": "this is a mock failure to test services",
+    "additional_info": "the failure finds air pressure problem",
+    "purpose": "check pressure is within 20-30 range, with a deviation of 2%",
+    "severity": 3,
+    "operator_failure": [
+      "high fuel consumption",
+      "exploding tire risk"
+    ],
+    "line_replacent_units": [
+      "line12",
+      "line22"
+    ],
+    "field_replacemnt_units": [
+      "field1",
+      "field2",
+      "field3"
+    ]
+  },
+  "examination_rule": {
+    "matching_field": "AirPressure",
+    "matching_tag": {
+      "key": "hostname",
+      "value": "server02"
+    },
+    "failure_criteria": {
+      "value_criteria": {
+        "minimum": 20,
+        "miximum": 30,
+        "threshold_mode": 0,
+        "exceeding": {
+          "type": 1,
+          "value": 2
+        }
+      },
+      "time_criteria": {
+        "window_type": 0,
+        "window_size": 0,
+        "failures_cCount": 1
+      }
+    }
+  },
+  "report_duration": {
+    "indication": 1,
+    "indication_seconds": 0
+  },
+  "dependencies": {
+    "belongs_to_group": [
+      "group 3",
+      "group general"
+    ],
+    "masks_other_group": [
+      "group1",
+      "TemperatureCelsius group"
+    ]
+  }
+}

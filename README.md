@@ -1,5 +1,4 @@
 # BIT framework
-![bit build](https://img.shields.io/badge/build-success-green)
 
 ## Description
 
@@ -254,6 +253,8 @@ To complete all definitions and assumptions we took, we will detail more about s
 
 Open source packages used in the project can be found in the go.mod file:
 ```
+Libraries for the go backend:
+
 github.com/coraxster/PriorityQueue
 github.com/go-playground/universal-translator
 github.com/go-playground/validator
@@ -265,6 +266,17 @@ github.com/magiconair/properties
 github.com/segmentio/conf
 google.golang.org/protobuf 
 gopkg.in/go-playground/assert.v1
+
+And for the web-UI frontend:
+
+react
+typescript
+material-ui
+axios
+date-fns
+dayjs
+react-dom
+web-vitals
 ```
 
 ## License

@@ -28,7 +28,7 @@ func writeReports(w http.ResponseWriter, testReports *string) {
 		return
 	}
 	for _, report := range reports.Reports {
-		if time.Now().Sub(report.Timestamp).Seconds() >= Configs.BitHandlerTriggerPeriod {
+		if time.Since(report.Timestamp).Seconds() >= Configs.BitHandlerTriggerPeriod {
 			log.Printf("Report %v: Timestamp is too late and bitHandler will ignore this report!", report.TestId)
 		}
 		reportToWrite := testReportToTestResult(report)
@@ -482,10 +482,7 @@ func IsEmpty(name string) bool {
 	defer f.Close()
 
 	_, err = f.Readdirnames(1)
-	if err == io.EOF {
-		return true
-	}
-	return false
+	return err == io.EOF
 }
 
 func convertToKeyValuePair(arr []KeyValue) []*KeyValuePair {

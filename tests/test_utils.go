@@ -94,16 +94,45 @@ func fetchReportsFromStorage() []TestReport{
 	return reports
 }
 
+func fetchStatusFromQuery() BitStatus{
+	req, err := http.NewRequest(http.MethodGet, "http://localhost:8085/status", nil)
+	if err != nil {
+		log.Fatalln("Can't make new http request")
+	}
+
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	params := req.URL.Query()
+	params.Add("user_group", "engine")
+	params.Add("start", time.Now().Add(-5 * time.Minute).Format(layout))
+	params.Add("end", time.Now().Add(5 * time.Minute).Format(layout))
+	params.Add("filter", "time")
+	req.URL.RawQuery = params.Encode()
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK{
+		log.Fatalln("Couldn't get status from query:\n", err)
+	}
+
+	var bitStatus BitStatus
+	err = json.NewDecoder(resp.Body).Decode(&bitStatus)
+	if err != nil {
+		log.Fatalln("Can't decode response from query:\n", err)
+	}
+
+	return bitStatus
+}
+
 func cleanTest(killServicesCmd *exec.Cmd) {
-	cleanStorage()
+	deleteTestFilesFromStorage()
 	err := killServicesCmd.Run()
 	if err != nil {
 		log.Fatalln("Error killing services", err)
 	}
+	cleanTestStorageConfigDirs()
 }
 
-func cleanStorage() {
-	deleteTestFilesFromStorage()
+func cleanTestStorageConfigDirs() {
 	configDirs, err := os.ReadDir("./storage/config")
 	if err != nil {
 		log.Fatalln("Can't read config directories", err)
@@ -117,7 +146,7 @@ func cleanStorage() {
 			if file.Name() != ".gitignore" {
 				err = os.Remove("./storage/config/" + dir.Name() + "/" + file.Name())
 				if err != nil {
-					log.Fatalln("Can't remove file " + file.Name(), err)
+					log.Fatalln("Can't remove file " + file.Name() + "\n", err)
 				}
 			}
 		}

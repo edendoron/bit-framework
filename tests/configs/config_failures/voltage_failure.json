@@ -1,0 +1,65 @@
+{
+  "description": {
+    "unit_name": "system test check",
+    "test_name": "volts test",
+    "test_id": 1,
+    "bit_type": [
+      "CBIT"
+    ],
+    "description": "this is a mock failure to test services",
+    "additional_info": "the failure finds voltage problem",
+    "purpose": "check voltage is not within 1-7 range, with a deviation of 10%",
+    "severity": 1,
+    "operator_failure": [
+      "unable to start",
+      "normal functionality is damaged"
+    ],
+    "line_replacent_units": [
+      "line1",
+      "line2"
+    ],
+    "field_replacemnt_units": [
+      "field1",
+      "field2",
+      "field3"
+    ]
+  },
+  "examination_rule": {
+    "matching_field": "volts",
+    "matching_tag": {
+      "key": "hostname",
+      "value": "server02"
+    },
+    "failure_criteria": {
+      "value_criteria": {
+        "minimum": 2,
+        "miximum": 7,
+        "threshold_mode": 0,
+        "exceeding": {
+          "type": 1,
+          "value": 10
+        }
+      },
+      "time_criteria": {
+        "window_type": 1,
+        "window_size": 5,
+        "failures_cCount": 0
+      }
+    }
+  },
+  "report_duration": {
+    "indication": 2,
+    "indication_seconds": 600
+  },
+  "dependencies": {
+    "belongs_to_group": [
+      "group1",
+      "groupRafael",
+      "groupField"
+    ],
+    "masks_other_group": [
+      "group3",
+      "group4"
+    ]
+  }
+}

@@ -281,6 +281,9 @@ func readConfigFailures(w http.ResponseWriter) {
 		return
 	}
 	for _, f := range files {
+		if f.Name() == ".gitignore" {
+			continue
+		}
 		content, err := ioutil.ReadFile("storage/config/filtering_rules/" + f.Name())
 		if err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
@@ -312,6 +315,9 @@ func readExtendedFailures(w http.ResponseWriter) {
 		return
 	}
 	for _, f := range files {
+		if f.Name() == ".gitignore" {
+			continue
+		}
 		content, err := ioutil.ReadFile("storage/config/perm_filtering_rules/" + f.Name())
 		if err != nil {
 			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)

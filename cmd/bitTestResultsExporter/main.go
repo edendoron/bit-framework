@@ -18,7 +18,7 @@ func main() {
 
 	router := exporter.ExporterRoutes.NewRouter()
 
-	srv := server.NewServer(router, exporter.Configs.BitExporterPort)
+	srv := server.NewServer(router, exporter.Configs.Host + exporter.Configs.BitExporterPort)
 
 	// NOTE: requests may be sent in 0.1 second deviation of the requested duration
 	go exporter.ReportsScheduler(time.Second)

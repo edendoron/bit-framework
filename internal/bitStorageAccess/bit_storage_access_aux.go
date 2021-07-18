@@ -242,7 +242,7 @@ func readReports(w http.ResponseWriter, start string, end string) {
 			if len(pathToTime) >= 2 {
 				timeToCmp := strings.ReplaceAll(pathToTime[2], " ", "-") + " " + strings.Join(pathToTime[3:], ":")
 				reportTime, err := time.Parse(layout, timeToCmp)
-				if err == nil && info.IsDir() && reportTime.After(startTime) && reportTime.Before(endTime) {
+				if err == nil && info.IsDir() && !reportTime.Before(startTime) && reportTime.Before(endTime) {
 					protoReports, err := ioutil.ReadFile(path + "/tests_results.txt")
 					if err != nil {
 						ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
@@ -352,7 +352,7 @@ func readBitStatus(w http.ResponseWriter, start string, end string) {
 			if len(pathToTime) >= 2 {
 				timeToCmp := strings.ReplaceAll(pathToTime[2], " ", "-") + " " + strings.Join(pathToTime[3:], ":")
 				reportTime, err := time.Parse(layout, timeToCmp)
-				if err == nil && info.IsDir() && reportTime.After(startTime) && reportTime.Before(endTime) {
+				if err == nil && info.IsDir() && !reportTime.Before(startTime) && reportTime.Before(endTime) {
 					protoStatus, err := ioutil.ReadFile(path + "/bit_status.txt")
 					if err != nil {
 						ApiResponseHandler(w, http.StatusInternalServerError, "Can't find status!", err)
@@ -421,7 +421,7 @@ func deleteAgedData(w http.ResponseWriter, fileType string, timestamp string) {
 	if err != nil {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
-	err = filepath.Walk("storage/" +fileType,
+	err = filepath.Walk("storage/"+fileType,
 		func(path string, info os.FileInfo, err error) error {
 			pathToTime := strings.Split(path, "\\")
 			if len(pathToTime) >= 2 {
@@ -440,7 +440,7 @@ func deleteAgedData(w http.ResponseWriter, fileType string, timestamp string) {
 		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
-	deleteEmptyDirectories(w, "storage/" + fileType, 0, fileType)
+	deleteEmptyDirectories(w, "storage/"+fileType, 0, fileType)
 }
 
 func deleteEmptyDirectories(w http.ResponseWriter, path string, depth int, fileType string) {

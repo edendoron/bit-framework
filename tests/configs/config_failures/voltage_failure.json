@@ -34,7 +34,7 @@
       "value_criteria": {
         "minimum": 2,
         "miximum": 7,
-        "threshold_mode": 0,
+        "threshold_mode": 1,
         "exceeding": {
           "type": 1,
           "value": 10
@@ -48,7 +48,7 @@
     }
   },
   "report_duration": {
-    "indication": 2,
+    "indication": 0,
     "indication_seconds": 600
   },
   "dependencies": {

@@ -265,6 +265,3 @@ dayjs
 react-dom
 web-vitals
 ```
-
-## License
-[MIT](https://choosealicense.com/licenses/mit/)

@@ -146,8 +146,6 @@ func TestSystemFlowWithHandler(t *testing.T) {
 
 	cmdRunQuery := exec.Command("go", "run", "../cmd/bitQuery/main.go", "-config-file", configPath)
 
-	cmdRunCurator := exec.Command("go", "run", "../cmd/bitHistoryCurator/main.go", "-config-file", configPath)
-
 	cleanTestStorageConfigDirs() // clean test environment storage before test start
 
 	err := cmdRunStorage.Start()
@@ -232,18 +230,7 @@ func TestSystemFlowWithHandler(t *testing.T) {
 		t.Errorf("Handler didn't catch high voltage failure:\n %v", err)
 	}
 
-	cleanTestStorageConfigDirs()
-
-	err = cmdRunCurator.Start()
-	if err != nil {
-		cleanTest(killServicesCmd)
-		log.Fatalln("Couldn't start bitQuery service:\n", err)
-	}
-
-	err = killServicesCmd.Run()
-	if err != nil {
-		log.Fatalln("Error killing services", err)
-	}
+	cleanTest(killServicesCmd)
 
 	err = cmdRunHandler.Wait()
 	if err != nil && err.Error() != "exit status 1"{
@@ -263,11 +250,6 @@ func TestSystemFlowWithHandler(t *testing.T) {
 	err = cmdRunConfig.Wait()
 	if err != nil && err.Error() != "exit status 1"{
 		log.Fatalln("Error waiting on cmdRunConfig:\n", err)
-	}
-
-	err = cmdRunCurator.Wait()
-	if err != nil && err.Error() != "exit status 1"{
-		log.Fatalln("Error waiting on cmdRunStorage:\n", err)
 	}
 
 	err = cmdRunStorage.Wait()

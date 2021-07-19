@@ -18,7 +18,7 @@ var status string
 // StatusScheduler manages reading data from storage, analyze it and write bitStatus to storage according to CurrentTrigger
 func StatusScheduler() {
 	d := time.Duration(CurrentTrigger.PeriodSec) * time.Second
-	var analyzer handler.BitAnalyzer
+	var analyzer BitAnalyzer
 	analyzer.ReadFailuresFromStorage("config_failures")
 	analyzer.ReadFailuresFromStorage("forever_failures")
 	ticker := time.NewTicker(d)

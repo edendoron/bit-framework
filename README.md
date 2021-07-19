@@ -235,24 +235,53 @@ User should place the configurations under the appropriate path in order for the
 - User groups filtering rules under `./configs/config_user_groups_filtering`.
 - SSH configurations (certificate and key for https configurations) under `./configs/prog_configs/sshConfigs`.
 
-## Resources
+## Report card
 
+We used 'Go Report Card' (Apache-2.0 License) - a web application that generates a report on the quality of an open source Go project.
+It uses several measures, including `gofmt`, `go vet`, `go lint` and `gocyclo`.
 
+You can find further information on: https://github.com/gojp/goreportcard.
+
+Because our repo is currently private, we had to clone the 'goreportcard' repository, and install it manually. If you wish to reproduce our results, run:
+```
+git clone https://github.com/gojp/goreportcard.git
+cd goreportcard
+```
+Then run the `install` script with:
+```
+make install
+```
+Or manually:
+```
+go install ./vendor/github.com/alecthomas/gometalinter
+go install ./vendor/golang.org/x/lint/golint
+go install ./vendor/github.com/alecthomas/gocyclo
+go install ./vendor/github.com/gordonklaus/ineffassign
+go install ./vendor/github.com/client9/misspell
+```
+Then, in order to produce the report card results run:
+```
+go install ./cmd/goreportcard-cli
+goreportcard-cli
+```
+Screenshot of the results:
+
+![img.png](usageExample/reportcard.png)
+
+Although two of the measures were disabled (due to large repo). BIT framework got an excellent score of A+.
 
 ## Open source packages
 
-Open source packages used in the project can be found in the go.mod file:
+Open source packages used in the project can be found in the go.mod file. Here are the direct open source packages we used:
 ```
 Libraries for the go backend:
 
 github.com/coraxster/PriorityQueue                  | (MIT License)
-github.com/go-playground/universal-translator       | (MIT License)
 github.com/go-playground/validator                  | (MIT License)
 github.com/golang/protobuf                          | (BSD-3-Clause License)
 github.com/gorilla/mux                              | (BSD-3-Clause License)
-github.com/leodido/go-urn                           | (MIT License)
-github.com/magiconair/properties                    | (BSD-2-Clause License)
 github.com/segmentio/conf                           | (MIT License)
+github.com/gojp/goreportcard                        | (Apache-2.0 License)
 
 And for the web-UI frontend:
 

@@ -123,5 +123,3 @@ func DeleteData(w http.ResponseWriter, r *http.Request) {
 	deleteAgedData(w, "bit_status", timestamp)
 	ApiResponseHandler(w, http.StatusOK, "Outdated data deleted successfully", nil)
 }
-
-

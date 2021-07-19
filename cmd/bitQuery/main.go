@@ -17,7 +17,7 @@ func main() {
 
 	router := query.QueryRoutes.NewRouter()
 
-	srv := server.NewServer(router, query.Configs.Host + query.Configs.BitQueryPort)
+	srv := server.NewServer(router, query.Configs.Host+query.Configs.BitQueryPort)
 
 	if query.Configs.UseHTTPS {
 		err := srv.ListenAndServeTLS(query.Configs.SSHCertPath, query.Configs.SSHKeyPath)

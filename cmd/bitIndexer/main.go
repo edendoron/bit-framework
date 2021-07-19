@@ -17,7 +17,7 @@ func main() {
 
 	router := indexer.IndexerRoutes.NewRouter()
 
-	srv := server.NewServer(router, indexer.Configs.Host + indexer.Configs.BitIndexerPort)
+	srv := server.NewServer(router, indexer.Configs.Host+indexer.Configs.BitIndexerPort)
 
 	if indexer.Configs.UseHTTPS {
 		err := srv.ListenAndServeTLS(indexer.Configs.SSHCertPath, indexer.Configs.SSHKeyPath)

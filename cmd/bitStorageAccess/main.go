@@ -17,7 +17,7 @@ func main() {
 
 	router := storage.StorageAccessRoutes.NewRouter()
 
-	srv := server.NewServer(router, storage.Configs.Host + storage.Configs.BitStoragePort)
+	srv := server.NewServer(router, storage.Configs.Host+storage.Configs.BitStoragePort)
 
 	if storage.Configs.UseHTTPS {
 		err := srv.ListenAndServeTLS(storage.Configs.SSHCertPath, storage.Configs.SSHKeyPath)

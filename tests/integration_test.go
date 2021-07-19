@@ -72,7 +72,7 @@ func TestSystemFlow(t *testing.T) {
 	//cmdRunHandler.Start()
 
 	sentReports := ReportBody{Reports: []TestReport{report0, report1, report2, report3, report4, report5,
-	report6, report7, report8, report9, report10}}
+		report6, report7, report8, report9, report10}}
 
 	reportsMarshaled, err := json.MarshalIndent(sentReports, "", " ")
 	if err != nil {
@@ -116,17 +116,12 @@ func TestSystemFlow(t *testing.T) {
 		log.Fatalln("Error killing services", err)
 	}
 
-
 	cmdRunHandler.Wait()
 	cmdRunIndexer.Wait()
 	cmdRunExporter.Wait()
 	cmdRunConfig.Wait()
 	cmdRunStorage.Wait()
 }
-
-
-
-
 
 // temp variables for tests
 
@@ -539,6 +534,7 @@ var report10 = TestReport{
 		{Key: "AirPressure", Value: "35"},
 	},
 }
+
 //
 //var report11 = TestReport{
 //	TestId:         134,

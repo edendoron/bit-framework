@@ -18,7 +18,7 @@ func main() {
 
 	router := config.ConfigRoutes.NewRouter()
 
-	srv := server.NewServer(router, config.Configs.Host + config.Configs.BitConfigPort)
+	srv := server.NewServer(router, config.Configs.Host+config.Configs.BitConfigPort)
 
 	go func() {
 		config.PostFailuresData()

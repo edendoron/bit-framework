@@ -19,7 +19,7 @@ func main() {
 
 	router := handler.HandlerRoutes.NewRouter()
 
-	srv := server.NewServer(router, handler.Configs.Host + handler.Configs.BitHandlerPort)
+	srv := server.NewServer(router, handler.Configs.Host+handler.Configs.BitHandlerPort)
 
 	go handler.StatusScheduler()
 

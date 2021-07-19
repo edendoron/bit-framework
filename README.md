@@ -118,7 +118,7 @@ We'll use an example ReportBody located in the repository under `./usageExample/
 As you can see, test report 2 is violating our failure examination rule, and so should be reported in a BIT status report.
 In order to demonstrate the 'BIT handler' work logic, we need to change the report's timestamp. Note that the 'Handler' does not examine reports retrospectively, so we'll change the date to be in about a minute from the system's current time (this is due to the fact that in real-time systems reports are being reported and extracted from the storage in a matter of milliseconds and so in order to make sure this report isn't ignored by the 'Handler' we give it a future timestamp).
 
-You can use 'Postman' or 'curl' command-line tool for transferring data, and send this report through the exporter:
+You can use 'Postman' or 'curl' a command-line tool for transferring data, and send this report through the exporter. Here is an example of how to use 'curl' (bash syntax):
 ```
 curl --location --request POST 'localhost:8087/report/raw' \
 --header 'Content-Type: application/json' \
@@ -234,16 +234,6 @@ User should place the configurations under the appropriate path in order for the
 - Failures definitions under `./configs/config_failures`.
 - User groups filtering rules under `./configs/config_user_groups_filtering`.
 - SSH configurations (certificate and key for https configurations) under `./configs/prog_configs/sshConfigs`.
-
-### Failures
-
-Failures definition and explanation can be found mainly in the protobuf generated go file located in `./configs/rafael.com/bina/bit/bit.pb.go` and in the guidance presentation.
-To complete all definitions and assumptions we took, we will detail more about specific fields of a configured failure.
-
-- `Failure.FailureExaminationRule.MatchingTag` indicates the tag set that needed to be present in the test report. One of the test report tag sets should contain the failure specified tag set in order for it to be considered as this failure violation.
-- `Failure.FailureExaminationRule.FailureValueCriteria.ThresholdMode` - either 'WITHIN' or 'OUTOF', report will be considered violation of the failure if the tested field values are within or out of the range respectively.
-- `Failure.FailureExaminationRule.FailureValueCriteria.ExceedingType and ExceedingValue` - report will be considered violation of the failure if the tested field values are within or out of the range according to threshold mode, with a deviation of some value or percentage from the range allowed. For example: in our usage example, a voltage value of 12 is of course out of the range 1-7 so will be applied as violation. Voltage value of 5 is with-in the range so will not be considered violation, but also a value of 7.6 is under the limitations of 10% deviation of the configured range, and so wil also not be considered as violation. similar approach applies on 'WITHIN' exceeding type.
-- `Failure.FailureTimeCriteria` - fields 'windowSize' and 'failuresCount' are only relevant for 'SLIDING_WINDOW' type failures. 'NO_WINDOW' failures count will be documented under 'BITStatus.ReportedFailure.exactCount' of the corresponding BITStatus report failure, if found.
 
 ## Resources
 

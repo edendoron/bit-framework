@@ -1,7 +1,7 @@
 package main
 
 import (
-	storage "github.com/edendoron/bit-framework/internal/bitStorageAccess"
+	storage "github.com/edendoron/bit-framework/internal/bitstorageaccess"
 	"github.com/edendoron/bit-framework/internal/models"
 	"github.com/edendoron/bit-framework/server"
 	"log"

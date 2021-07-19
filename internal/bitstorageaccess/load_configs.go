@@ -1,4 +1,4 @@
-package bithandler
+package bitstorageaccess
 
 import (
 	"github.com/edendoron/bit-framework/internal/models"
@@ -11,7 +11,4 @@ var Configs models.ProgConfigs
 // LoadConfigs extract services configurations and initialize global package variables if needed
 func LoadConfigs() {
 	conf.Load(&Configs)
-
-	CurrentTrigger.PeriodSec = Configs.BitHandlerTriggerPeriod
-	CurrentTrigger.BitType = Configs.BitHandlerTriggerType
 }

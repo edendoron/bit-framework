@@ -1,4 +1,4 @@
-package bitConfig
+package bitconfig
 
 import (
 	"encoding/json"

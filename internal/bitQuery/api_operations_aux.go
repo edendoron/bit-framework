@@ -1,10 +1,10 @@
-package bitQuery
+package bitquery
 
 import (
 	"encoding/json"
-	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
-	. "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	rh "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
+	"github.com/edendoron/bit-framework/internal/models"
 	"log"
 	"net/http"
 )
@@ -15,19 +15,19 @@ func bitStatusQueryHandler(w http.ResponseWriter, req *http.Request, userGroup s
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	defer resp.Body.Close()
-	var bitStatusList []BitStatus
+	var bitStatusList []bit.BitStatus
 	err = json.NewDecoder(resp.Body).Decode(&bitStatusList)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	maskedTestIds, e := getUserGroupsFiltering(userGroup)
 	if e != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error extract user groups filtering", e)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error extract user groups filtering", e)
 	} else {
 		FilterBitStatus(&bitStatusList, maskedTestIds)
 	}
@@ -35,7 +35,7 @@ func bitStatusQueryHandler(w http.ResponseWriter, req *http.Request, userGroup s
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	err = json.NewEncoder(w).Encode(&bitStatusList)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -48,21 +48,21 @@ func reportsQueryHandler(w http.ResponseWriter, req *http.Request, filter string
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	defer resp.Body.Close()
-	var reports []TestReport
+	var reports []models.TestReport
 	err = json.NewDecoder(resp.Body).Decode(&reports)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	FilterReports(&reports, filter, values)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	err = json.NewEncoder(w).Encode(&reports)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -75,20 +75,20 @@ func userGroupsQueryHandler(w http.ResponseWriter, req *http.Request) {
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	defer resp.Body.Close()
 	var userGroups []string
 	err = json.NewDecoder(resp.Body).Decode(&userGroups)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	err = json.NewEncoder(w).Encode(&userGroups)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -189,7 +189,7 @@ func getUserGroupsFiltering(userGroup string) ([]uint64, error) {
 }
 
 // FilterBitStatus filter failures from @param statusList according to @param maskedTestIds
-func FilterBitStatus(statusList *[]BitStatus, maskedTestIds []uint64) {
+func FilterBitStatus(statusList *[]bit.BitStatus, maskedTestIds []uint64) {
 	idx := 0
 	for _, status := range *statusList {
 		n := 0
@@ -217,7 +217,7 @@ func FilterBitStatus(statusList *[]BitStatus, maskedTestIds []uint64) {
 }
 
 // FilterReports filter reports from @param reportList according to @params filter, values
-func FilterReports(reportList *[]TestReport, filter string, values []string) {
+func FilterReports(reportList *[]models.TestReport, filter string, values []string) {
 	if filter == "time" {
 		return
 	}

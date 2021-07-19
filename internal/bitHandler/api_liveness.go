@@ -1,4 +1,4 @@
-package bitHandler
+package bithandler
 
 import (
 	"encoding/json"

@@ -1,8 +1,8 @@
-package bitStorageAccess
+package bitstorageaccess
 
 import (
 	"encoding/json"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"log"
 	"net/http"
 	"time"
@@ -10,7 +10,7 @@ import (
 
 func GetExtendedStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	response := StorageExtendedStatus{StorageType: "file_system"}
+	response := models.StorageExtendedStatus{StorageType: "file_system"}
 	err := json.NewEncoder(w).Encode(&response)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -21,7 +21,7 @@ func GetExtendedStatus(w http.ResponseWriter, r *http.Request) {
 
 func StorageGetPing(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	response := PongBody{Timestamp: time.Now(), Version: Configs.Version, Host: Configs.Host, Ready: true, ApiVersion: Configs.ApiVersion}
+	response := models.PongBody{Timestamp: time.Now(), Version: Configs.Version, Host: Configs.Host, Ready: true, ApiVersion: Configs.ApiVersion}
 	err := json.NewEncoder(w).Encode(&response)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)

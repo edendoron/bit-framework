@@ -1,4 +1,4 @@
-package bitHandler
+package bithandler
 
 import (
 	"github.com/edendoron/bit-framework/internal/models"

@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// ApiResponseHandler general purpose response handler that writes 'ApiResponse' to @w
 func ApiResponseHandler(w http.ResponseWriter, code int, message string, e error) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	response := models.ApiResponse{Code: int32(code), Message: message}

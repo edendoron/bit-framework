@@ -1,8 +1,8 @@
-package bitIndexer
+package bitindexer
 
 import (
 	"fmt"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"log"
 	"net/http"
 	"strings"
@@ -15,22 +15,22 @@ func IndexerIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var IndexerRoutes = Routes{
-	Route{
+var IndexerRoutes = models.Routes{
+	models.Route{
 		Name:        "IndexerIndex",
 		Method:      "GET",
 		Pattern:     "/",
 		HandlerFunc: IndexerIndex,
 	},
 
-	Route{
+	models.Route{
 		Name:        "IndexerGetPing",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/ping",
 		HandlerFunc: IndexerGetPing,
 	},
 
-	Route{
+	models.Route{
 		Name:        "IndexerPostReport",
 		Method:      strings.ToUpper("Post"),
 		Pattern:     "/report/raw",

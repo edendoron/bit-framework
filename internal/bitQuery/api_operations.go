@@ -1,14 +1,14 @@
-package bitQuery
+package bitquery
 
 import (
-	. "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
+	rh "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
 	"net/http"
 )
 
 func BitStatusQuery(w http.ResponseWriter, r *http.Request) {
 	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
@@ -16,7 +16,7 @@ func BitStatusQuery(w http.ResponseWriter, r *http.Request) {
 
 	failed, userGroup := bitStatusRequestHandler(r, req)
 	if failed {
-		ApiResponseHandler(w, http.StatusBadRequest, "Bad Request, check query params", err)
+		rh.ApiResponseHandler(w, http.StatusBadRequest, "Bad Request, check query params", err)
 		return
 	}
 
@@ -26,7 +26,7 @@ func BitStatusQuery(w http.ResponseWriter, r *http.Request) {
 func ReportQuery(w http.ResponseWriter, r *http.Request) {
 	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
@@ -34,7 +34,7 @@ func ReportQuery(w http.ResponseWriter, r *http.Request) {
 
 	failed, filter, values := reportsRequestHandler(r, req)
 	if failed {
-		ApiResponseHandler(w, http.StatusBadRequest, "Bad Request, check query params", err)
+		rh.ApiResponseHandler(w, http.StatusBadRequest, "Bad Request, check query params", err)
 		return
 	}
 
@@ -44,7 +44,7 @@ func ReportQuery(w http.ResponseWriter, r *http.Request) {
 func UserGroupQuery(w http.ResponseWriter, r *http.Request) {
 	req, err := http.NewRequest(http.MethodGet, Configs.StorageReadURL, nil)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")

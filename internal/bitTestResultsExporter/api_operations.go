@@ -71,11 +71,7 @@ func ExporterPostReport(w http.ResponseWriter, r *http.Request) {
 			rh.ApiResponseHandler(w, http.StatusBadRequest, "Bad request", err)
 			continue
 		}
-		_, err = ReportsQueue.Push(report, int(report.ReportPriority))
-		if err != nil {
-			rh.ApiResponseHandler(w, http.StatusBadRequest, "Bad request - report body might be too large", err)
-			return
-		}
+		_ = ReportsQueue.Enqueue(report, uint8(report.ReportPriority))
 	}
 	QueueChannel <- ReportsQueue.Len()
 

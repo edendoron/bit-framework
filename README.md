@@ -1,4 +1,4 @@
-# BIT framework
+# BIT framework [![Go Report Card](https://goreportcard.com/badge/github.com/gojp/goreportcard)]()
 
 ## Description
 
@@ -183,7 +183,7 @@ When the current time matches the provided timestamp, the 'Handler' will identif
 You can run the client (explained in the corresponding web-UI service section) in order to experience the BIT status report (or address the 'Query' service directly).
 Here is an example screenshot of how this data will appear in the Web-UI:
 
-![img.png](usageExample/img.png)
+![img.png](usageExample/UI.png)
 
 ### Testing
 
@@ -273,24 +273,27 @@ Although two of the measures were disabled (due to large repo). BIT framework go
 ## Open source packages
 
 Open source packages used in the project can be found in the go.mod file. Here are the direct open source packages we used:
-```
-Libraries for the go backend:
 
-github.com/coraxster/PriorityQueue                  | (MIT License)
-github.com/go-playground/validator                  | (MIT License)
-github.com/golang/protobuf                          | (BSD-3-Clause License)
-github.com/gorilla/mux                              | (BSD-3-Clause License)
-github.com/segmentio/conf                           | (MIT License)
-github.com/gojp/goreportcard                        | (Apache-2.0 License)
+For the go backend:
+
+Package | License
+------------ | -------------
+github.com/bgadrian/data-structures                 | MIT License
+github.com/go-playground/validator                  | MIT License
+github.com/golang/protobuf                          | BSD-3-Clause License
+github.com/gorilla/mux                              | BSD-3-Clause License
+github.com/segmentio/conf                           | MIT License
+github.com/gojp/goreportcard                        | Apache-2.0 License
 
 And for the web-UI frontend:
 
-react
-typescript
-material-ui
-axios
-date-fns
-dayjs
-react-dom
-web-vitals
-```
+Package | License
+------------ | -------------
+react        | MIT License
+typescript   | Apache License 2.0
+material-ui  | MIT License
+axios        | MIT License
+date-fns     | MIT License
+dayjs        | MIT License
+react-dom    | MIT License
+web-vitals   | Apache License 2.0

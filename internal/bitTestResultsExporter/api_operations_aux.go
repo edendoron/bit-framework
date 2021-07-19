@@ -3,7 +3,7 @@ package bitexporter
 import (
 	"bytes"
 	"encoding/json"
-	prqueue "github.com/coraxster/PriorityQueue"
+	prqueue "github.com/bgadrian/data-structures/priorityqueue"
 	"github.com/edendoron/bit-framework/internal/models"
 	"log"
 	m "math"
@@ -14,7 +14,7 @@ import (
 // init global package variables and constants
 
 // ReportsQueue saves the incoming reports by priority
-var ReportsQueue = prqueue.Build()
+var ReportsQueue = prqueue.NewHierarchicalQueue(255, true)
 
 // QueueChannel indicates incoming reports
 var QueueChannel = make(chan int, 1000)
@@ -34,7 +34,7 @@ const M = K * 1000
 const G = M * 1000
 const T = G * 1000
 
-// ReportStatus is an enum to indicates reason for the previous epoch report sent
+// ReportStatus is an enum to indicates reason for send
 type ReportStatus int
 
 const (
@@ -118,7 +118,7 @@ func UpdateAndSendReport(epochSentSize float32, epoch time.Time, duration time.D
 	indexerReport := models.ReportBody{}
 	postBodyPrev := &bytes.Reader{}
 	for ReportsQueue.Len() > 0 && time.Since(epoch) < duration {
-		item, _ := ReportsQueue.Pull()
+		item, _ := ReportsQueue.Dequeue()
 		report := item.(models.TestReport)
 
 		indexerReport.Reports = append(indexerReport.Reports, report)
@@ -133,11 +133,7 @@ func UpdateAndSendReport(epochSentSize float32, epoch time.Time, duration time.D
 		reportSize := epochSentSize + float32(len(postBody))
 
 		if reportSize > sizeLimitInBytes {
-			_, err = ReportsQueue.Push(report, int(report.ReportPriority))
-			if err != nil {
-				log.Printf("error push report to queue, reports may be too large, error: %v", err)
-				return -1, 0
-			}
+			_ = ReportsQueue.Enqueue(report, uint8(report.ReportPriority))
 			indexerReport.Reports = indexerReport.Reports[:len(indexerReport.Reports)-1]
 			return postReportUpdateEpoch(postBodyPrev, SizeLimit, epoch, duration)
 		}

@@ -9,4 +9,4 @@ The purpose of this type of design pattern is to locate the cohesive task of rec
 
 Further explanation about internal functions can be found in the source code.
 
-**Resources and open source packages:** https://github.com/coraxster/PriorityQueue
+**Resources and open source packages:** https://github.com/bgadrian/data-structures/tree/master/priorityqueue (MIT License).

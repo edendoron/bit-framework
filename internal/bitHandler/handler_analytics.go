@@ -3,8 +3,8 @@ package bitHandler
 import (
 	"bytes"
 	"encoding/json"
-	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	"github.com/edendoron/bit-framework/internal/models"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"net/http"
@@ -19,14 +19,14 @@ var TestingFlag = false
 // BitAnalyzer extract data from storage and creates bitStatus
 type BitAnalyzer struct {
 	ConfigFailures      []ExtendedFailure
-	Reports             []TestReport
+	Reports             []models.TestReport
 	LastEpochReportTime time.Time
 	SavedFailures       []ExtendedFailure
-	Status              BitStatus
+	Status              bit.BitStatus
 }
 
 // ByTime implements sort.Interface for []TestReport based on the timestamp field.
-type ByTime []TestReport
+type ByTime []models.TestReport
 
 func (a ByTime) Len() int           { return len(a) }
 func (a ByTime) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
@@ -59,7 +59,7 @@ func (a *BitAnalyzer) ReadFailuresFromStorage(keyValue string) {
 
 	switch keyValue {
 	case "config_failures":
-		var configFails []Failure
+		var configFails []bit.Failure
 		err = json.NewDecoder(storageResponse.Body).Decode(&configFails)
 		a.ConfigFailures = FailuresSliceToExtendedFailuresSlice(configFails)
 	case "forever_failures":
@@ -95,7 +95,7 @@ func (a *BitAnalyzer) ReadReportsFromStorage() {
 	}
 	defer storageResponse.Body.Close()
 
-	var storageReports []TestReport
+	var storageReports []models.TestReport
 	err = json.NewDecoder(storageResponse.Body).Decode(&storageReports)
 	if err != nil {
 		log.Printf("error decode storage response body. %v", err)
@@ -131,7 +131,7 @@ func (a *BitAnalyzer) Crosscheck(examinationTime time.Time) {
 			a.SavedFailures = append(a.SavedFailures, extFailure)
 
 			//// post forever failures to storage in order to restore it later if needed
-			if extFailure.Failure.ReportDuration.Indication == FailureReportDuration_LATCH_FOREVER {
+			if extFailure.Failure.ReportDuration.Indication == bit.FailureReportDuration_LATCH_FOREVER {
 				writeForeverFailure(extFailure)
 			}
 		}
@@ -155,7 +155,7 @@ func (a *BitAnalyzer) WriteBitStatus() {
 		return
 	}
 
-	message := KeyValue{
+	message := models.KeyValue{
 		Key:   "bit_status",
 		Value: string(jsonStatus),
 	}
@@ -181,7 +181,7 @@ func (a *BitAnalyzer) WriteBitStatus() {
 func (a *BitAnalyzer) ResetSavedFailures() {
 	n := 0
 	for _, item := range a.SavedFailures {
-		isResetIndication := item.Failure.ReportDuration.Indication == FailureReportDuration_LATCH_UNTIL_RESET
+		isResetIndication := item.Failure.ReportDuration.Indication == bit.FailureReportDuration_LATCH_UNTIL_RESET
 		if !isResetIndication {
 			// keep saved failure for next trigger check
 			a.SavedFailures[n] = item
@@ -193,7 +193,7 @@ func (a *BitAnalyzer) ResetSavedFailures() {
 
 // CleanBitStatus remove last interval bitStatus from analyzer after reporting it to storage
 func (a *BitAnalyzer) CleanBitStatus() {
-	a.Status = BitStatus{}
+	a.Status = bit.BitStatus{}
 }
 
 // internal methods
@@ -204,8 +204,8 @@ func (a *BitAnalyzer) filterSavedFailures() {
 	for _, item := range a.SavedFailures {
 		indication := item.Failure.ReportDuration.Indication
 		switch indication {
-		case FailureReportDuration_NO_LATCH:
-		case FailureReportDuration_NUM_OF_SECONDS:
+		case bit.FailureReportDuration_NO_LATCH:
+		case bit.FailureReportDuration_NUM_OF_SECONDS:
 			if uint32(time.Since(item.Time).Seconds()) < item.Failure.ReportDuration.IndicationSeconds {
 				//keep saved failure for next trigger check
 				a.SavedFailures[n] = item
@@ -232,7 +232,7 @@ func (a *BitAnalyzer) updateBitStatus(maskedUserGroups map[string]int) {
 func (a *BitAnalyzer) insertReportedFailureBitStatus(masked bool, item ExtendedFailure) {
 	if !masked {
 		// insert failure to BitStatus
-		reportedFailure := &BitStatus_RportedFailure{
+		reportedFailure := &bit.BitStatus_RportedFailure{
 			FailureData: item.Failure.Description,
 			Timestamp:   timestamppb.New(item.Time),
 			Count:       item.failureCount,
@@ -254,9 +254,9 @@ func (a *BitAnalyzer) checkExaminationRule(i int) uint64 {
 	}
 	// count failed tests
 	switch timeCriteria.WindowType {
-	case FailureExaminationRule_FailureCriteria_FailureTimeCriteria_NO_WINDOW:
+	case bit.FailureExaminationRule_FailureCriteria_FailureTimeCriteria_NO_WINDOW:
 		return a.checkNoWindow(i)
-	case FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING:
+	case bit.FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING:
 		return a.checkSlidingWindow(i)
 	default:
 		return 0
@@ -384,7 +384,7 @@ UpdateReports removes previous time frame reports from analyzer reports, update 
 note: some of previous time frame reports may not be removed in order to keep examine failures from the last point stopped,
 and find failures that may occur between time frames (relevant for SLIDING_WINDOW failures).
 */
-func (a *BitAnalyzer) UpdateReports(reports []TestReport) {
+func (a *BitAnalyzer) UpdateReports(reports []models.TestReport) {
 	n := sort.Search(len(a.Reports), func(i int) bool { return !a.Reports[i].Timestamp.Before(a.LastEpochReportTime) })
 	a.Reports = append(a.Reports[n:], reports...)
 	sort.Stable(ByTime(a.Reports))
@@ -405,7 +405,7 @@ func checkMasked(maskedUserGroups map[string]int, item ExtendedFailure) bool {
 }
 
 // return true iff value criteria is failed due to field or tag matching problem.
-func failedValueCriteria(test *TestReport, examinationRule *FailureExaminationRule) bool {
+func failedValueCriteria(test *models.TestReport, examinationRule *bit.FailureExaminationRule) bool {
 
 	fieldValue := checkField(test, examinationRule)
 	if fieldValue == "" || !checkTag(test, examinationRule) {
@@ -416,7 +416,7 @@ func failedValueCriteria(test *TestReport, examinationRule *FailureExaminationRu
 }
 
 // check field existing
-func checkField(test *TestReport, examinationRule *FailureExaminationRule) string {
+func checkField(test *models.TestReport, examinationRule *bit.FailureExaminationRule) string {
 	for _, field := range test.FieldSet {
 		if field.Key == examinationRule.MatchingField {
 			return field.Value
@@ -426,7 +426,7 @@ func checkField(test *TestReport, examinationRule *FailureExaminationRule) strin
 }
 
 // check tag existing
-func checkTag(test *TestReport, examinationRule *FailureExaminationRule) bool {
+func checkTag(test *models.TestReport, examinationRule *bit.FailureExaminationRule) bool {
 	// fixes problem of base64 encoding of protobuf
 	key, err := json.MarshalIndent(examinationRule.MatchingTag.Key, "", " ")
 	if err != nil {
@@ -449,7 +449,7 @@ func checkTag(test *TestReport, examinationRule *FailureExaminationRule) bool {
 }
 
 // check failure value criteria, return true if value of test violates rule, false otherwise
-func checkFailedValue(value string, criteria *FailureExaminationRule_FailureCriteria_FailureValueCriteria) bool {
+func checkFailedValue(value string, criteria *bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria) bool {
 	min, max := calculateThreshold(criteria.Minimum, criteria.Miximum, criteria)
 	if min >= max {
 		return false
@@ -461,9 +461,9 @@ func checkFailedValue(value string, criteria *FailureExaminationRule_FailureCrit
 	}
 	valueWithin := floatValue >= min && floatValue <= max
 	switch criteria.ThresholdMode {
-	case FailureExaminationRule_FailureCriteria_FailureValueCriteria_WITHIN:
+	case bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_WITHIN:
 		return valueWithin
-	case FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF:
+	case bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF:
 		return !valueWithin
 	default:
 		return valueWithin
@@ -471,12 +471,12 @@ func checkFailedValue(value string, criteria *FailureExaminationRule_FailureCrit
 }
 
 // calculate threshold after allowed deviation (by value or percent) defined in failure configuration. return (min, max) threshold
-func calculateThreshold(minimum float64, maximum float64, criteria *FailureExaminationRule_FailureCriteria_FailureValueCriteria) (float64, float64) {
+func calculateThreshold(minimum float64, maximum float64, criteria *bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria) (float64, float64) {
 	deviation := criteria.Exceeding.Value
-	if criteria.Exceeding.Type == FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_PERCENT {
+	if criteria.Exceeding.Type == bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_PERCENT {
 		deviation *= 0.01 * (maximum - minimum)
 	}
-	if criteria.ThresholdMode == FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF {
+	if criteria.ThresholdMode == bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF {
 		return minimum - deviation, maximum + deviation
 	} else {
 		return minimum + deviation, maximum - deviation
@@ -494,7 +494,7 @@ func writeForeverFailure(failure ExtendedFailure) {
 		return
 	}
 
-	message := KeyValue{
+	message := models.KeyValue{
 		Key:   "forever_failure",
 		Value: string(jsonForeverFailure),
 	}

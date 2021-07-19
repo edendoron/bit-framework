@@ -1,9 +1,9 @@
 package bitHandler
 
 import (
-	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
-	. "github.com/edendoron/bit-framework/internal/bitHandler"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	handler "github.com/edendoron/bit-framework/internal/bitHandler"
+	"github.com/edendoron/bit-framework/internal/models"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"testing"
@@ -13,16 +13,16 @@ import (
 // test for filter failures
 func TestResetSavedFailures(t *testing.T) {
 
-	fail0 := ExtendedFailure{Failure: Failure{ReportDuration: &FailureReportDuration{Indication: 3}}}
-	fail1 := ExtendedFailure{Failure: Failure{ReportDuration: &FailureReportDuration{Indication: 1}}}
-	fail2 := ExtendedFailure{Failure: Failure{ReportDuration: &FailureReportDuration{Indication: 0}}}
-	fail3 := ExtendedFailure{Failure: Failure{ReportDuration: &FailureReportDuration{Indication: 2}}}
-	fail4 := ExtendedFailure{Failure: Failure{ReportDuration: &FailureReportDuration{Indication: 1}}}
+	fail0 := handler.ExtendedFailure{Failure: bit.Failure{ReportDuration: &bit.FailureReportDuration{Indication: 3}}}
+	fail1 := handler.ExtendedFailure{Failure: bit.Failure{ReportDuration: &bit.FailureReportDuration{Indication: 1}}}
+	fail2 := handler.ExtendedFailure{Failure: bit.Failure{ReportDuration: &bit.FailureReportDuration{Indication: 0}}}
+	fail3 := handler.ExtendedFailure{Failure: bit.Failure{ReportDuration: &bit.FailureReportDuration{Indication: 2}}}
+	fail4 := handler.ExtendedFailure{Failure: bit.Failure{ReportDuration: &bit.FailureReportDuration{Indication: 1}}}
 
-	fails := []ExtendedFailure{fail0, fail1, fail2, fail3, fail4}
-	expectedResult := []ExtendedFailure{fail0, fail2, fail3}
+	fails := []handler.ExtendedFailure{fail0, fail1, fail2, fail3, fail4}
+	expectedResult := []handler.ExtendedFailure{fail0, fail2, fail3}
 
-	var analyzer BitAnalyzer
+	var analyzer handler.BitAnalyzer
 	analyzer.SavedFailures = fails
 
 	analyzer.ResetSavedFailures()
@@ -36,13 +36,13 @@ func TestResetSavedFailures(t *testing.T) {
 // test for update reports
 func TestUpdateReports(t *testing.T) {
 
-	var analyzer BitAnalyzer
-	analyzer.Reports = []TestReport{report6, report7, report8, report9, report10}
+	var analyzer handler.BitAnalyzer
+	analyzer.Reports = []models.TestReport{report6, report7, report8, report9, report10}
 	analyzer.LastEpochReportTime = report9.Timestamp
 
-	analyzer.UpdateReports([]TestReport{report12, report11})
+	analyzer.UpdateReports([]models.TestReport{report12, report11})
 
-	expectedResult := []TestReport{report8, report9, report10, report11, report12}
+	expectedResult := []models.TestReport{report8, report9, report10, report11, report12}
 
 	if !reflect.DeepEqual(analyzer.Reports, expectedResult) {
 		t.Errorf("UpdateReports did not filter properly")
@@ -53,16 +53,16 @@ func TestUpdateReports(t *testing.T) {
 // test for Crosscheck function, examination rule, reliability of analysis
 func TestExaminationRuleEmptyBitStatus(t *testing.T) {
 
-	var a BitAnalyzer
+	var a handler.BitAnalyzer
 
-	TestingFlag = true
+	handler.TestingFlag = true
 
 	testTime := time.Now()
-	expectedResult := BitStatus{}
+	expectedResult := bit.BitStatus{}
 
 	// test empty bitStatus - no failures found
-	a.ConfigFailures = []ExtendedFailure{failure1}
-	a.Reports = []TestReport{report0}
+	a.ConfigFailures = []handler.ExtendedFailure{failure1}
+	a.Reports = []models.TestReport{report0}
 	a.Crosscheck(testTime)
 	if !reflect.DeepEqual(a.Status, expectedResult) {
 		t.Errorf("test empty bitStatus, expected no failures, got failures")
@@ -70,7 +70,7 @@ func TestExaminationRuleEmptyBitStatus(t *testing.T) {
 	clearBitStatus(&a)
 
 	// test empty bitStatus - no reports in time frame
-	a.ConfigFailures = []ExtendedFailure{failure1}
+	a.ConfigFailures = []handler.ExtendedFailure{failure1}
 	a.Crosscheck(testTime)
 	if !reflect.DeepEqual(a.Status, expectedResult) {
 		t.Errorf("test empty bitStatus, expected no failures, got failures")
@@ -79,18 +79,18 @@ func TestExaminationRuleEmptyBitStatus(t *testing.T) {
 }
 
 func TestExaminationRuleFieldTag(t *testing.T) {
-	var a BitAnalyzer
+	var a handler.BitAnalyzer
 
-	TestingFlag = true
+	handler.TestingFlag = true
 
 	testTime := time.Now()
-	expectedResult := BitStatus{}
+	expectedResult := bit.BitStatus{}
 
 	// test failure Field + Tag match - one failure should be reported + WITHIN range threshold + SLIDING - one report violation
-	a.ConfigFailures = []ExtendedFailure{failure0}
-	a.Reports = []TestReport{report0}
-	expectedResult = BitStatus{
-		Failures: []*BitStatus_RportedFailure{
+	a.ConfigFailures = []handler.ExtendedFailure{failure0}
+	a.Reports = []models.TestReport{report0}
+	expectedResult = bit.BitStatus{
+		Failures: []*bit.BitStatus_RportedFailure{
 			{
 				FailureData: failure0.Failure.Description,
 				Timestamp:   timestamppb.New(testTime),
@@ -108,9 +108,9 @@ func TestExaminationRuleFieldTag(t *testing.T) {
 	clearBitStatus(&a)
 
 	// test failure only Field match - no failures should be reported
-	a.ConfigFailures = []ExtendedFailure{failure0}
-	a.Reports = []TestReport{report1}
-	expectedResult = BitStatus{}
+	a.ConfigFailures = []handler.ExtendedFailure{failure0}
+	a.Reports = []models.TestReport{report1}
+	expectedResult = bit.BitStatus{}
 	a.Crosscheck(testTime)
 	if !reflect.DeepEqual(a.Status, expectedResult) {
 		t.Errorf("test failure only Field match, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
@@ -118,9 +118,9 @@ func TestExaminationRuleFieldTag(t *testing.T) {
 	clearBitStatus(&a)
 
 	// test failure only Tag math - no failures should be reported
-	a.ConfigFailures = []ExtendedFailure{failure0}
-	a.Reports = []TestReport{report2}
-	expectedResult = BitStatus{}
+	a.ConfigFailures = []handler.ExtendedFailure{failure0}
+	a.Reports = []models.TestReport{report2}
+	expectedResult = bit.BitStatus{}
 	a.Crosscheck(testTime)
 	if !reflect.DeepEqual(a.Status, expectedResult) {
 		t.Errorf("test failure only Tag match, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
@@ -129,18 +129,18 @@ func TestExaminationRuleFieldTag(t *testing.T) {
 }
 
 func TestExaminationRuleThresholdAndExceedingTypes(t *testing.T) {
-	var a BitAnalyzer
+	var a handler.BitAnalyzer
 
-	TestingFlag = true
+	handler.TestingFlag = true
 
 	testTime := time.Now()
-	expectedResult := BitStatus{}
+	expectedResult := bit.BitStatus{}
 
 	// test failure OUT_OF range threshold - 2 reports fit rule, 1 failures should be reported with count 1 + PERCENT Exceeding type + multiple reports violation, reports meet the requirements in time range
-	a.ConfigFailures = []ExtendedFailure{failure2}
-	a.Reports = []TestReport{report3, report4, report5, report6}
-	expectedResult = BitStatus{
-		Failures: []*BitStatus_RportedFailure{
+	a.ConfigFailures = []handler.ExtendedFailure{failure2}
+	a.Reports = []models.TestReport{report3, report4, report5, report6}
+	expectedResult = bit.BitStatus{
+		Failures: []*bit.BitStatus_RportedFailure{
 			{
 				FailureData: failure2.Failure.Description,
 				Timestamp:   timestamppb.New(testTime),
@@ -158,10 +158,10 @@ func TestExaminationRuleThresholdAndExceedingTypes(t *testing.T) {
 	clearBitStatus(&a)
 
 	// test failure VALUE Exceeding type + NO_WINDOW - multiple reports violation
-	a.ConfigFailures = []ExtendedFailure{failure1}
-	a.Reports = []TestReport{report3, report4, report5, report6}
-	expectedResult = BitStatus{
-		Failures: []*BitStatus_RportedFailure{
+	a.ConfigFailures = []handler.ExtendedFailure{failure1}
+	a.Reports = []models.TestReport{report3, report4, report5, report6}
+	expectedResult = bit.BitStatus{
+		Failures: []*bit.BitStatus_RportedFailure{
 			{
 				FailureData: failure1.Failure.Description,
 				Timestamp:   timestamppb.New(testTime),
@@ -183,17 +183,17 @@ func TestExaminationRuleThresholdAndExceedingTypes(t *testing.T) {
 }
 
 func TestExaminationRuleSlidingAndMultipleViolations(t *testing.T) {
-	var a BitAnalyzer
+	var a handler.BitAnalyzer
 
-	TestingFlag = true
+	handler.TestingFlag = true
 
 	testTime := time.Now()
-	expectedResult := BitStatus{}
+	expectedResult := bit.BitStatus{}
 
 	// test failure SLIDING - multiple reports violation, reports did not meet the requirements
-	a.ConfigFailures = []ExtendedFailure{failure3}
-	a.Reports = []TestReport{report1}
-	expectedResult = BitStatus{}
+	a.ConfigFailures = []handler.ExtendedFailure{failure3}
+	a.Reports = []models.TestReport{report1}
+	expectedResult = bit.BitStatus{}
 	a.Crosscheck(testTime)
 	if !reflect.DeepEqual(a.Status, expectedResult) {
 		t.Errorf("test failure SLIDING - multiple reports violation, reports did not meet the requirements, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
@@ -201,10 +201,10 @@ func TestExaminationRuleSlidingAndMultipleViolations(t *testing.T) {
 	clearBitStatus(&a)
 
 	// test failure SLIDING - multiple reports fit rule in different time frame, 1 failures should be reported with count 2
-	a.ConfigFailures = []ExtendedFailure{failure3}
-	a.Reports = []TestReport{report1, report6, report7, report8, report9}
-	expectedResult = BitStatus{
-		Failures: []*BitStatus_RportedFailure{
+	a.ConfigFailures = []handler.ExtendedFailure{failure3}
+	a.Reports = []models.TestReport{report1, report6, report7, report8, report9}
+	expectedResult = bit.BitStatus{
+		Failures: []*bit.BitStatus_RportedFailure{
 			{
 				FailureData: failure3.Failure.Description,
 				Timestamp:   timestamppb.New(testTime),
@@ -219,9 +219,9 @@ func TestExaminationRuleSlidingAndMultipleViolations(t *testing.T) {
 	clearBitStatus(&a)
 
 	// test failure SLIDING - multiple reports violation, reports meet the requirements between time ranges + trigger smaller than window
-	a.ConfigFailures = []ExtendedFailure{failure2}
-	a.Reports = []TestReport{report3, report5, report6}
-	expectedResult = BitStatus{}
+	a.ConfigFailures = []handler.ExtendedFailure{failure2}
+	a.Reports = []models.TestReport{report3, report5, report6}
+	expectedResult = bit.BitStatus{}
 	// only 2 violations in 0-3 sec window, failure not found
 	a.Crosscheck(testTime)
 	if !reflect.DeepEqual(a.Status, expectedResult) {
@@ -229,10 +229,10 @@ func TestExaminationRuleSlidingAndMultipleViolations(t *testing.T) {
 	}
 	time.Sleep(2 * time.Second)
 	// another violation in 0-3 sec window, and 3 violation between 1-4 sec window, failure count should be 2
-	reports := []TestReport{report10, report9}
+	reports := []models.TestReport{report10, report9}
 	a.UpdateReports(reports)
-	expectedResult = BitStatus{
-		Failures: []*BitStatus_RportedFailure{
+	expectedResult = bit.BitStatus{
+		Failures: []*bit.BitStatus_RportedFailure{
 			{
 				FailureData: failure2.Failure.Description,
 				Timestamp:   timestamppb.New(testTime),
@@ -250,14 +250,14 @@ func TestExaminationRuleSlidingAndMultipleViolations(t *testing.T) {
 
 // test for report duration, reliability of Duration method
 func TestReportDuration(t *testing.T) {
-	var a BitAnalyzer
+	var a handler.BitAnalyzer
 
 	testTime := time.Now()
-	expectedResult := BitStatus{}
+	expectedResult := bit.BitStatus{}
 
 	// test for NO_LATCH indication
-	a.ConfigFailures = []ExtendedFailure{failure0}
-	a.Reports = []TestReport{report0}
+	a.ConfigFailures = []handler.ExtendedFailure{failure0}
+	a.Reports = []models.TestReport{report0}
 	// failure is reported in bit status after first crosscheck
 	a.Crosscheck(testTime)
 	// failure should disappear after CleanBitStatus which happens in the end of WriteBitStatus
@@ -269,17 +269,17 @@ func TestReportDuration(t *testing.T) {
 
 	// test for LATCH_UNTIL_RESET + LATCH_FOREVER indication
 
-	a.ConfigFailures = []ExtendedFailure{failure1}
-	a.Reports = []TestReport{report3, report4, report5, report6}
+	a.ConfigFailures = []handler.ExtendedFailure{failure1}
+	a.Reports = []models.TestReport{report3, report4, report5, report6}
 	a.Crosscheck(testTime)
 	// bitStatus contains 1 failure with count 3
 
 	a.CleanBitStatus()
-	a.Reports = []TestReport{}
+	a.Reports = []models.TestReport{}
 	// bitStatus is empty, analyzer should keep UNTIL_RESET failure
 	a.Crosscheck(testTime.Add(time.Second))
-	expectedResult = BitStatus{
-		Failures: []*BitStatus_RportedFailure{
+	expectedResult = bit.BitStatus{
+		Failures: []*bit.BitStatus_RportedFailure{
 			{
 				FailureData: failure1.Failure.Description,
 				Timestamp:   timestamppb.New(testTime),
@@ -294,24 +294,24 @@ func TestReportDuration(t *testing.T) {
 	a.ResetSavedFailures()
 	a.CleanBitStatus()
 
-	expectedResult = BitStatus{}
+	expectedResult = bit.BitStatus{}
 	if !reflect.DeepEqual(a.Status, expectedResult) {
 		t.Errorf("test for LATCH_UNTIL_RESET indication, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
 	}
 	clearBitStatus(&a)
 
 	// test for LATCH_FOREVER indication
-	a.ConfigFailures = []ExtendedFailure{failure2}
-	a.Reports = []TestReport{report3, report4, report5, report6}
+	a.ConfigFailures = []handler.ExtendedFailure{failure2}
+	a.Reports = []models.TestReport{report3, report4, report5, report6}
 	a.Crosscheck(testTime)
 	// bitStatus contains 1 failure
 
 	a.CleanBitStatus()
-	a.Reports = []TestReport{}
+	a.Reports = []models.TestReport{}
 	// bitStatus is empty, analyzer should keep forever failure
 	a.Crosscheck(testTime.Add(time.Second))
-	expectedResult = BitStatus{
-		Failures: []*BitStatus_RportedFailure{
+	expectedResult = bit.BitStatus{
+		Failures: []*bit.BitStatus_RportedFailure{
 			{
 				FailureData: failure2.Failure.Description,
 				Timestamp:   timestamppb.New(testTime),
@@ -326,10 +326,10 @@ func TestReportDuration(t *testing.T) {
 	clearBitStatus(&a)
 
 	// test for NUM_OF_SECONDS indication
-	a.ConfigFailures = []ExtendedFailure{failure3}
-	a.Reports = []TestReport{report1, report6, report7, report8, report9}
-	expectedResult = BitStatus{
-		Failures: []*BitStatus_RportedFailure{
+	a.ConfigFailures = []handler.ExtendedFailure{failure3}
+	a.Reports = []models.TestReport{report1, report6, report7, report8, report9}
+	expectedResult = bit.BitStatus{
+		Failures: []*bit.BitStatus_RportedFailure{
 			{
 				FailureData: failure3.Failure.Description,
 				Timestamp:   timestamppb.New(testTime),
@@ -340,7 +340,7 @@ func TestReportDuration(t *testing.T) {
 	a.Crosscheck(testTime)
 	// bitStatus contains 1 failure with count 2
 	a.CleanBitStatus()
-	a.Reports = []TestReport{}
+	a.Reports = []models.TestReport{}
 	// bitStatus is empty, analyzer should keep failure for 3 more seconds
 	time.Sleep(time.Second)
 	// bitStatus is empty, analyzer should keep failure for 2 more seconds
@@ -351,11 +351,11 @@ func TestReportDuration(t *testing.T) {
 	}
 
 	a.CleanBitStatus()
-	a.Reports = []TestReport{}
+	a.Reports = []models.TestReport{}
 	time.Sleep(3 * time.Second)
 	a.Crosscheck(testTime)
 	// bitStatus should be empty
-	expectedResult = BitStatus{}
+	expectedResult = bit.BitStatus{}
 	if !reflect.DeepEqual(a.Status, expectedResult) {
 		t.Errorf("test for NUM_OF_SECONDS indication, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
 	}
@@ -364,15 +364,15 @@ func TestReportDuration(t *testing.T) {
 
 // test for Dependencies, reliability of masking
 func TestDependencies(t *testing.T) {
-	var a BitAnalyzer
+	var a handler.BitAnalyzer
 
 	testTime := time.Now()
 
 	// test for masking groups, group1 should be masked, failure2 belongs to another group so it will be reported
-	a.ConfigFailures = []ExtendedFailure{failure1, failure2}
-	a.Reports = []TestReport{report3, report4, report5, report6}
-	expectedResult := BitStatus{
-		Failures: []*BitStatus_RportedFailure{
+	a.ConfigFailures = []handler.ExtendedFailure{failure1, failure2}
+	a.Reports = []models.TestReport{report3, report4, report5, report6}
+	expectedResult := bit.BitStatus{
+		Failures: []*bit.BitStatus_RportedFailure{
 			{
 				FailureData: failure1.Failure.Description,
 				Timestamp:   timestamppb.New(testTime),
@@ -397,10 +397,10 @@ func TestDependencies(t *testing.T) {
 		"group temp",
 		"group1",
 	}
-	a.ConfigFailures = []ExtendedFailure{tempFailure, failure2}
-	a.Reports = []TestReport{report3, report4, report5, report6}
-	expectedResult = BitStatus{
-		Failures: []*BitStatus_RportedFailure{
+	a.ConfigFailures = []handler.ExtendedFailure{tempFailure, failure2}
+	a.Reports = []models.TestReport{report3, report4, report5, report6}
+	expectedResult = bit.BitStatus{
+		Failures: []*bit.BitStatus_RportedFailure{
 			{
 				FailureData: tempFailure.Failure.Description,
 				Timestamp:   timestamppb.New(testTime),
@@ -415,18 +415,18 @@ func TestDependencies(t *testing.T) {
 	clearBitStatus(&a)
 }
 
-func clearBitStatus(a *BitAnalyzer) {
-	a.ConfigFailures = []ExtendedFailure{}
-	a.SavedFailures = []ExtendedFailure{}
-	a.Status = BitStatus{}
-	a.Reports = []TestReport{}
+func clearBitStatus(a *handler.BitAnalyzer) {
+	a.ConfigFailures = []handler.ExtendedFailure{}
+	a.SavedFailures = []handler.ExtendedFailure{}
+	a.Status = bit.BitStatus{}
+	a.Reports = []models.TestReport{}
 }
 
 // temp variables for tests
 
-var failure0 = ExtendedFailure{
-	Failure: Failure{
-		Description: &FailureDescription{
+var failure0 = handler.ExtendedFailure{
+	Failure: bit.Failure{
+		Description: &bit.FailureDescription{
 			UnitName:       "system test check",
 			TestName:       "volts test",
 			TestId:         1,
@@ -449,34 +449,34 @@ var failure0 = ExtendedFailure{
 				"field3",
 			},
 		},
-		ExaminationRule: &FailureExaminationRule{
+		ExaminationRule: &bit.FailureExaminationRule{
 			MatchingField: "volts",
-			MatchingTag: &KeyValuePair{
+			MatchingTag: &bit.KeyValuePair{
 				Key:   []byte("hostname"),
 				Value: []byte("server02"),
 			},
-			FailureCriteria: &FailureExaminationRule_FailureCriteria{
-				ValueCriteria: &FailureExaminationRule_FailureCriteria_FailureValueCriteria{
+			FailureCriteria: &bit.FailureExaminationRule_FailureCriteria{
+				ValueCriteria: &bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria{
 					Minimum:       2,
 					Miximum:       7,
-					ThresholdMode: FailureExaminationRule_FailureCriteria_FailureValueCriteria_WITHIN,
-					Exceeding: &FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding{
-						Type:  FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_PERCENT,
+					ThresholdMode: bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_WITHIN,
+					Exceeding: &bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding{
+						Type:  bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_PERCENT,
 						Value: 10,
 					},
 				},
-				TimeCriteria: &FailureExaminationRule_FailureCriteria_FailureTimeCriteria{
-					WindowType:     FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING,
+				TimeCriteria: &bit.FailureExaminationRule_FailureCriteria_FailureTimeCriteria{
+					WindowType:     bit.FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING,
 					WindowSize:     5,
 					FailuresCCount: 0,
 				},
 			},
 		},
-		ReportDuration: &FailureReportDuration{
-			Indication:        FailureReportDuration_NO_LATCH,
+		ReportDuration: &bit.FailureReportDuration{
+			Indication:        bit.FailureReportDuration_NO_LATCH,
 			IndicationSeconds: 600,
 		},
-		Dependencies: &Failure_FailureDependencies{
+		Dependencies: &bit.Failure_FailureDependencies{
 			BelongsToGroup: []string{
 				"group1",
 				"groupRafael",
@@ -490,9 +490,9 @@ var failure0 = ExtendedFailure{
 	},
 }
 
-var failure1 = ExtendedFailure{
-	Failure: Failure{
-		Description: &FailureDescription{
+var failure1 = handler.ExtendedFailure{
+	Failure: bit.Failure{
+		Description: &bit.FailureDescription{
 			UnitName:       "system test check",
 			TestName:       "temperature test",
 			TestId:         2,
@@ -515,34 +515,34 @@ var failure1 = ExtendedFailure{
 				"field3",
 			},
 		},
-		ExaminationRule: &FailureExaminationRule{
+		ExaminationRule: &bit.FailureExaminationRule{
 			MatchingField: "TemperatureCelsius",
-			MatchingTag: &KeyValuePair{
+			MatchingTag: &bit.KeyValuePair{
 				Key:   []byte("hostname"),
 				Value: []byte("server02"),
 			},
-			FailureCriteria: &FailureExaminationRule_FailureCriteria{
-				ValueCriteria: &FailureExaminationRule_FailureCriteria_FailureValueCriteria{
+			FailureCriteria: &bit.FailureExaminationRule_FailureCriteria{
+				ValueCriteria: &bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria{
 					Minimum:       60,
 					Miximum:       80,
-					ThresholdMode: FailureExaminationRule_FailureCriteria_FailureValueCriteria_WITHIN,
-					Exceeding: &FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding{
-						Type:  FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_VALUE,
+					ThresholdMode: bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_WITHIN,
+					Exceeding: &bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding{
+						Type:  bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_VALUE,
 						Value: 8,
 					},
 				},
-				TimeCriteria: &FailureExaminationRule_FailureCriteria_FailureTimeCriteria{
-					WindowType:     FailureExaminationRule_FailureCriteria_FailureTimeCriteria_NO_WINDOW,
+				TimeCriteria: &bit.FailureExaminationRule_FailureCriteria_FailureTimeCriteria{
+					WindowType:     bit.FailureExaminationRule_FailureCriteria_FailureTimeCriteria_NO_WINDOW,
 					WindowSize:     5,
 					FailuresCCount: 2,
 				},
 			},
 		},
-		ReportDuration: &FailureReportDuration{
-			Indication:        FailureReportDuration_LATCH_UNTIL_RESET,
+		ReportDuration: &bit.FailureReportDuration{
+			Indication:        bit.FailureReportDuration_LATCH_UNTIL_RESET,
 			IndicationSeconds: 0,
 		},
-		Dependencies: &Failure_FailureDependencies{
+		Dependencies: &bit.Failure_FailureDependencies{
 			BelongsToGroup: []string{
 				"TemperatureCelsius group",
 				"groupRafael",
@@ -555,9 +555,9 @@ var failure1 = ExtendedFailure{
 	},
 }
 
-var failure2 = ExtendedFailure{
-	Failure: Failure{
-		Description: &FailureDescription{
+var failure2 = handler.ExtendedFailure{
+	Failure: bit.Failure{
+		Description: &bit.FailureDescription{
 			UnitName:       "system test check",
 			TestName:       "pressure test",
 			TestId:         2,
@@ -581,34 +581,34 @@ var failure2 = ExtendedFailure{
 				"field3",
 			},
 		},
-		ExaminationRule: &FailureExaminationRule{
+		ExaminationRule: &bit.FailureExaminationRule{
 			MatchingField: "AirPressure",
-			MatchingTag: &KeyValuePair{
+			MatchingTag: &bit.KeyValuePair{
 				Key:   []byte("hostname123"),
 				Value: []byte("north"),
 			},
-			FailureCriteria: &FailureExaminationRule_FailureCriteria{
-				ValueCriteria: &FailureExaminationRule_FailureCriteria_FailureValueCriteria{
+			FailureCriteria: &bit.FailureExaminationRule_FailureCriteria{
+				ValueCriteria: &bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria{
 					Minimum:       0,
 					Miximum:       20,
-					ThresholdMode: FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF,
-					Exceeding: &FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding{
-						Type:  FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_PERCENT,
+					ThresholdMode: bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF,
+					Exceeding: &bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding{
+						Type:  bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_PERCENT,
 						Value: 16,
 					},
 				},
-				TimeCriteria: &FailureExaminationRule_FailureCriteria_FailureTimeCriteria{
-					WindowType:     FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING,
+				TimeCriteria: &bit.FailureExaminationRule_FailureCriteria_FailureTimeCriteria{
+					WindowType:     bit.FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING,
 					WindowSize:     3,
 					FailuresCCount: 2,
 				},
 			},
 		},
-		ReportDuration: &FailureReportDuration{
-			Indication:        FailureReportDuration_LATCH_FOREVER,
+		ReportDuration: &bit.FailureReportDuration{
+			Indication:        bit.FailureReportDuration_LATCH_FOREVER,
 			IndicationSeconds: 0,
 		},
-		Dependencies: &Failure_FailureDependencies{
+		Dependencies: &bit.Failure_FailureDependencies{
 			BelongsToGroup: []string{
 				"group temp",
 				"group1",
@@ -621,9 +621,9 @@ var failure2 = ExtendedFailure{
 	Time: time.Now(),
 }
 
-var failure3 = ExtendedFailure{
-	Failure: Failure{
-		Description: &FailureDescription{
+var failure3 = handler.ExtendedFailure{
+	Failure: bit.Failure{
+		Description: &bit.FailureDescription{
 			UnitName:       "system test check",
 			TestName:       "oil test",
 			TestId:         1,
@@ -646,34 +646,34 @@ var failure3 = ExtendedFailure{
 				"field3",
 			},
 		},
-		ExaminationRule: &FailureExaminationRule{
+		ExaminationRule: &bit.FailureExaminationRule{
 			MatchingField: "oil",
-			MatchingTag: &KeyValuePair{
+			MatchingTag: &bit.KeyValuePair{
 				Key:   []byte("ss"),
 				Value: []byte("longstanding"),
 			},
-			FailureCriteria: &FailureExaminationRule_FailureCriteria{
-				ValueCriteria: &FailureExaminationRule_FailureCriteria_FailureValueCriteria{
+			FailureCriteria: &bit.FailureExaminationRule_FailureCriteria{
+				ValueCriteria: &bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria{
 					Minimum:       0,
 					Miximum:       9,
-					ThresholdMode: FailureExaminationRule_FailureCriteria_FailureValueCriteria_WITHIN,
-					Exceeding: &FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding{
-						Type:  FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_VALUE,
+					ThresholdMode: bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_WITHIN,
+					Exceeding: &bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding{
+						Type:  bit.FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_VALUE,
 						Value: 1,
 					},
 				},
-				TimeCriteria: &FailureExaminationRule_FailureCriteria_FailureTimeCriteria{
-					WindowType:     FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING,
+				TimeCriteria: &bit.FailureExaminationRule_FailureCriteria_FailureTimeCriteria{
+					WindowType:     bit.FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING,
 					WindowSize:     1,
 					FailuresCCount: 1,
 				},
 			},
 		},
-		ReportDuration: &FailureReportDuration{
-			Indication:        FailureReportDuration_NUM_OF_SECONDS,
+		ReportDuration: &bit.FailureReportDuration{
+			Indication:        bit.FailureReportDuration_NUM_OF_SECONDS,
 			IndicationSeconds: 3,
 		},
-		Dependencies: &Failure_FailureDependencies{
+		Dependencies: &bit.Failure_FailureDependencies{
 			BelongsToGroup: []string{
 				"group1",
 			},
@@ -684,163 +684,163 @@ var failure3 = ExtendedFailure{
 	},
 }
 
-var report0 = TestReport{
+var report0 = models.TestReport{
 	TestId:         123,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname", Value: "server02"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "volts", Value: "6.5"},
 	},
 }
 
-var report1 = TestReport{
+var report1 = models.TestReport{
 	TestId:         124,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname", Value: "server01"},
 		{Key: "ss", Value: "longstanding"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "volts", Value: "10"},
 		{Key: "oil", Value: "4"},
 	},
 }
 
-var report2 = TestReport{
+var report2 = models.TestReport{
 	TestId:         125,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname123", Value: "north"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "AirPressure", Value: "-1"},
 	},
 }
 
-var report3 = TestReport{
+var report3 = models.TestReport{
 	TestId:         126,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname123", Value: "north"},
 		{Key: "host", Value: "north east"},
 		{Key: "hostname", Value: "server02"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "AirPressure", Value: "-3.3"},
 		{Key: "TemperatureCelsius", Value: "68"},
 	},
 }
 
-var report4 = TestReport{
+var report4 = models.TestReport{
 	TestId:         127,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname123", Value: "north"},
 		{Key: "host", Value: "north east"},
 		{Key: "hostname", Value: "server02"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "AirPressure", Value: "50"},
 		{Key: "TemperatureCelsius", Value: "60"},
 	},
 }
 
-var report5 = TestReport{
+var report5 = models.TestReport{
 	TestId:         129,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname123", Value: "north"},
 		{Key: "host", Value: "north east"},
 		{Key: "hostname", Value: "server02"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "AirPressure", Value: "10"},
 		{Key: "TemperatureCelsius", Value: "72"},
 	},
 }
 
-var report6 = TestReport{
+var report6 = models.TestReport{
 	TestId:         128,
 	ReportPriority: 12,
 	Timestamp:      time.Now().Add(time.Second),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname123", Value: "north"},
 		{Key: "host", Value: "north east"},
 		{Key: "hostname", Value: "server02"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "AirPressure", Value: "23.25"},
 		{Key: "TemperatureCelsius", Value: "70"},
 	},
 }
 
-var report7 = TestReport{
+var report7 = models.TestReport{
 	TestId:         130,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "ss", Value: "longstanding"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "oil", Value: "8"},
 	},
 }
 
-var report8 = TestReport{
+var report8 = models.TestReport{
 	TestId:         131,
 	ReportPriority: 12,
 	Timestamp:      time.Now().Add(2 * time.Second),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "ss", Value: "longstanding"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "oil", Value: "2"},
 	},
 }
 
-var report9 = TestReport{
+var report9 = models.TestReport{
 	TestId:         132,
 	ReportPriority: 12,
 	Timestamp:      time.Now().Add(2 * time.Second),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "ss", Value: "longstanding"},
 		{Key: "hostname123", Value: "north"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "oil", Value: "4.4"},
 		{Key: "AirPressure", Value: "40.4"},
 	},
 }
 
-var report10 = TestReport{
+var report10 = models.TestReport{
 	TestId:         133,
 	ReportPriority: 12,
 	Timestamp:      time.Now().Add(4 * time.Second),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "ss", Value: "longstanding"},
 		{Key: "hostname123", Value: "north"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "oil", Value: "4.4"},
 		{Key: "AirPressure", Value: "35"},
 	},
 }
 
-var report11 = TestReport{
+var report11 = models.TestReport{
 	TestId:         134,
 	ReportPriority: 12,
 	Timestamp:      time.Now().Add(4 * time.Second),
 }
 
-var report12 = TestReport{
+var report12 = models.TestReport{
 	TestId:         135,
 	ReportPriority: 12,
 	Timestamp:      time.Now().Add(time.Hour),

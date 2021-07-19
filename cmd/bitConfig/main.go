@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	config "github.com/edendoron/bit-framework/internal/bitConfig"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"github.com/edendoron/bit-framework/server"
 	"log"
 )
@@ -12,7 +12,7 @@ func main() {
 
 	config.LoadConfigs()
 
-	RedirectLogger(config.Configs.BitConfigPath)
+	models.RedirectLogger(config.Configs.BitConfigPath)
 
 	log.Printf("Service started - bit-config " + config.Configs.BitConfigPort)
 

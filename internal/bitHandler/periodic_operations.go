@@ -1,13 +1,13 @@
 package bitHandler
 
 import (
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"time"
 )
 
-var CurrentTrigger = TriggerBody{}
+var CurrentTrigger = models.TriggerBody{}
 
-var TriggerChannel = make(chan TriggerBody)
+var TriggerChannel = make(chan models.TriggerBody)
 
 var ResetIndicationChannel = make(chan bool)
 
@@ -18,7 +18,7 @@ var status string
 // StatusScheduler manages reading data from storage, analyze it and write bitStatus to storage according to CurrentTrigger
 func StatusScheduler() {
 	d := time.Duration(CurrentTrigger.PeriodSec) * time.Second
-	var analyzer BitAnalyzer
+	var analyzer handler.BitAnalyzer
 	analyzer.ReadFailuresFromStorage("config_failures")
 	analyzer.ReadFailuresFromStorage("forever_failures")
 	ticker := time.NewTicker(d)

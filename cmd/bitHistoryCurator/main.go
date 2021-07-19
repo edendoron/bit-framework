@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	history "github.com/edendoron/bit-framework/internal/bitHistoryCurator"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"github.com/edendoron/bit-framework/server"
 	"log"
 )
@@ -12,7 +12,7 @@ func main() {
 
 	history.LoadConfigs()
 
-	RedirectLogger(history.Configs.BitHistoryCuratorPath)
+	models.RedirectLogger(history.Configs.BitHistoryCuratorPath)
 
 	log.Printf("Service started - bit-history-curator")
 

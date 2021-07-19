@@ -245,17 +245,14 @@ Open source packages used in the project can be found in the go.mod file:
 ```
 Libraries for the go backend:
 
-github.com/coraxster/PriorityQueue
-github.com/go-playground/universal-translator
-github.com/go-playground/validator
-github.com/gogo/protobuf
-github.com/golang/protobuf
-github.com/gorilla/mux
-github.com/leodido/go-urn
-github.com/magiconair/properties
-github.com/segmentio/conf
-google.golang.org/protobuf 
-gopkg.in/go-playground/assert.v1
+github.com/coraxster/PriorityQueue                  | (MIT License)
+github.com/go-playground/universal-translator       | (MIT License)
+github.com/go-playground/validator                  | (MIT License)
+github.com/golang/protobuf                          | (BSD-3-Clause License)
+github.com/gorilla/mux                              | (BSD-3-Clause License)
+github.com/leodido/go-urn                           | (MIT License)
+github.com/magiconair/properties                    | (BSD-2-Clause License)
+github.com/segmentio/conf                           | (MIT License)
 
 And for the web-UI frontend:
 

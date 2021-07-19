@@ -2,7 +2,7 @@ package bitHandler
 
 import (
 	"fmt"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"log"
 	"net/http"
 	"strings"
@@ -15,36 +15,36 @@ func HandlerIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var HandlerRoutes = Routes{
-	Route{
+var HandlerRoutes = models.Routes{
+	models.Route{
 		Name:        "Index",
 		Method:      "GET",
 		Pattern:     "/",
 		HandlerFunc: HandlerIndex,
 	},
 
-	Route{
+	models.Route{
 		Name:        "HandlerGetPing",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/ping",
 		HandlerFunc: HandlerGetPing,
 	},
 
-	Route{
+	models.Route{
 		Name:        "GetTrigger",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/logic",
 		HandlerFunc: GetTrigger,
 	},
 
-	Route{
+	models.Route{
 		Name:        "PostTrigger",
 		Method:      strings.ToUpper("Post"),
 		Pattern:     "/logic",
 		HandlerFunc: PostTrigger,
 	},
 
-	Route{
+	models.Route{
 		Name:        "PutResetIndications",
 		Method:      strings.ToUpper("Put"),
 		Pattern:     "/reset",

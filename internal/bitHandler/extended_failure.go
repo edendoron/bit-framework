@@ -1,14 +1,14 @@
 package bitHandler
 
 import (
-	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	"github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
 
 type ExtendedFailure struct {
-	Failure       Failure
+	Failure       bit.Failure
 	Time          time.Time
 	failureCount  uint64
 	reportsCount  uint32
@@ -16,15 +16,15 @@ type ExtendedFailure struct {
 	endReportId   float64
 }
 
-func (e *ExtendedFailure) ExtendedFailureToBitStatusReportedFailure() BitStatus_RportedFailure {
-	return BitStatus_RportedFailure{
+func (e *ExtendedFailure) ExtendedFailureToBitStatusReportedFailure() bit.BitStatus_RportedFailure {
+	return bit.BitStatus_RportedFailure{
 		FailureData: e.Failure.Description,
 		Timestamp:   timestamppb.New(e.Time),
 		Count:       e.failureCount,
 	}
 }
 
-func FailuresSliceToExtendedFailuresSlice(failures []Failure) []ExtendedFailure {
+func FailuresSliceToExtendedFailuresSlice(failures []bit.Failure) []ExtendedFailure {
 	var extendedFailures []ExtendedFailure
 	for _, fail := range failures {
 		extendedFailures = append(extendedFailures, FailureToExtendedFailure(fail))
@@ -32,7 +32,7 @@ func FailuresSliceToExtendedFailuresSlice(failures []Failure) []ExtendedFailure 
 	return extendedFailures
 }
 
-func FailureToExtendedFailure(failure Failure) ExtendedFailure {
+func FailureToExtendedFailure(failure bit.Failure) ExtendedFailure {
 	return ExtendedFailure{
 		Failure:       failure,
 		failureCount:  0,

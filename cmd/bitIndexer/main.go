@@ -2,7 +2,7 @@ package main
 
 import (
 	indexer "github.com/edendoron/bit-framework/internal/bitIndexer"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"github.com/edendoron/bit-framework/server"
 	"log"
 )
@@ -11,7 +11,7 @@ func main() {
 
 	indexer.LoadConfigs()
 
-	RedirectLogger(indexer.Configs.BitIndexerPath)
+	models.RedirectLogger(indexer.Configs.BitIndexerPath)
 
 	log.Printf("Server started - bit-indexer")
 

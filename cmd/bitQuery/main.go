@@ -2,7 +2,7 @@ package main
 
 import (
 	query "github.com/edendoron/bit-framework/internal/bitQuery"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"github.com/edendoron/bit-framework/server"
 	"log"
 )
@@ -11,7 +11,7 @@ func main() {
 
 	query.LoadConfigs()
 
-	RedirectLogger(query.Configs.BitQueryPath)
+	models.RedirectLogger(query.Configs.BitQueryPath)
 
 	log.Printf("Server started - bit-query")
 

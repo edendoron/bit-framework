@@ -2,15 +2,15 @@ package bitHandler
 
 import (
 	"encoding/json"
-	. "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
-	. "github.com/edendoron/bit-framework/internal/models"
+	rh "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
+	"github.com/edendoron/bit-framework/internal/models"
 	"net/http"
 )
 
 func GetTrigger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	result := LogicStatusBody{
+	result := models.LogicStatusBody{
 		Trigger:               &CurrentTrigger,
 		LastBitStartTimestamp: epoch,
 		Status:                status,
@@ -18,7 +18,7 @@ func GetTrigger(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewEncoder(w).Encode(&result)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal Server Error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal Server Error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -27,7 +27,7 @@ func GetTrigger(w http.ResponseWriter, r *http.Request) {
 func PostTrigger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	triggerRequest := TriggerBody{}
+	triggerRequest := models.TriggerBody{}
 
 	if handleNonStartAction(w, r, triggerRequest) {
 		return
@@ -35,14 +35,14 @@ func PostTrigger(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&triggerRequest)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusBadRequest, "Bad Request", err)
+		rh.ApiResponseHandler(w, http.StatusBadRequest, "Bad Request", err)
 		return
 	}
 
 	// validate that data from the user is of type TriggerBody
-	err = ValidateType(triggerRequest)
+	err = models.ValidateType(triggerRequest)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusBadRequest, "Bad Request", err)
+		rh.ApiResponseHandler(w, http.StatusBadRequest, "Bad Request", err)
 		return
 	}
 
@@ -50,7 +50,7 @@ func PostTrigger(w http.ResponseWriter, r *http.Request) {
 	TriggerChannel <- triggerRequest
 
 	// return ApiResponse response to the user
-	ApiResponseHandler(w, http.StatusOK, "Trigger updated!", nil)
+	rh.ApiResponseHandler(w, http.StatusOK, "Trigger updated!", nil)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -61,6 +61,6 @@ func PutResetIndications(w http.ResponseWriter, r *http.Request) {
 	ResetIndicationChannel <- true
 
 	// return ApiResponse response to the user
-	ApiResponseHandler(w, http.StatusOK, "Reset indications!", nil)
+	rh.ApiResponseHandler(w, http.StatusOK, "Reset indications!", nil)
 	w.WriteHeader(http.StatusOK)
 }

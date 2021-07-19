@@ -2,7 +2,7 @@ package main
 
 import (
 	storage "github.com/edendoron/bit-framework/internal/bitStorageAccess"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"github.com/edendoron/bit-framework/server"
 	"log"
 )
@@ -11,7 +11,7 @@ func main() {
 
 	storage.LoadConfigs()
 
-	RedirectLogger(storage.Configs.BitStoragePath)
+	models.RedirectLogger(storage.Configs.BitStoragePath)
 
 	log.Printf("Server started - bit-storage-access")
 

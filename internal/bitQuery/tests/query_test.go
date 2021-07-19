@@ -11,7 +11,7 @@ import (
 )
 
 // test filterBitStatus
-func TestFilterBitStatus(t *testing.T) {
+func TestFilterBitStatus1BitStatus(t *testing.T) {
 
 	// filter 1 failure from 1 bitStatus
 	var statusSlice = []BitStatus{
@@ -36,18 +36,19 @@ func TestFilterBitStatus(t *testing.T) {
 			}
 		}
 	}
-
+}
+func TestFilterBitStatus2BitStatus(t *testing.T) {
 	// filter 2 failures from different bitStatus
-	statusSlice = []BitStatus{
+	statusSlice := []BitStatus{
 		{Failures: []*BitStatus_RportedFailure{failure0, failure1}},
 		{Failures: []*BitStatus_RportedFailure{failure2, failure3}},
 	}
 
-	expectedResult = []BitStatus{
+	expectedResult := []BitStatus{
 		{Failures: []*BitStatus_RportedFailure{failure1}},
 		{Failures: []*BitStatus_RportedFailure{failure2}},
 	}
-	maskedTests = []uint64{1, 4}
+	maskedTests := []uint64{1, 4}
 
 	FilterBitStatus(&statusSlice, maskedTests)
 
@@ -62,17 +63,19 @@ func TestFilterBitStatus(t *testing.T) {
 			}
 		}
 	}
+}
 
+func TestFilterBitStatusAllFailures(t *testing.T) {
 	// filter all failures in one bit status (bit status array is not empty)
-	statusSlice = []BitStatus{
+	statusSlice := []BitStatus{
 		{Failures: []*BitStatus_RportedFailure{failure0, failure1}},
 		{Failures: []*BitStatus_RportedFailure{failure2, failure3}},
 	}
 
-	expectedResult = []BitStatus{
+	expectedResult := []BitStatus{
 		{Failures: []*BitStatus_RportedFailure{failure2, failure3}},
 	}
-	maskedTests = []uint64{1, 2}
+	maskedTests := []uint64{1, 2}
 
 	FilterBitStatus(&statusSlice, maskedTests)
 

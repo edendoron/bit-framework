@@ -51,7 +51,7 @@ func TestUpdateReports(t *testing.T) {
 }
 
 // test for Crosscheck function, examination rule, reliability of analysis
-func TestExaminationRule(t *testing.T) {
+func TestExaminationRuleEmptyBitStatus(t *testing.T) {
 
 	var a BitAnalyzer
 
@@ -76,6 +76,15 @@ func TestExaminationRule(t *testing.T) {
 		t.Errorf("test empty bitStatus, expected no failures, got failures")
 	}
 	clearBitStatus(&a)
+}
+
+func TestExaminationRuleFieldTag(t *testing.T) {
+	var a BitAnalyzer
+
+	TestingFlag = true
+
+	testTime := time.Now()
+	expectedResult := BitStatus{}
 
 	// test failure Field + Tag match - one failure should be reported + WITHIN range threshold + SLIDING - one report violation
 	a.ConfigFailures = []ExtendedFailure{failure0}
@@ -117,6 +126,15 @@ func TestExaminationRule(t *testing.T) {
 		t.Errorf("test failure only Tag match, expected %v failures, got %v", len(expectedResult.Failures), len(a.Status.Failures))
 	}
 	clearBitStatus(&a)
+}
+
+func TestExaminationRuleThresholdAndExceedingTypes(t *testing.T) {
+	var a BitAnalyzer
+
+	TestingFlag = true
+
+	testTime := time.Now()
+	expectedResult := BitStatus{}
 
 	// test failure OUT_OF range threshold - 2 reports fit rule, 1 failures should be reported with count 1 + PERCENT Exceeding type + multiple reports violation, reports meet the requirements in time range
 	a.ConfigFailures = []ExtendedFailure{failure2}
@@ -162,6 +180,15 @@ func TestExaminationRule(t *testing.T) {
 		}
 	}
 	clearBitStatus(&a)
+}
+
+func TestExaminationRuleSlidingAndMultipleViolations(t *testing.T) {
+	var a BitAnalyzer
+
+	TestingFlag = true
+
+	testTime := time.Now()
+	expectedResult := BitStatus{}
 
 	// test failure SLIDING - multiple reports violation, reports did not meet the requirements
 	a.ConfigFailures = []ExtendedFailure{failure3}

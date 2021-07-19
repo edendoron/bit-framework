@@ -2,7 +2,7 @@ package main
 
 import (
 	handler "github.com/edendoron/bit-framework/internal/bitHandler"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"github.com/edendoron/bit-framework/server"
 	"log"
 )
@@ -11,7 +11,7 @@ func main() {
 
 	handler.LoadConfigs()
 
-	RedirectLogger(handler.Configs.BitHandlerPath)
+	models.RedirectLogger(handler.Configs.BitHandlerPath)
 
 	log.Printf("Server started - bit-handler")
 
@@ -19,7 +19,7 @@ func main() {
 
 	router := handler.HandlerRoutes.NewRouter()
 
-	srv := server.NewServer(router, handler.Configs.Host + handler.Configs.BitHandlerPort)
+	srv := server.NewServer(router, handler.Configs.Host+handler.Configs.BitHandlerPort)
 
 	go handler.StatusScheduler()
 

@@ -1,12 +1,12 @@
-package bitStorageAccess
+package bitstorageaccess
 
 import (
 	"encoding/json"
 	"fmt"
-	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
-	. "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
+	"github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	rh "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
 	handler "github.com/edendoron/bit-framework/internal/bitHandler"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"io"
@@ -22,9 +22,9 @@ import (
 )
 
 func writeReports(w http.ResponseWriter, testReports *string) {
-	reports := ReportBody{}
+	reports := models.ReportBody{}
 	if err := json.Unmarshal([]byte(*testReports), &reports); err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	for _, report := range reports.Reports {
@@ -37,38 +37,38 @@ func writeReports(w http.ResponseWriter, testReports *string) {
 		if _, err := os.Stat(path + "/tests_results.txt"); os.IsNotExist(err) {
 			err = os.MkdirAll(path, 0700)
 			if err != nil {
-				ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+				rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 				return
 			}
 		}
 		f, err := os.OpenFile(path+"/tests_results.txt", os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
 		protoReports, err := ioutil.ReadFile(path + "/tests_results.txt")
 		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
 			return
 		}
-		var temp TestResultsSet
+		var temp bit.TestResultsSet
 		err = proto.Unmarshal(protoReports, &temp)
 		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
 		temp.ResultsSet = append(temp.ResultsSet, &reportToWrite)
 		protoReports, err = proto.Marshal(&temp)
 		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
 		if _, err = f.Write(protoReports); err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
 		if err = f.Close(); err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
 	}
@@ -76,24 +76,24 @@ func writeReports(w http.ResponseWriter, testReports *string) {
 }
 
 func writeConfigFailures(w http.ResponseWriter, failureToWrite *string) {
-	failure := Failure{}
+	failure := bit.Failure{}
 	if err := json.Unmarshal([]byte(*failureToWrite), &failure); err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	filename := failure.Description.UnitName + "_" + failure.Description.TestName + "_" + strconv.FormatUint(failure.Description.TestId, 10)
 	f, err := os.OpenFile("storage/config/filtering_rules/"+filename+".txt", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	failureToProto, err := proto.Marshal(&failure)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	if _, err = f.Write(failureToProto); err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -101,12 +101,12 @@ func writeConfigFailures(w http.ResponseWriter, failureToWrite *string) {
 	writeUserGroups(w, failure)
 }
 
-func writeUserGroups(w http.ResponseWriter, failure Failure) {
+func writeUserGroups(w http.ResponseWriter, failure bit.Failure) {
 	var content []byte
 	if _, err := os.Stat("storage/config/user_groups/user_groups.txt"); err == nil {
 		content, err = ioutil.ReadFile("storage/config/user_groups/user_groups.txt")
 		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
 	}
@@ -127,19 +127,19 @@ func writeUserGroups(w http.ResponseWriter, failure Failure) {
 	}
 	f, err := os.OpenFile("storage/config/user_groups/user_groups.txt", os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0755)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	i := 0
 	for group := range userGroups {
 		if _, err = f.WriteString(group); err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
 		if i != len(userGroups)-1 {
 			_, err = f.WriteString("\n")
 			if err != nil {
-				ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+				rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 				return
 			}
 		}
@@ -150,59 +150,59 @@ func writeUserGroups(w http.ResponseWriter, failure Failure) {
 func writeExtendedFailures(w http.ResponseWriter, failureToWrite *string) {
 	failure := handler.ExtendedFailure{}
 	if err := json.Unmarshal([]byte(*failureToWrite), &failure); err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	filename := failure.Failure.Description.UnitName + "_" + failure.Failure.Description.TestName + "_" + strconv.FormatUint(failure.Failure.Description.TestId, 10)
 	f, err := os.OpenFile("storage/config/perm_filtering_rules/"+filename+".txt", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	//failureToProto, err := proto.Marshal(&failure)
 	//if err != nil {
-	//	ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+	//	rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	//}
 	if _, err = f.Write([]byte(*failureToWrite)); err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func writeUserGroupFiltering(w http.ResponseWriter, userGroupConfig *string) {
-	userGroupsFilters := UserGroupsFiltering_FilteredFailures{}
+	userGroupsFilters := bit.UserGroupsFiltering_FilteredFailures{}
 	if err := json.Unmarshal([]byte(*userGroupConfig), &userGroupsFilters); err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	filename := "storage/config/user_groups_masks/" + userGroupsFilters.UserGroup + ".txt"
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	userGroupToProto, err := proto.Marshal(&userGroupsFilters)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	if _, err = f.Write(userGroupToProto); err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func writeBitStatus(w http.ResponseWriter, bitStatus *string) {
-	status := BitStatus{}
+	status := bit.BitStatus{}
 	if err := json.Unmarshal([]byte(*bitStatus), &status); err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	protoStatus, err := proto.Marshal(&status)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	currentTime := time.Now()
@@ -211,33 +211,33 @@ func writeBitStatus(w http.ResponseWriter, bitStatus *string) {
 	if _, err = os.Stat(path + "/bit_status.txt"); os.IsNotExist(err) {
 		err = os.MkdirAll(path, 0700)
 		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
 	}
 	f, err := os.OpenFile(path+"/bit_status.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	if _, err = f.Write(protoStatus); err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func readReports(w http.ResponseWriter, start string, end string) {
-	var reports TestResultsSet
+	var reports bit.TestResultsSet
 	const layout = "2006-January-02 15:4:5"
 	startTime, err := time.Parse(layout, start)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	endTime, err := time.Parse(layout, end)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	err = filepath.Walk("storage/test_reports/",
@@ -249,12 +249,12 @@ func readReports(w http.ResponseWriter, start string, end string) {
 				if err == nil && info.IsDir() && !reportTime.Before(startTime) && reportTime.Before(endTime) {
 					protoReports, err := ioutil.ReadFile(path + "/tests_results.txt")
 					if err != nil {
-						ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
+						rh.ApiResponseHandler(w, http.StatusInternalServerError, "Can't find report!", err)
 					}
-					var temp TestResultsSet
+					var temp bit.TestResultsSet
 					err = proto.Unmarshal(protoReports, &temp)
 					if err != nil {
-						ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+						rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 					}
 					reports.ResultsSet = append(reports.ResultsSet, temp.ResultsSet...)
 				}
@@ -262,26 +262,26 @@ func readReports(w http.ResponseWriter, start string, end string) {
 			return nil
 		})
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
-	response := make([]TestReport, len(reports.ResultsSet))
+	response := make([]models.TestReport, len(reports.ResultsSet))
 	for i, report := range reports.ResultsSet {
 		response[i] = testResultToTestReport(*report)
 	}
 	err = json.NewEncoder(w).Encode(&response)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func readConfigFailures(w http.ResponseWriter) {
-	var configFailures []Failure
+	var configFailures []bit.Failure
 	files, err := ioutil.ReadDir("storage/config/filtering_rules")
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	for _, f := range files {
@@ -290,14 +290,14 @@ func readConfigFailures(w http.ResponseWriter) {
 		}
 		content, err := ioutil.ReadFile("storage/config/filtering_rules/" + f.Name())
 		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
 
-		decodedContent := Failure{}
+		decodedContent := bit.Failure{}
 		err = proto.Unmarshal(content, &decodedContent)
 		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
 
@@ -305,7 +305,7 @@ func readConfigFailures(w http.ResponseWriter) {
 	}
 	err = json.NewEncoder(w).Encode(&configFailures)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -315,7 +315,7 @@ func readExtendedFailures(w http.ResponseWriter) {
 	var foreverFailures []handler.ExtendedFailure
 	files, err := ioutil.ReadDir("storage/config/perm_filtering_rules")
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	for _, f := range files {
@@ -324,36 +324,36 @@ func readExtendedFailures(w http.ResponseWriter) {
 		}
 		content, err := ioutil.ReadFile("storage/config/perm_filtering_rules/" + f.Name())
 		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
 		decodedContent := handler.ExtendedFailure{}
 		err = proto.Unmarshal(content, &decodedContent)
 		if err != nil {
-			ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+			rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 			return
 		}
 		foreverFailures = append(foreverFailures, decodedContent)
 	}
 	err = json.NewEncoder(w).Encode(&foreverFailures)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func readBitStatus(w http.ResponseWriter, start string, end string) {
-	var statuses []BitStatus
+	var statuses []bit.BitStatus
 	const layout = "2006-January-02 15:4:5"
 	startTime, err := time.Parse(layout, start)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	endTime, err := time.Parse(layout, end)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	err = filepath.Walk("storage/bit_status/",
@@ -365,12 +365,12 @@ func readBitStatus(w http.ResponseWriter, start string, end string) {
 				if err == nil && info.IsDir() && !reportTime.Before(startTime) && reportTime.Before(endTime) {
 					protoStatus, err := ioutil.ReadFile(path + "/bit_status.txt")
 					if err != nil {
-						ApiResponseHandler(w, http.StatusInternalServerError, "Can't find status!", err)
+						rh.ApiResponseHandler(w, http.StatusInternalServerError, "Can't find status!", err)
 					}
-					temp := BitStatus{}
+					temp := bit.BitStatus{}
 					err = proto.Unmarshal(protoStatus, &temp)
 					if err != nil {
-						ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+						rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 					}
 					statuses = append(statuses, temp)
 				}
@@ -378,12 +378,12 @@ func readBitStatus(w http.ResponseWriter, start string, end string) {
 			return nil
 		})
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	err = json.NewEncoder(w).Encode(&statuses)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -392,18 +392,18 @@ func readBitStatus(w http.ResponseWriter, start string, end string) {
 func readUserGroupMaskedTestIds(w http.ResponseWriter, userGroup string) {
 	content, err := ioutil.ReadFile("storage/config/user_groups_masks/" + userGroup + ".txt")
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
-	decodedContent := UserGroupsFiltering_FilteredFailures{}
+	decodedContent := bit.UserGroupsFiltering_FilteredFailures{}
 	err = proto.Unmarshal(content, &decodedContent)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	err = json.NewEncoder(w).Encode(&decodedContent.MaskedTestIds)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -412,13 +412,13 @@ func readUserGroupMaskedTestIds(w http.ResponseWriter, userGroup string) {
 func readUserGroups(w http.ResponseWriter) {
 	content, err := ioutil.ReadFile("storage/config/user_groups/user_groups.txt")
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	groups := strings.Split(string(content), "\n")
 	err = json.NewEncoder(w).Encode(&groups)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -429,7 +429,7 @@ func deleteAgedData(w http.ResponseWriter, fileType string, timestamp string) {
 	const layout = "2006-January-02 15:4:5"
 	threshold, err := time.Parse(layout, timestamp)
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 	}
 	err = filepath.Walk("storage/"+fileType,
 		func(path string, info os.FileInfo, err error) error {
@@ -440,14 +440,14 @@ func deleteAgedData(w http.ResponseWriter, fileType string, timestamp string) {
 				if err == nil && info.IsDir() && reportTime.Before(threshold) {
 					err = os.RemoveAll(path)
 					if err != nil {
-						ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+						rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 					}
 				}
 			}
 			return nil
 		})
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	deleteEmptyDirectories(w, "storage/"+fileType, 0, fileType)
@@ -463,13 +463,13 @@ func deleteEmptyDirectories(w http.ResponseWriter, path string, depth int, fileT
 			if (path != ("storage/" + fileType)) && IsEmpty(path) {
 				err := os.RemoveAll(path)
 				if err != nil {
-					ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+					rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 				}
 			}
 			return nil
 		})
 	if err != nil {
-		ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
+		rh.ApiResponseHandler(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 }
@@ -485,26 +485,26 @@ func IsEmpty(name string) bool {
 	return err == io.EOF
 }
 
-func convertToKeyValuePair(arr []KeyValue) []*KeyValuePair {
-	copyArr := make([]*KeyValuePair, len(arr))
+func convertToKeyValuePair(arr []models.KeyValue) []*bit.KeyValuePair {
+	copyArr := make([]*bit.KeyValuePair, len(arr))
 	for k, v := range arr {
-		pair := KeyValuePair{Key: []byte(v.Key), Value: []byte(v.Value)}
+		pair := bit.KeyValuePair{Key: []byte(v.Key), Value: []byte(v.Value)}
 		copyArr[k] = &pair
 	}
 	return copyArr
 }
 
-func convertToKeyValue(arr []*KeyValuePair) []KeyValue {
-	copyArr := make([]KeyValue, len(arr))
+func convertToKeyValue(arr []*bit.KeyValuePair) []models.KeyValue {
+	copyArr := make([]models.KeyValue, len(arr))
 	for k, v := range arr {
-		pair := KeyValue{Key: string(v.Key), Value: string(v.Value)}
+		pair := models.KeyValue{Key: string(v.Key), Value: string(v.Value)}
 		copyArr[k] = pair
 	}
 	return copyArr
 }
 
-func testReportToTestResult(tr TestReport) TestResult {
-	return TestResult{
+func testReportToTestResult(tr models.TestReport) bit.TestResult {
+	return bit.TestResult{
 		TestId:         uint64(tr.TestId),
 		Timestamp:      timestamppb.New(tr.Timestamp),
 		TagSet:         convertToKeyValuePair(tr.TagSet),
@@ -513,8 +513,8 @@ func testReportToTestResult(tr TestReport) TestResult {
 	}
 }
 
-func testResultToTestReport(tr TestResult) TestReport {
-	return TestReport{
+func testResultToTestReport(tr bit.TestResult) models.TestReport {
+	return models.TestReport{
 		TestId:         float64(tr.TestId),
 		ReportPriority: float64(tr.ReportPriority),
 		Timestamp:      tr.Timestamp.AsTime(),

@@ -1,8 +1,8 @@
-package bitHistoryCurator
+package bithistorycurator
 
 import (
 	"fmt"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"log"
 	"net/http"
 	"strings"
@@ -15,14 +15,14 @@ func HistoryIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var HistoryCuratorRoutes = Routes{
-	Route{
+var HistoryCuratorRoutes = models.Routes{
+	models.Route{
 		Name:        "HistoryIndex",
 		Method:      "GET",
 		Pattern:     "/",
 		HandlerFunc: HistoryIndex,
 	},
-	Route{
+	models.Route{
 		Name:        "StorageGetPing",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/ping",

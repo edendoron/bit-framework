@@ -1,8 +1,8 @@
-package bitStorageAccess
+package bitstorageaccess
 
 import (
 	"fmt"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"log"
 	"net/http"
 	"strings"
@@ -15,57 +15,57 @@ func StorageIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var StorageAccessRoutes = Routes{
-	Route{
+var StorageAccessRoutes = models.Routes{
+	models.Route{
 		Name:        "StorageIndex",
 		Method:      "GET",
 		Pattern:     "/",
 		HandlerFunc: StorageIndex,
 	},
 
-	Route{
+	models.Route{
 		Name:        "GetExtendedStatus",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/extended/status",
 		HandlerFunc: GetExtendedStatus,
 	},
 
-	Route{
+	models.Route{
 		Name:        "StorageGetPing",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/ping",
 		HandlerFunc: StorageGetPing,
 	},
 
-	Route{
+	models.Route{
 		Name:        "GetDataRead",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/data/read",
 		HandlerFunc: GetDataRead,
 	},
 
-	Route{
+	models.Route{
 		Name:        "PostDataWrite",
 		Method:      strings.ToUpper("Post"),
 		Pattern:     "/data/write",
 		HandlerFunc: PostDataWrite,
 	},
 
-	Route{
+	models.Route{
 		Name:        "PutDataRead",
 		Method:      strings.ToUpper("Put"),
 		Pattern:     "/data/read",
 		HandlerFunc: PutDataRead,
 	},
 
-	Route{
+	models.Route{
 		Name:        "PutDataWrite",
 		Method:      strings.ToUpper("Put"),
 		Pattern:     "/data/write",
 		HandlerFunc: PutDataWrite,
 	},
 
-	Route{
+	models.Route{
 		Name:        "DeleteData",
 		Method:      strings.ToUpper("Delete"),
 		Pattern:     "/data/delete",

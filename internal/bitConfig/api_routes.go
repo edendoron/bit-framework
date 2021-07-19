@@ -1,8 +1,8 @@
-package bitConfig
+package bitconfig
 
 import (
 	"fmt"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"log"
 	"net/http"
 	"strings"
@@ -15,14 +15,14 @@ func ConfigIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var ConfigRoutes = Routes{
-	Route{
+var ConfigRoutes = models.Routes{
+	models.Route{
 		Name:        "ConfigIndex",
 		Method:      "GET",
 		Pattern:     "/",
 		HandlerFunc: ConfigIndex,
 	},
-	Route{
+	models.Route{
 		Name:        "ConfigGetPing",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/ping",

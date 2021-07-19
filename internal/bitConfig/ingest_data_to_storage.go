@@ -1,10 +1,10 @@
-package bitConfig
+package bitconfig
 
 import (
 	"bytes"
 	"encoding/json"
-	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	"github.com/edendoron/bit-framework/internal/models"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,7 +12,7 @@ import (
 
 // PostFailuresData writes the configuration failures found in Configs.BitConfigFailuresPath to storage
 func PostFailuresData() {
-	failure := Failure{}
+	failure := bit.Failure{}
 	files, err := ioutil.ReadDir(Configs.BitConfigFailuresPath)
 	if err != nil {
 		log.Fatal("error reading config_failures dir error: ", err)
@@ -28,12 +28,12 @@ func PostFailuresData() {
 			log.Printf("error unmarshal config_failures file number %v, error: %v", i+1, e)
 			continue
 		}
-		e = ValidateType(failure)
+		e = models.ValidateType(failure)
 		if e != nil {
 			log.Printf("error validate config_failures file number %v, error: %v", i+1, e)
 			continue
 		}
-		message := KeyValue{Key: "config_failure", Value: string(content)}
+		message := models.KeyValue{Key: "config_failure", Value: string(content)}
 		postBody, e := json.MarshalIndent(message, "", " ")
 		if e != nil {
 			log.Printf("error marshal config_failures file number %v, error: %v", i+1, e)
@@ -51,7 +51,7 @@ func PostFailuresData() {
 
 // PostGroupFilterData writes the user group filtering rules found in Configs.BitConfigUserGroupPath to storage
 func PostGroupFilterData() {
-	groupFilter := UserGroupsFiltering_FilteredFailures{}
+	groupFilter := bit.UserGroupsFiltering_FilteredFailures{}
 	files, err := ioutil.ReadDir(Configs.BitConfigUserGroupPath)
 	if err != nil {
 		log.Printf("error reading config_user_groups_filtering dir. error: %v", err)
@@ -68,12 +68,12 @@ func PostGroupFilterData() {
 			log.Printf("error unmarshal config_user_groups_filtering file number %v, error: %v", i+1, e)
 			continue
 		}
-		e = ValidateType(groupFilter)
+		e = models.ValidateType(groupFilter)
 		if e != nil {
 			log.Printf("error validate config_user_groups_filtering file number %v, error: %v", i+1, e)
 			continue
 		}
-		message := KeyValue{Key: "config_user_group_filtering", Value: string(content)}
+		message := models.KeyValue{Key: "config_user_group_filtering", Value: string(content)}
 		postBody, e := json.MarshalIndent(message, "", " ")
 		if e != nil {
 			log.Printf("error marshal config_user_groups_filtering file number %v, error: %v", i+1, e)

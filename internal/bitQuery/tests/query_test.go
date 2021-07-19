@@ -1,9 +1,9 @@
 package bitQuery
 
 import (
-	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
-	. "github.com/edendoron/bit-framework/internal/bitQuery"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	query "github.com/edendoron/bit-framework/internal/bitQuery"
+	"github.com/edendoron/bit-framework/internal/models"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"testing"
@@ -11,19 +11,19 @@ import (
 )
 
 // test filterBitStatus
-func TestFilterBitStatus(t *testing.T) {
+func TestFilterBitStatus1BitStatus(t *testing.T) {
 
 	// filter 1 failure from 1 bitStatus
-	var statusSlice = []BitStatus{
-		{Failures: []*BitStatus_RportedFailure{failure0, failure1}},
+	var statusSlice = []bit.BitStatus{
+		{Failures: []*bit.BitStatus_RportedFailure{failure0, failure1}},
 	}
 
-	var expectedResult = []BitStatus{
-		{Failures: []*BitStatus_RportedFailure{failure1}},
+	var expectedResult = []bit.BitStatus{
+		{Failures: []*bit.BitStatus_RportedFailure{failure1}},
 	}
 	maskedTests := []uint64{1}
 
-	FilterBitStatus(&statusSlice, maskedTests)
+	query.FilterBitStatus(&statusSlice, maskedTests)
 
 	if !reflect.DeepEqual(statusSlice, expectedResult) {
 		if len(expectedResult) != len(statusSlice) {
@@ -36,20 +36,22 @@ func TestFilterBitStatus(t *testing.T) {
 			}
 		}
 	}
+}
 
+func TestFilterBitStatus2BitStatus(t *testing.T) {
 	// filter 2 failures from different bitStatus
-	statusSlice = []BitStatus{
-		{Failures: []*BitStatus_RportedFailure{failure0, failure1}},
-		{Failures: []*BitStatus_RportedFailure{failure2, failure3}},
+	statusSlice := []bit.BitStatus{
+		{Failures: []*bit.BitStatus_RportedFailure{failure0, failure1}},
+		{Failures: []*bit.BitStatus_RportedFailure{failure2, failure3}},
 	}
 
-	expectedResult = []BitStatus{
-		{Failures: []*BitStatus_RportedFailure{failure1}},
-		{Failures: []*BitStatus_RportedFailure{failure2}},
+	expectedResult := []bit.BitStatus{
+		{Failures: []*bit.BitStatus_RportedFailure{failure1}},
+		{Failures: []*bit.BitStatus_RportedFailure{failure2}},
 	}
-	maskedTests = []uint64{1, 4}
+	maskedTests := []uint64{1, 4}
 
-	FilterBitStatus(&statusSlice, maskedTests)
+	query.FilterBitStatus(&statusSlice, maskedTests)
 
 	if !reflect.DeepEqual(statusSlice, expectedResult) {
 		if len(expectedResult) != len(statusSlice) {
@@ -62,19 +64,21 @@ func TestFilterBitStatus(t *testing.T) {
 			}
 		}
 	}
+}
 
+func TestFilterBitStatusAllFailures(t *testing.T) {
 	// filter all failures in one bit status (bit status array is not empty)
-	statusSlice = []BitStatus{
-		{Failures: []*BitStatus_RportedFailure{failure0, failure1}},
-		{Failures: []*BitStatus_RportedFailure{failure2, failure3}},
+	statusSlice := []bit.BitStatus{
+		{Failures: []*bit.BitStatus_RportedFailure{failure0, failure1}},
+		{Failures: []*bit.BitStatus_RportedFailure{failure2, failure3}},
 	}
 
-	expectedResult = []BitStatus{
-		{Failures: []*BitStatus_RportedFailure{failure2, failure3}},
+	expectedResult := []bit.BitStatus{
+		{Failures: []*bit.BitStatus_RportedFailure{failure2, failure3}},
 	}
-	maskedTests = []uint64{1, 2}
+	maskedTests := []uint64{1, 2}
 
-	FilterBitStatus(&statusSlice, maskedTests)
+	query.FilterBitStatus(&statusSlice, maskedTests)
 
 	if !reflect.DeepEqual(statusSlice, expectedResult) {
 		if len(expectedResult) != len(statusSlice) {
@@ -89,14 +93,14 @@ func TestFilterBitStatus(t *testing.T) {
 	}
 
 	// filter all failures (bit status array is empty)
-	statusSlice = []BitStatus{
-		{Failures: []*BitStatus_RportedFailure{failure0, failure1}},
+	statusSlice = []bit.BitStatus{
+		{Failures: []*bit.BitStatus_RportedFailure{failure0, failure1}},
 	}
 
-	expectedResult = []BitStatus{}
+	expectedResult = []bit.BitStatus{}
 	maskedTests = []uint64{1, 2}
 
-	FilterBitStatus(&statusSlice, maskedTests)
+	query.FilterBitStatus(&statusSlice, maskedTests)
 
 	if !reflect.DeepEqual(statusSlice, expectedResult) {
 		if len(expectedResult) != len(statusSlice) {
@@ -115,14 +119,14 @@ func TestFilterBitStatus(t *testing.T) {
 func TestFilterReports(t *testing.T) {
 
 	// filter 2 reports by tag
-	var reportSlice = []TestReport{report0, report1, report2}
+	var reportSlice = []models.TestReport{report0, report1, report2}
 
-	var expectedResult = []TestReport{report2}
+	var expectedResult = []models.TestReport{report2}
 
 	filter := "tag"
 	var values = []string{"hostname123", "north"}
 
-	FilterReports(&reportSlice, filter, values)
+	query.FilterReports(&reportSlice, filter, values)
 
 	if !reflect.DeepEqual(reportSlice, expectedResult) {
 		if len(expectedResult) != len(reportSlice) {
@@ -132,14 +136,14 @@ func TestFilterReports(t *testing.T) {
 	}
 
 	// filter all reports by field
-	reportSlice = []TestReport{report0, report1, report2}
+	reportSlice = []models.TestReport{report0, report1, report2}
 
-	expectedResult = []TestReport{}
+	expectedResult = []models.TestReport{}
 
 	filter = "field"
 	values = []string{"temp"}
 
-	FilterReports(&reportSlice, filter, values)
+	query.FilterReports(&reportSlice, filter, values)
 
 	if !reflect.DeepEqual(reportSlice, expectedResult) {
 		if len(expectedResult) != len(reportSlice) {
@@ -149,14 +153,14 @@ func TestFilterReports(t *testing.T) {
 	}
 
 	// filter no reports by tag
-	reportSlice = []TestReport{report3, report4, report5}
+	reportSlice = []models.TestReport{report3, report4, report5}
 
-	expectedResult = []TestReport{report3, report4, report5}
+	expectedResult = []models.TestReport{report3, report4, report5}
 
 	filter = "tag"
 	values = []string{"hostname", "server02"}
 
-	FilterReports(&reportSlice, filter, values)
+	query.FilterReports(&reportSlice, filter, values)
 
 	if !reflect.DeepEqual(reportSlice, expectedResult) {
 		if len(expectedResult) != len(reportSlice) {
@@ -168,8 +172,8 @@ func TestFilterReports(t *testing.T) {
 
 // temp variables for tests
 
-var failure0 = &BitStatus_RportedFailure{
-	FailureData: &FailureDescription{
+var failure0 = &bit.BitStatus_RportedFailure{
+	FailureData: &bit.FailureDescription{
 		UnitName:       "system test check",
 		TestName:       "volts test",
 		TestId:         1,
@@ -194,8 +198,8 @@ var failure0 = &BitStatus_RportedFailure{
 	},
 }
 
-var failure1 = &BitStatus_RportedFailure{
-	FailureData: &FailureDescription{
+var failure1 = &bit.BitStatus_RportedFailure{
+	FailureData: &bit.FailureDescription{
 		UnitName:       "system test check",
 		TestName:       "temperature test",
 		TestId:         2,
@@ -220,8 +224,8 @@ var failure1 = &BitStatus_RportedFailure{
 	},
 }
 
-var failure2 = &BitStatus_RportedFailure{
-	FailureData: &FailureDescription{
+var failure2 = &bit.BitStatus_RportedFailure{
+	FailureData: &bit.FailureDescription{
 		UnitName:       "system test check",
 		TestName:       "pressure test",
 		TestId:         3,
@@ -248,8 +252,8 @@ var failure2 = &BitStatus_RportedFailure{
 	Timestamp: timestamppb.Now(),
 }
 
-var failure3 = &BitStatus_RportedFailure{
-	FailureData: &FailureDescription{
+var failure3 = &bit.BitStatus_RportedFailure{
+	FailureData: &bit.FailureDescription{
 		UnitName:       "system test check",
 		TestName:       "oil test",
 		TestId:         4,
@@ -274,84 +278,84 @@ var failure3 = &BitStatus_RportedFailure{
 	},
 }
 
-var report0 = TestReport{
+var report0 = models.TestReport{
 	TestId:         123,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname", Value: "server02"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "volts", Value: "6.5"},
 	},
 }
 
-var report1 = TestReport{
+var report1 = models.TestReport{
 	TestId:         124,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname", Value: "server01"},
 		{Key: "ss", Value: "longstanding"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "volts", Value: "10"},
 		{Key: "oil", Value: "4"},
 	},
 }
 
-var report2 = TestReport{
+var report2 = models.TestReport{
 	TestId:         125,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname123", Value: "north"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "AirPressure", Value: "-1"},
 	},
 }
 
-var report3 = TestReport{
+var report3 = models.TestReport{
 	TestId:         126,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname123", Value: "north"},
 		{Key: "host", Value: "north east"},
 		{Key: "hostname", Value: "server02"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "AirPressure", Value: "-3.3"},
 		{Key: "TemperatureCelsius", Value: "68"},
 	},
 }
 
-var report4 = TestReport{
+var report4 = models.TestReport{
 	TestId:         127,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname123", Value: "north"},
 		{Key: "host", Value: "north east"},
 		{Key: "hostname", Value: "server02"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "AirPressure", Value: "50"},
 		{Key: "TemperatureCelsius", Value: "60"},
 	},
 }
 
-var report5 = TestReport{
+var report5 = models.TestReport{
 	TestId:         129,
 	ReportPriority: 12,
 	Timestamp:      time.Now(),
-	TagSet: []KeyValue{
+	TagSet: []models.KeyValue{
 		{Key: "hostname123", Value: "north"},
 		{Key: "host", Value: "north east"},
 		{Key: "hostname", Value: "server02"},
 	},
-	FieldSet: []KeyValue{
+	FieldSet: []models.KeyValue{
 		{Key: "AirPressure", Value: "10"},
 		{Key: "TemperatureCelsius", Value: "72"},
 	},

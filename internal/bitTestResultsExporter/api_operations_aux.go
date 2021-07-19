@@ -1,10 +1,10 @@
-package bitExporter
+package bitexporter
 
 import (
 	"bytes"
 	"encoding/json"
 	prqueue "github.com/coraxster/PriorityQueue"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"log"
 	m "math"
 	"net/http"
@@ -13,12 +13,16 @@ import (
 
 // init global package variables and constants
 
+// ReportsQueue saves the incoming reports by priority
 var ReportsQueue = prqueue.Build()
 
+// QueueChannel indicates incoming reports
 var QueueChannel = make(chan int, 1000)
 
-var CurrentBW = Bandwidth{}
+// CurrentBW stores current state of exporter
+var CurrentBW = models.Bandwidth{}
 
+// TestingFlag assist in tests manipulations
 var TestingFlag = false
 
 const KiB = 1024
@@ -30,6 +34,7 @@ const M = K * 1000
 const G = M * 1000
 const T = G * 1000
 
+// ReportStatus is an enum to indicates reason for the previous epoch report sent
 type ReportStatus int
 
 const (
@@ -78,7 +83,7 @@ func CalculateExtraSize() float32 {
 }
 
 // CalculateSizeLimit in bytes based on @param bw
-func CalculateSizeLimit(bw Bandwidth) float32 {
+func CalculateSizeLimit(bw models.Bandwidth) float32 {
 	switch bw.UnitsPerSecond {
 	case "KiB":
 		return bw.Size * KiB
@@ -102,7 +107,7 @@ func CalculateSizeLimit(bw Bandwidth) float32 {
 }
 
 // sets unlimited bandwidth size to @param bw if user requests to set negative size
-func modifyBandwidthSize(bw *Bandwidth) {
+func modifyBandwidthSize(bw *models.Bandwidth) {
 	if bw.Size < 0 {
 		bw.Size = m.MaxFloat32
 	}
@@ -110,11 +115,11 @@ func modifyBandwidthSize(bw *Bandwidth) {
 
 // UpdateAndSendReport function prepare and send Report to Indexer. Return the size of request body (without extra size) if queue is empty in order to know the size left to fill request, -1 otherwise. Second return value is for test purpose
 func UpdateAndSendReport(epochSentSize float32, epoch time.Time, duration time.Duration) (float32, float32) {
-	indexerReport := ReportBody{}
+	indexerReport := models.ReportBody{}
 	postBodyPrev := &bytes.Reader{}
 	for ReportsQueue.Len() > 0 && time.Since(epoch) < duration {
 		item, _ := ReportsQueue.Pull()
-		report := item.(TestReport)
+		report := item.(models.TestReport)
 
 		indexerReport.Reports = append(indexerReport.Reports, report)
 

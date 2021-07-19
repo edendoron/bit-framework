@@ -1,20 +1,20 @@
-package bitHandler
+package bithandler
 
 import (
 	"errors"
-	. "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
-	. "github.com/edendoron/bit-framework/internal/models"
+	rh "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
+	"github.com/edendoron/bit-framework/internal/models"
 	"net/http"
 )
 
 // function handles Trigger according to "action" parameter.
 // function returns true and stops bitStatus routine if "action" param is "stop",
 // returns false if action param is "start", and returns true with proper error message to user otherwise.
-func handleNonStartAction(w http.ResponseWriter, r *http.Request, triggerRequest TriggerBody) bool {
+func handleNonStartAction(w http.ResponseWriter, r *http.Request, triggerRequest models.TriggerBody) bool {
 	keys, ok := r.URL.Query()["action"]
 
 	if !ok || len(keys[0]) < 1 {
-		ApiResponseHandler(w, http.StatusBadRequest, "Url Param 'action' is missing", nil)
+		rh.ApiResponseHandler(w, http.StatusBadRequest, "Url Param 'action' is missing", nil)
 		return true
 	}
 
@@ -24,10 +24,10 @@ func handleNonStartAction(w http.ResponseWriter, r *http.Request, triggerRequest
 		return false
 	case "stop":
 		TriggerChannel <- triggerRequest
-		ApiResponseHandler(w, http.StatusOK, "Trigger stopped", nil)
+		rh.ApiResponseHandler(w, http.StatusOK, "Trigger stopped", nil)
 		return true
 	default:
-		ApiResponseHandler(w, http.StatusBadRequest, "Url Param 'action' is not one of 'start' or 'stop'", errors.New("bad request"))
+		rh.ApiResponseHandler(w, http.StatusBadRequest, "Url Param 'action' is not one of 'start' or 'stop'", errors.New("bad request"))
 		return true
 	}
 }

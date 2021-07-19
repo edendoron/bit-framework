@@ -181,7 +181,7 @@ const compareNumber = (status1: statusObject, status2: statusObject) => {
 function stableSort<T>(array: T[], comparator: (a: T, b: T) => number, direction: string) {
     const stabilizedThis = array.map((el, index) => [el, index] as [T, number]);
     stabilizedThis.sort((a, b) => {
-        const order = direction == "desc" ? comparator(a[0], b[0]) : -comparator(a[0], b[0]);
+        const order = direction === "desc" ? comparator(a[0], b[0]) : -comparator(a[0], b[0]);
         if (order !== 0) return order;
         return a[1] - b[1];
     });
@@ -217,7 +217,7 @@ export const StatusTable: FC<StatusTableProps> = ({data}) => {
 
     const classes = useHeaderRowStyles();
 
-    if (data.length === 0) return <div>No Statuses Found.</div>
+    if (!data || data.length === 0) return <div>No Statuses Found.</div>
 
     return (
         <TableContainer component={Paper}>

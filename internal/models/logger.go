@@ -24,6 +24,7 @@ func Logger(inner http.Handler, name string) http.Handler {
 	})
 }
 
+// RedirectLogger redirects logs to each service unique path
 func RedirectLogger(servicePath string) {
 	currTime := time.Now().Format("20060102150405")
 

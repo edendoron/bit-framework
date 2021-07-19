@@ -1,8 +1,8 @@
-package bitExporter
+package bitexporter
 
 import (
 	"fmt"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"log"
 	"net/http"
 	"strings"
@@ -15,36 +15,36 @@ func ExporterIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var ExporterRoutes = Routes{
-	Route{
+var ExporterRoutes = models.Routes{
+	models.Route{
 		Name:        "Index",
 		Method:      "GET",
 		Pattern:     "/",
 		HandlerFunc: ExporterIndex,
 	},
 
-	Route{
+	models.Route{
 		Name:        "ExporterGetPing",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/ping",
 		HandlerFunc: ExporterGetPing,
 	},
 
-	Route{
+	models.Route{
 		Name:        "GetBandwidth",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/qos/bandwidth",
 		HandlerFunc: GetBandwidth,
 	},
 
-	Route{
+	models.Route{
 		Name:        "PostBandwidth",
 		Method:      strings.ToUpper("Post"),
 		Pattern:     "/qos/bandwidth",
 		HandlerFunc: PostBandwidth,
 	},
 
-	Route{
+	models.Route{
 		Name:        "ExporterPostReport",
 		Method:      strings.ToUpper("Post"),
 		Pattern:     "/report/raw",

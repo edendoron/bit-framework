@@ -1,4 +1,4 @@
-package bitHistoryCurator
+package bithistorycurator
 
 import (
 	"log"

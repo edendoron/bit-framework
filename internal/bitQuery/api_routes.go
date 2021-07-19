@@ -1,8 +1,8 @@
-package bitQuery
+package bitquery
 
 import (
 	"fmt"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"github.com/edendoron/bit-framework/internal/models"
 	"log"
 	"net/http"
 	"strings"
@@ -15,36 +15,36 @@ func QueryIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var QueryRoutes = Routes{
-	Route{
+var QueryRoutes = models.Routes{
+	models.Route{
 		Name:        "QueryIndex",
 		Method:      "GET",
 		Pattern:     "/",
 		HandlerFunc: QueryIndex,
 	},
 
-	Route{
+	models.Route{
 		Name:        "QueryGetPing",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/ping",
 		HandlerFunc: QueryGetPing,
 	},
 
-	Route{
+	models.Route{
 		Name:        "BitStatusQuery",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/status",
 		HandlerFunc: BitStatusQuery,
 	},
 
-	Route{
+	models.Route{
 		Name:        "ReportQuery",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/reports",
 		HandlerFunc: ReportQuery,
 	},
 
-	Route{
+	models.Route{
 		Name:        "UserGroupQuery",
 		Method:      strings.ToUpper("Get"),
 		Pattern:     "/userGroups",

@@ -94,7 +94,7 @@ func fetchReportsFromStorage() []TestReport{
 	return reports
 }
 
-func fetchStatusFromQuery() BitStatus{
+func fetchStatusFromQuery() []BitStatus{
 	req, err := http.NewRequest(http.MethodGet, "http://localhost:8085/status", nil)
 	if err != nil {
 		log.Fatalln("Can't make new http request")
@@ -114,7 +114,7 @@ func fetchStatusFromQuery() BitStatus{
 		log.Fatalln("Couldn't get status from query:\n", err)
 	}
 
-	var bitStatus BitStatus
+	var bitStatus []BitStatus
 	err = json.NewDecoder(resp.Body).Decode(&bitStatus)
 	if err != nil {
 		log.Fatalln("Can't decode response from query:\n", err)
@@ -161,7 +161,7 @@ func deleteTestFilesFromStorage() {
 
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	params := req.URL.Query()
-	params.Add("timestamp", time.Now().Format(layout))
+	params.Add("timestamp", time.Now().Add(time.Minute).Format(layout))
 	req.URL.RawQuery = params.Encode()
 
 	client := &http.Client{}

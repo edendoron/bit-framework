@@ -109,13 +109,28 @@ func TestSystemFlow(t *testing.T) {
 
 	cleanTest(killServicesCmd)
 
-	cmdRunIndexer.Wait()
-	cmdRunExporter.Wait()
-	cmdRunConfig.Wait()
-	cmdRunStorage.Wait()
+	err = cmdRunIndexer.Wait()
+	if err != nil && err.Error() != "exit status 1"{
+		log.Fatalln("Error waiting on cmdRunIndexer:\n", err)
+	}
+
+	err = cmdRunExporter.Wait()
+	if err != nil && err.Error() != "exit status 1" {
+		log.Fatalln("Error waiting on cmdRunExporter:\n", err)
+	}
+
+	err = cmdRunConfig.Wait()
+	if err != nil && err.Error() != "exit status 1" {
+		log.Fatalln("Error waiting on cmdRunConfig:\n", err)
+	}
+
+	err = cmdRunStorage.Wait()
+	if err != nil && err.Error() != "exit status 1" {
+		log.Fatalln("Error waiting on cmdRunStorage:\n", err)
+	}
 }
 
-//test the normal flow of the framework with bitHandler
+// test the normal flow of the framework with bitHandler
 func TestSystemFlowWithHandler(t *testing.T) {
 	killServicesCmd := exec.Command("Taskkill", "/IM", "main.exe", "/F")
 
@@ -131,9 +146,9 @@ func TestSystemFlowWithHandler(t *testing.T) {
 
 	cmdRunQuery := exec.Command("go", "run", "../cmd/bitQuery/main.go", "-config-file", configPath)
 
-	//cmdRunCurator := exec.Command("go", "run", "../cmd/bitCurator/main.go", "-config-file", configPath)
+	cmdRunCurator := exec.Command("go", "run", "../cmd/bitHistoryCurator/main.go", "-config-file", configPath)
 
-	cleanTestStorageConfigDirs() //clean test environment storage before test start
+	cleanTestStorageConfigDirs() // clean test environment storage before test start
 
 	err := cmdRunStorage.Start()
 	if err != nil {
@@ -156,14 +171,6 @@ func TestSystemFlowWithHandler(t *testing.T) {
 		log.Fatalln("Couldn't start bitHandler service\n", err)
 	}
 
-	sentReports := ReportBody{Reports: []TestReport{report0}}
-
-	reportsMarshaled, err := json.MarshalIndent(sentReports, "", " ")
-	if err != nil {
-		cleanTest(killServicesCmd)
-		log.Fatalln("Error marshaling sent reports", err)
-	}
-	body := bytes.NewBuffer(reportsMarshaled)
 
 	err = cmdRunIndexer.Start()
 	if err != nil {
@@ -180,24 +187,35 @@ func TestSystemFlowWithHandler(t *testing.T) {
 	time.Sleep(time.Second)
 
 	go func() {
-		for i := 0; i < 10; i++ {
-			body = bytes.NewBuffer(reportsMarshaled)
+		for i := 1; i < 10; i++ {
+			report := TestReport{
+				TestId: 		float64(i),
+				ReportPriority: 12,
+				Timestamp:      time.Now().Add(5*time.Second),
+				TagSet: []KeyValue{
+					{Key: "hostname", Value: "server02"},
+				},
+				FieldSet: []KeyValue{
+					{Key: "volts", Value: "50"},
+				},
+			}
+			sentReports := ReportBody{Reports: []TestReport{report}}
+
+			reportsMarshaled, err := json.MarshalIndent(sentReports, "", " ")
+			if err != nil {
+				cleanTest(killServicesCmd)
+				log.Fatalln("Error marshaling sent reports:\n", err)
+			}
+
+			body := bytes.NewBuffer(reportsMarshaled)
 			exporterRes, err := http.Post("http://localhost:8087/report/raw", "application/json; charset=UTF-8", body)
 			if err != nil || exporterRes.StatusCode != http.StatusOK {
 				cleanTest(killServicesCmd)
-				t.Errorf("Reports couldn't reach exporter  %v", err)
-				return
+				log.Fatalln("Reports couldn't reach exporter\n", err)
 			}
 			time.Sleep(time.Second)
 		}
 	}()
-
-	//exporterRes, err := http.Post("http://localhost:8087/report/raw", "application/json; charset=UTF-8", body)
-	//if err != nil || exporterRes.StatusCode != http.StatusOK {
-	//	cleanTest(killServicesCmd)
-	//	t.Errorf("Reports couldn't reach exporter  %v", err)
-	//	return
-	//}
 
 	err = cmdRunQuery.Start()
 	if err != nil {
@@ -205,26 +223,57 @@ func TestSystemFlowWithHandler(t *testing.T) {
 		log.Fatalln("Couldn't start bitQuery service:\n", err)
 	}
 
-	time.Sleep(7 * time.Second)
+	time.Sleep(10 * time.Second)
 
-	bitStatus := fetchStatusFromQuery()
+	bitStatuses := fetchStatusFromQuery()
 
-
-	//if !reflect.DeepEqual(expectedResult, bitStatus) {
-	//	log.Fatalln("DA")
-	//}
-
-	if len(expectedResult.Failures) != len(bitStatus.Failures) {
-		t.Errorf("THIS IS BAD!!")
+	if len(bitStatuses) > 0 && len(expectedResult.Failures) != len(bitStatuses[0].Failures) {
+		cleanTest(killServicesCmd)
+		t.Errorf("Handler didn't catch high voltage failure:\n %v", err)
 	}
 
-		cleanTest(killServicesCmd)
+	cleanTestStorageConfigDirs()
 
-	cmdRunHandler.Wait()
-	cmdRunIndexer.Wait()
-	cmdRunExporter.Wait()
-	cmdRunConfig.Wait()
-	cmdRunStorage.Wait()
+	err = cmdRunCurator.Start()
+	if err != nil {
+		cleanTest(killServicesCmd)
+		log.Fatalln("Couldn't start bitQuery service:\n", err)
+	}
+
+	err = killServicesCmd.Run()
+	if err != nil {
+		log.Fatalln("Error killing services", err)
+	}
+
+	err = cmdRunHandler.Wait()
+	if err != nil && err.Error() != "exit status 1"{
+		log.Fatalln("Error waiting on cmdRunHandler:\n", err)
+	}
+
+	err = cmdRunIndexer.Wait()
+	if err != nil && err.Error() != "exit status 1" {
+		log.Fatalln("Error waiting on cmdRunIndexer:\n", err)
+	}
+
+	err = cmdRunExporter.Wait()
+	if err != nil && err.Error() != "exit status 1"{
+		log.Fatalln("Error waiting on cmdRunExporter:\n", err)
+	}
+
+	err = cmdRunConfig.Wait()
+	if err != nil && err.Error() != "exit status 1"{
+		log.Fatalln("Error waiting on cmdRunConfig:\n", err)
+	}
+
+	err = cmdRunCurator.Wait()
+	if err != nil && err.Error() != "exit status 1"{
+		log.Fatalln("Error waiting on cmdRunStorage:\n", err)
+	}
+
+	err = cmdRunStorage.Wait()
+	if err != nil && err.Error() != "exit status 1"{
+		log.Fatalln("Error waiting on cmdRunStorage:\n", err)
+	}
 }
 
 // temp variables for tests
@@ -304,200 +353,6 @@ var failure0 = ExtendedFailure{
 		},
 	},
 }
-
-//var failure1 = ExtendedFailure{
-//	Failure: Failure{
-//		Description: &FailureDescription{
-//			UnitName:       "system test check",
-//			TestName:       "temperature test",
-//			TestId:         2,
-//			BitType:        []string{"CBIT"},
-//			Description:    "this is a mock failure to test services",
-//			AdditionalInfo: "the failure finds temperature problem",
-//			Purpose:        "check temperature is within 60-80 range, with a deviation of 8",
-//			Severity:       2,
-//			OperatorFailure: []string{
-//				"can't ignite",
-//				"normal functionality is damaged",
-//			},
-//			LineReplacentUnits: []string{
-//				"line1",
-//				"line2",
-//			},
-//			FieldReplacemntUnits: []string{
-//				"field1",
-//				"field2",
-//				"field3",
-//			},
-//		},
-//		ExaminationRule: &FailureExaminationRule{
-//			MatchingField: "TemperatureCelsius",
-//			MatchingTag: &KeyValuePair{
-//				Key:   []byte("hostname"),
-//				Value: []byte("server02"),
-//			},
-//			FailureCriteria: &FailureExaminationRule_FailureCriteria{
-//				ValueCriteria: &FailureExaminationRule_FailureCriteria_FailureValueCriteria{
-//					Minimum:       60,
-//					Miximum:       80,
-//					ThresholdMode: FailureExaminationRule_FailureCriteria_FailureValueCriteria_WITHIN,
-//					Exceeding: &FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding{
-//						Type:  FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_VALUE,
-//						Value: 8,
-//					},
-//				},
-//				TimeCriteria: &FailureExaminationRule_FailureCriteria_FailureTimeCriteria{
-//					WindowType:     FailureExaminationRule_FailureCriteria_FailureTimeCriteria_NO_WINDOW,
-//					WindowSize:     5,
-//					FailuresCCount: 2,
-//				},
-//			},
-//		},
-//		ReportDuration: &FailureReportDuration{
-//			Indication:        FailureReportDuration_LATCH_UNTIL_RESET,
-//			IndicationSeconds: 0,
-//		},
-//		Dependencies: &Failure_FailureDependencies{
-//			BelongsToGroup: []string{
-//				"TemperatureCelsius group",
-//				"groupRafael",
-//				"group general",
-//			},
-//			MasksOtherGroup: []string{
-//				"group1",
-//			},
-//		},
-//	},
-//}
-//
-//var failure2 = ExtendedFailure{
-//	Failure: Failure{
-//		Description: &FailureDescription{
-//			UnitName:       "system test check",
-//			TestName:       "pressure test",
-//			TestId:         2,
-//			BitType:        []string{"CBIT, PBIT"},
-//			Description:    "this is a mock failure to test services",
-//			AdditionalInfo: "the failure finds air pressure problem",
-//			Purpose:        "check pressure is out of 0-20 range, with a deviation of 16 percent",
-//			Severity:       24,
-//			OperatorFailure: []string{
-//				"OperatorFailure1",
-//				"OperatorFailure2",
-//				"OperatorFailure3",
-//			},
-//			LineReplacentUnits: []string{
-//				"line1",
-//				"line2",
-//			},
-//			FieldReplacemntUnits: []string{
-//				"field1",
-//				"field2",
-//				"field3",
-//			},
-//		},
-//		ExaminationRule: &FailureExaminationRule{
-//			MatchingField: "AirPressure",
-//			MatchingTag: &KeyValuePair{
-//				Key:   []byte("hostname123"),
-//				Value: []byte("north"),
-//			},
-//			FailureCriteria: &FailureExaminationRule_FailureCriteria{
-//				ValueCriteria: &FailureExaminationRule_FailureCriteria_FailureValueCriteria{
-//					Minimum:       0,
-//					Miximum:       20,
-//					ThresholdMode: FailureExaminationRule_FailureCriteria_FailureValueCriteria_OUTOF,
-//					Exceeding: &FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding{
-//						Type:  FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_PERCENT,
-//						Value: 16,
-//					},
-//				},
-//				TimeCriteria: &FailureExaminationRule_FailureCriteria_FailureTimeCriteria{
-//					WindowType:     FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING,
-//					WindowSize:     3,
-//					FailuresCCount: 2,
-//				},
-//			},
-//		},
-//		ReportDuration: &FailureReportDuration{
-//			Indication:        FailureReportDuration_LATCH_FOREVER,
-//			IndicationSeconds: 0,
-//		},
-//		Dependencies: &Failure_FailureDependencies{
-//			BelongsToGroup: []string{
-//				"group temp",
-//				"group1",
-//			},
-//			MasksOtherGroup: []string{
-//				"group2",
-//			},
-//		},
-//	},
-//	Time: time.Now(),
-//}
-//
-//var failure3 = ExtendedFailure{
-//	Failure: Failure{
-//		Description: &FailureDescription{
-//			UnitName:       "system test check",
-//			TestName:       "oil test",
-//			TestId:         1,
-//			BitType:        []string{"CBIT"},
-//			Description:    "this is a mock failure to test services",
-//			AdditionalInfo: "the failure finds oil problem",
-//			Purpose:        "check oil is within 0-9 range, with a deviation of 1",
-//			Severity:       1,
-//			OperatorFailure: []string{
-//				"unable to start",
-//				"normal functionality is damaged",
-//			},
-//			LineReplacentUnits: []string{
-//				"line1",
-//				"line2",
-//			},
-//			FieldReplacemntUnits: []string{
-//				"field1",
-//				"field2",
-//				"field3",
-//			},
-//		},
-//		ExaminationRule: &FailureExaminationRule{
-//			MatchingField: "oil",
-//			MatchingTag: &KeyValuePair{
-//				Key:   []byte("ss"),
-//				Value: []byte("longstanding"),
-//			},
-//			FailureCriteria: &FailureExaminationRule_FailureCriteria{
-//				ValueCriteria: &FailureExaminationRule_FailureCriteria_FailureValueCriteria{
-//					Minimum:       0,
-//					Miximum:       9,
-//					ThresholdMode: FailureExaminationRule_FailureCriteria_FailureValueCriteria_WITHIN,
-//					Exceeding: &FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding{
-//						Type:  FailureExaminationRule_FailureCriteria_FailureValueCriteria_Exceeding_VALUE,
-//						Value: 1,
-//					},
-//				},
-//				TimeCriteria: &FailureExaminationRule_FailureCriteria_FailureTimeCriteria{
-//					WindowType:     FailureExaminationRule_FailureCriteria_FailureTimeCriteria_SLIDING,
-//					WindowSize:     1,
-//					FailuresCCount: 1,
-//				},
-//			},
-//		},
-//		ReportDuration: &FailureReportDuration{
-//			Indication:        FailureReportDuration_NUM_OF_SECONDS,
-//			IndicationSeconds: 3,
-//		},
-//		Dependencies: &Failure_FailureDependencies{
-//			BelongsToGroup: []string{
-//				"group1",
-//			},
-//			MasksOtherGroup: []string{
-//				"group4",
-//			},
-//		},
-//	},
-//}
 
 var report0 = TestReport{
 	TestId:         123,

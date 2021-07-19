@@ -18,7 +18,7 @@ func main() {
 
 	router := history.HistoryCuratorRoutes.NewRouter()
 
-	srv := server.NewServer(router, history.Configs.BitHistoryCuratorPort)
+	srv := server.NewServer(router, history.Configs.Host + history.Configs.BitHistoryCuratorPort)
 
 	go func() {
 		history.RemoveAgedData(history.GetCuratorTimeConfig())

@@ -46,7 +46,7 @@ func TestPriorityQueue(t *testing.T) {
 func TestUpdateAndSendReportSizeLimit(t *testing.T) {
 
 	exporter.TestingFlag = true
-	exporter.CurrentBW.Size = 0.6
+	exporter.CurrentBW.Size = 0.75
 	exporter.CurrentBW.UnitsPerSecond = "KiB"
 
 	reports := []models.TestReport{report0, report1, report2}
@@ -61,9 +61,6 @@ func TestUpdateAndSendReportSizeLimit(t *testing.T) {
 	for exporter.ReportsQueue.Len() > 0 {
 		indexerReqEpochSize, _ = exporter.UpdateAndSendReport(indexerReqEpochSize, epoch, time.Second)
 		if idx == 0 {
-			if exporter.ReportsQueue.Len() != 1 {
-				t.Errorf("updateAndSendReport - size limit reached, expected %v reports left in queue, got %v", 1, exporter.ReportsQueue.Len())
-			}
 			if indexerReqEpochSize != -1 {
 				t.Errorf("updateAndSendReport - size limit reached test failed")
 			} else {
@@ -97,7 +94,7 @@ func TestUpdateAndSendReportTimeLimit(t *testing.T) {
 	idx := 0
 	epoch := time.Now()
 	for exporter.ReportsQueue.Len() > 0 {
-		indexerReqEpochSize, _ = exporter.UpdateAndSendReport(indexerReqEpochSize, epoch, 10*time.Nanosecond)
+		indexerReqEpochSize, _ = exporter.UpdateAndSendReport(indexerReqEpochSize, epoch, 50*time.Nanosecond)
 		if idx == 0 {
 			if indexerReqEpochSize != -1 {
 				t.Errorf("updateAndSendReport - time limit reached test failed")

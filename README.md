@@ -8,18 +8,45 @@ Our goal was to build each service as simple and independent as we can. Each ser
 The main goal of the system is to collect reports, analyze them and produce a "BIT status report" that reflects potential failures and vulnerabilities of the reporting clients.
 
 ## Installation and Usage
+
+### User Installation
+
 Assuming "go" is installed on the machine and the environment variables `$GOPATH`, `$GOROOT` is set properly (happens part of the default installation of golang) we can fetch a service's modules and dependencies, build and run it in a simple go instruction.
 
 To install a service, From the machine shell (or cmd prompt in Windows) use the command:
 ```
-> go install github.com/edendoron/bit-framework/cmd/<service-name>@v1.0.3
+> go install github.com/edendoron/bit-framework/cmd/<service-name>@<version>
 ```
 After the `@` write the specific version you want to install. Currently, the latest version is v1.0.3, you can also write `@latest`.
 
 The `go install` command will automatically compile the program in your current directory. The command will include all your `*.go` files in the directory. It will also build all of the supporting code needed to be able to execute the binary on any computer with the same system architecture, regardless of whether that system has the `.go` source files, or even a Go installation. The executable is placed into the `$GOPATH/bin` directory.
 
+### Developer Installation
+
+To clone the repository use the `git clone` command (followed by the repo url) inside your `$GOPATH/src` directory. You can now skip to the next level in order to build and run services.
+
+### Building executables
+
+We provided a cross compilation bash script that builds services for different OS and Architectures located in `./scripts/cross_compilation.sh`. Running it with the addition of a service `main.go` path as argument, will produce executable for 5 combinations of OS and Architectures. You can edit those combinations in the script.
+
+For example, to only build bitQuery executable for all combinations, from the project main path run:
+```
+./scripts/cross_compilation.sh ./cmd/bitQuery
+```
+
+This result in creating a `bin/` directory containing the following executable files:
+- `bitQuery-darwin-amd64`
+- `bitQuery-linux-386`
+- `bitQuery-linux-amd64`
+- `bitQuery-windows-amd64.exe`
+- `bitQuery-windows-386.exe`
+
+You can also use the Makefile with `make` command to build all executables under `/bin`.
+
+### Running the services
+
 Then, to run it, change your working directory to the project path inside GOPATH
-(`$GOPATH/pkg/github.com/edendoron/bit-framework`) and run the following command:
+(`$GOPATH/pkg/github.com/edendoron/bit-framework` or wherever you cloned the project to) and run the following command:
 
 ```
 > go run ./cmd/<service-name> -config-file ./configs/prog_configs/configs.yml

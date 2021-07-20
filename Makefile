@@ -5,7 +5,7 @@ GORUN=$(GOCMD) run
 LINTER=golangci-lint
 CONFIGS=-config-file ./configs/prog_configs/configs.yml
 
-all: lint test build
+all: lint build
 
 build: build_bit_query build_bit_indexer build_bit_config build_bit_exporter build_bit_handler build_bit_history_curator build_bit_storage_access
 

@@ -1,4 +1,4 @@
-package bitStorageAccess
+package bitstorageaccess
 
 import (
 	"github.com/edendoron/bit-framework/internal/models"

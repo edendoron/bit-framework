@@ -1,4 +1,4 @@
-package bitStorageAccess
+package bitstorageaccess
 
 import (
 	"fmt"

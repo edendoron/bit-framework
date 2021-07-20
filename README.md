@@ -1,4 +1,4 @@
-# BIT framework [![Go Report Card](https://goreportcard.com/badge/github.com/gojp/goreportcard)]()
+# BIT framework [![Go Report Card Section](https://goreportcard.com/badge/github.com/gojp/goreportcard)](#-report-card)
 
 ## Description
 
@@ -60,6 +60,8 @@ And for windows:
 ```
 > scripts\run_<service-name>.cmd
 ```
+Or use the Makefile `make run_<servic-name>` commands.
+
 To run all services together (one by one) you can use `run_all` script.
 
 For linux:

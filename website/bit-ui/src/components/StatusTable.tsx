@@ -148,6 +148,7 @@ const StatusRow = (props: { status: statusObject, index: number, time: number })
                                             <TableCell/>
                                             <TableCell>ID</TableCell>
                                             <TableCell align="center">Name</TableCell>
+                                            <TableCell align="center">BIT Type</TableCell>
                                             <TableCell align="center">Failure Count</TableCell>
                                             <TableCell align="center">Severity</TableCell>
                                         </TableRow>

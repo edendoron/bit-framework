@@ -2,9 +2,12 @@ package tests
 
 import (
 	"encoding/json"
-	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
-	. "github.com/edendoron/bit-framework/internal/models"
+	"fmt"
+	"github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
+	"github.com/edendoron/bit-framework/internal/models"
 	"log"
+	"math"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -15,7 +18,7 @@ const layout = "2006-January-02 15:4:5"
 const ConfigPath = "./configs/prog_configs/configs.yml"
 var killServicesCmd = exec.Command("Taskkill", "/IM", "main.exe", "/F")
 
-func fetchConfigFailuresFromStorage() []Failure{
+func fetchConfigFailuresFromStorage() []bit.Failure{
 	req, err := http.NewRequest(http.MethodGet, "http://localhost:8082/data/read", nil)
 	if err != nil {
 		err = killServicesCmd.Run()
@@ -40,7 +43,7 @@ func fetchConfigFailuresFromStorage() []Failure{
 		log.Fatalln("Couldn't get config failures from storage:\n", err)
 	}
 
-	var configFailures []Failure
+	var configFailures []bit.Failure
 	err = json.NewDecoder(resp.Body).Decode(&configFailures)
 	if err != nil {
 		err = killServicesCmd.Run()
@@ -91,7 +94,7 @@ func fetchUserGroupsFromStorage() []string{
 	return userGroups
 }
 
-func fetchReportsFromStorage() []TestReport{
+func fetchReportsFromStorage() []models.TestReport{
 	req, err := http.NewRequest(http.MethodGet, "http://localhost:8082/data/read", nil)
 	if err != nil {
 		err = killServicesCmd.Run()
@@ -119,7 +122,7 @@ func fetchReportsFromStorage() []TestReport{
 		log.Fatalln("Couldn't get reports from storage:\n", err)
 	}
 
-	var reports []TestReport
+	var reports []models.TestReport
 	err = json.NewDecoder(resp.Body).Decode(&reports)
 	if err != nil {
 		err = killServicesCmd.Run()
@@ -132,7 +135,7 @@ func fetchReportsFromStorage() []TestReport{
 	return reports
 }
 
-func fetchStatusFromQuery() []BitStatus{
+func fetchStatusFromQuery() []bit.BitStatus{
 	req, err := http.NewRequest(http.MethodGet, "http://localhost:8085/status", nil)
 	if err != nil {
 		err = killServicesCmd.Run()
@@ -160,7 +163,7 @@ func fetchStatusFromQuery() []BitStatus{
 		log.Fatalln("Couldn't get status from query:\n", err)
 	}
 
-	var bitStatus []BitStatus
+	var bitStatus []bit.BitStatus
 	err = json.NewDecoder(resp.Body).Decode(&bitStatus)
 	if err != nil {
 		err = killServicesCmd.Run()
@@ -171,6 +174,36 @@ func fetchStatusFromQuery() []BitStatus{
 	}
 
 	return bitStatus
+}
+
+func generateReport() models.TestReport {
+	rand.Seed(time.Now().UnixNano())
+	randomInt := rand.Intn(3)
+	report := models.TestReport{
+		TestId: 		float64(rand.Intn(math.MaxInt64)),
+		ReportPriority: float64(rand.Intn(256)),
+		Timestamp:      time.Now(),
+		TagSet: []models.KeyValue{
+			{Key: "hostname", Value: "server02"},
+		},
+		FieldSet: []models.KeyValue{
+			{Key: "", Value: ""},
+		},
+	}
+
+	switch randomInt {
+		case 0:
+			report.FieldSet[0].Key = "volts"
+			report.FieldSet[0].Value = fmt.Sprint(rand.Intn(20))
+		case 1:
+			report.FieldSet[0].Key = "AirPressure"
+			report.FieldSet[0].Value = fmt.Sprint(rand.Intn(100))
+		case 2:
+			report.FieldSet[0].Key = "TemperatureCelsius"
+			report.FieldSet[0].Value = fmt.Sprint(rand.Intn(100))
+	}
+
+	return report
 }
 
 func cleanTest() {

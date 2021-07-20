@@ -1,16 +1,12 @@
 package tests
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	. "github.com/edendoron/bit-framework/internal/models"
 	"log"
-	"math"
-	"math/rand"
 	"net/http"
-	"os"
 	"os/exec"
 	"testing"
 	"time"
@@ -65,27 +61,16 @@ func TestRunSimulation(t *testing.T) {
 		log.Fatalln("Couldn't start bitTestResultsExporter service", err)
 	}
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	ticker := time.NewTicker(200 * time.Millisecond)
 	stopTicker := make(chan struct{})
-	rand.Seed(time.Now().UnixNano())
 
 	go func() {
 		for {
 			select {
 			case <- ticker.C:
-				report := TestReport{
-					TestId: 		float64(rand.Intn(math.MaxInt64)),
-					ReportPriority: float64(rand.Intn(math.MaxInt64)),
-					Timestamp:      time.Now(),
-					TagSet: []KeyValue{
-						{Key: "hostname", Value: "server02"},
-					},
-					FieldSet: []KeyValue{
-						{Key: "volts", Value: fmt.Sprint(rand.Intn(math.MaxInt64))},
-					},
-				}
+				report := generateReport()
 				sentReports := ReportBody{Reports: []TestReport{report}}
 
 				reportsMarshaled, err := json.MarshalIndent(sentReports, "", " ")
@@ -114,18 +99,11 @@ func TestRunSimulation(t *testing.T) {
 		log.Fatalln("Couldn't start bitQuery service:\n", err)
 	}
 
-	time.Sleep(10 * time.Second)
-
-	fmt.Println("Press any key to stop simulation:")
-	for {
-		input := bufio.NewScanner(os.Stdin)
-		input.Scan()
-		if len(input.Text()) > 0 {
-			close(stopTicker)
-			break
-		}
+	fmt.Println("Press ctrl+c to stop simulation:")
+	startTime := time.Now()
+	for range time.Tick(30 * time.Second){
+		fmt.Println("time elapsed: " + time.Now().Sub(startTime).Round(time.Second).String())
 	}
-
 
 	cleanTest()
 

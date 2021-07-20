@@ -26,14 +26,15 @@ func TestSystemFlow(t *testing.T) {
 
 	cmdRunIndexer := exec.Command("go", "run", "../cmd/bitIndexer/main.go", "-config-file", ConfigPath)
 
-	cleanTestStorageConfigDirs() //clean test environment storage before test start
-
 	err := cmdRunStorage.Start()
 	if err != nil {
 		log.Fatalln("Couldn't start bitStorageAccess service", err)
 	}
 
-	time.Sleep(time.Second)
+	time.Sleep(3 * time.Second)
+
+	cleanTestStorageConfigDirs() //clean test environment storage before test start
+	deleteTestFilesFromStorage()
 
 	err = cmdRunConfig.Start()
 	if err != nil {
@@ -85,7 +86,7 @@ func TestSystemFlow(t *testing.T) {
 		log.Fatalln("Couldn't start bitTestResultsExporter service", err)
 	}
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	exporterRes, err := http.Post("http://localhost:8087/report/raw", "application/json; charset=UTF-8", body)
 	if err != nil || exporterRes.StatusCode != http.StatusOK {
@@ -142,14 +143,15 @@ func TestSystemFlowWithHandler(t *testing.T) {
 
 	cmdRunQuery := exec.Command("go", "run", "../cmd/bitQuery/main.go", "-config-file", ConfigPath)
 
-	cleanTestStorageConfigDirs() // clean test environment storage before test start
-
 	err := cmdRunStorage.Start()
 	if err != nil {
 		log.Fatalln("Couldn't start bitStorageAccess service", err)
 	}
 
-	time.Sleep(time.Second)
+	time.Sleep(3 * time.Second)
+
+	cleanTestStorageConfigDirs() //clean test environment storage before test start
+	deleteTestFilesFromStorage()
 
 	err = cmdRunConfig.Start()
 	if err != nil {
@@ -178,7 +180,7 @@ func TestSystemFlowWithHandler(t *testing.T) {
 		log.Fatalln("Couldn't start bitTestResultsExporter service", err)
 	}
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	go func() {
 		for i := 1; i < 10; i++ {

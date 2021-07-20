@@ -7,7 +7,7 @@ import (
 	rh "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
 	handler "github.com/edendoron/bit-framework/internal/bitHandler"
 	"github.com/edendoron/bit-framework/internal/models"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"io"
 	"io/fs"

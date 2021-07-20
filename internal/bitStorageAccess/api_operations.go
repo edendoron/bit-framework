@@ -6,7 +6,7 @@ import (
 	"github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
 	rh "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
 	"github.com/edendoron/bit-framework/internal/models"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"io/ioutil"
 	"net/http"
 	"os"

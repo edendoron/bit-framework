@@ -14,7 +14,7 @@ To install a service, From the machine shell (or cmd prompt in Windows) use the 
 ```
 > go install github.com/edendoron/bit-framework/cmd/<service-name>@v1.0.3
 ```
-after the `@` write the specific version you want to install. Currently, the latest version is v1.0.3, you can also write `@latest`
+After the `@` write the specific version you want to install. Currently, the latest version is v1.0.3, you can also write `@latest`.
 
 The `go install` command will automatically compile the program in your current directory. The command will include all your `*.go` files in the directory. It will also build all of the supporting code needed to be able to execute the binary on any computer with the same system architecture, regardless of whether that system has the `.go` source files, or even a Go installation. The executable is placed into the `$GOPATH/bin` directory.
 

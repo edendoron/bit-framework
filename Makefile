@@ -63,4 +63,4 @@ run_bit_exporter:
 	$(GORUN) ./cmd/bitTestResultsExporter $(CONFIGS)
 
 lint:
-	$(LINTER) run
+	$(LINTER) run -D govet

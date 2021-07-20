@@ -6,6 +6,7 @@ package bit
 import (
 	fmt "fmt"
 	proto "github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	math "math"
 )
@@ -673,6 +674,10 @@ type TestResult struct {
 	XXX_sizecache        int32                  `json:"-"`
 }
 
+func (m *TestResult) ProtoReflect() protoreflect.Message {
+	panic("implement me")
+}
+
 func (m *TestResult) Reset()         { *m = TestResult{} }
 func (m *TestResult) String() string { return proto.CompactTextString(m) }
 func (*TestResult) ProtoMessage()    {}
@@ -809,6 +814,10 @@ type TestResultsSet struct {
 	XXX_sizecache        int32         `json:"-"`
 }
 
+func (m *TestResultsSet) ProtoReflect() protoreflect.Message {
+	panic("implement me")
+}
+
 func (m *TestResultsSet) Reset()         { *m = TestResultsSet{} }
 func (m *TestResultsSet) String() string { return proto.CompactTextString(m) }
 func (*TestResultsSet) ProtoMessage()    {}
@@ -856,6 +865,10 @@ type Failure struct {
 	XXX_NoUnkeyedLiteral struct{}                     `json:"-"`
 	XXX_unrecognized     []byte                       `json:"-"`
 	XXX_sizecache        int32                        `json:"-"`
+}
+
+func (m *Failure) ProtoReflect() protoreflect.Message {
+	panic("implement me")
 }
 
 func (m *Failure) Reset()         { *m = Failure{} }
@@ -1004,6 +1017,10 @@ type UserGroupsFiltering_FilteredFailures struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
+func (m *UserGroupsFiltering_FilteredFailures) ProtoReflect() protoreflect.Message {
+	panic("implement me")
+}
+
 func (m *UserGroupsFiltering_FilteredFailures) Reset()         { *m = UserGroupsFiltering_FilteredFailures{} }
 func (m *UserGroupsFiltering_FilteredFailures) String() string { return proto.CompactTextString(m) }
 func (*UserGroupsFiltering_FilteredFailures) ProtoMessage()    {}
@@ -1049,6 +1066,10 @@ type BitStatus struct {
 	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
 	XXX_unrecognized     []byte                      `json:"-"`
 	XXX_sizecache        int32                       `json:"-"`
+}
+
+func (m *BitStatus) ProtoReflect() protoreflect.Message {
+	panic("implement me")
 }
 
 func (m *BitStatus) Reset()         { *m = BitStatus{} }

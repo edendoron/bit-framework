@@ -33,7 +33,7 @@
     "failure_criteria": {
       "value_criteria": {
         "minimum": 20,
-        "miximum": 30,
+        "miximum": 70,
         "threshold_mode": 0,
         "exceeding": {
           "type": 1,

@@ -128,7 +128,7 @@ const compareID = (report1: reportObject, report2: reportObject) => {
 function stableSort<T>(array: T[], comparator: (a: T, b: T) => number, direction: string) {
     const stabilizedThis = array.map((el, index) => [el, index] as [T, number]);
     stabilizedThis.sort((a, b) => {
-        const order = direction == "desc" ? comparator(a[0], b[0]) : -comparator(a[0], b[0]);
+        const order = direction === "desc" ? comparator(a[0], b[0]) : -comparator(a[0], b[0]);
         if (order !== 0) return order;
         return a[1] - b[1];
     });

@@ -17,7 +17,6 @@ import (
 
 //test the normal flow of the framework
 func TestSystemFlow(t *testing.T) {
-	killServicesCmd := exec.Command("Taskkill", "/IM", "main.exe", "/F")
 
 	cmdRunStorage := exec.Command("go", "run", "../cmd/bitStorageAccess/main.go", "-config-file", ConfigPath)
 
@@ -38,7 +37,7 @@ func TestSystemFlow(t *testing.T) {
 
 	err = cmdRunConfig.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitConfig service", err)
 	}
 
@@ -46,20 +45,20 @@ func TestSystemFlow(t *testing.T) {
 
 	configFiles, err := ioutil.ReadDir("./configs/config_failures")
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Can't read filtering rules directory", err)
 	}
 
 	configFailuresStorage := fetchConfigFailuresFromStorage()
 	if len(configFiles) != len(configFailuresStorage) {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		t.Errorf("At least one config failure is missing from storage %v", err)
 		return
 	}
 
 	userGroups := fetchUserGroupsFromStorage()
 	if len(userGroups) == 0 {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		t.Errorf("No user groups were generated in storage %v", err)
 		return
 	}
@@ -69,28 +68,28 @@ func TestSystemFlow(t *testing.T) {
 
 	reportsMarshaled, err := json.MarshalIndent(sentReports, "", " ")
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Error marshaling sent reports", err)
 	}
 	body := bytes.NewBuffer(reportsMarshaled)
 
 	err = cmdRunIndexer.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitIndexer service", err)
 	}
 
 	err = cmdRunExporter.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitTestResultsExporter service", err)
 	}
 
-	time.Sleep(time.Second)
+	time.Sleep(3 * time.Second)
 
 	exporterRes, err := http.Post("http://localhost:8087/report/raw", "application/json; charset=UTF-8", body)
 	if err != nil || exporterRes.StatusCode != http.StatusOK {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		t.Errorf("Reports couldn't reach exporter  %v", err)
 		return
 	}
@@ -100,12 +99,12 @@ func TestSystemFlow(t *testing.T) {
 	reports := fetchReportsFromStorage()
 
 	if len(reports) != len(sentReports.Reports) {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		t.Errorf("At least one report is missing from the storage.")
 		return
 	}
 
-	cleanTest(killServicesCmd)
+	cleanTest()
 
 	err = cmdRunIndexer.Wait()
 	if err != nil && err.Error() != "exit status 1"{
@@ -130,7 +129,6 @@ func TestSystemFlow(t *testing.T) {
 
 // test the normal flow of the framework with bitHandler
 func TestSystemFlowWithHandler(t *testing.T) {
-	killServicesCmd := exec.Command("Taskkill", "/IM", "main.exe", "/F")
 
 	cmdRunStorage := exec.Command("go", "run", "../cmd/bitStorageAccess/main.go", "-config-file", ConfigPath)
 
@@ -155,7 +153,7 @@ func TestSystemFlowWithHandler(t *testing.T) {
 
 	err = cmdRunConfig.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitConfig service", err)
 	}
 
@@ -163,24 +161,24 @@ func TestSystemFlowWithHandler(t *testing.T) {
 
 	err = cmdRunHandler.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitHandler service\n", err)
 	}
 
 
 	err = cmdRunIndexer.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitIndexer service", err)
 	}
 
 	err = cmdRunExporter.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitTestResultsExporter service", err)
 	}
 
-	time.Sleep(time.Second)
+	time.Sleep(3 * time.Second)
 
 	go func() {
 		for i := 1; i < 10; i++ {
@@ -199,14 +197,14 @@ func TestSystemFlowWithHandler(t *testing.T) {
 
 			reportsMarshaled, err := json.MarshalIndent(sentReports, "", " ")
 			if err != nil {
-				cleanTest(killServicesCmd)
+				cleanTest()
 				log.Fatalln("Error marshaling sent reports:\n", err)
 			}
 
 			body := bytes.NewBuffer(reportsMarshaled)
 			exporterRes, err := http.Post("http://localhost:8087/report/raw", "application/json; charset=UTF-8", body)
 			if err != nil || exporterRes.StatusCode != http.StatusOK {
-				cleanTest(killServicesCmd)
+				cleanTest()
 				log.Fatalln("Reports couldn't reach exporter\n", err)
 			}
 			time.Sleep(time.Second)
@@ -215,7 +213,7 @@ func TestSystemFlowWithHandler(t *testing.T) {
 
 	err = cmdRunQuery.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitQuery service:\n", err)
 	}
 
@@ -224,11 +222,11 @@ func TestSystemFlowWithHandler(t *testing.T) {
 	bitStatuses := fetchStatusFromQuery()
 
 	if len(bitStatuses) > 0 && len(expectedResult.Failures) != len(bitStatuses[0].Failures) {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		t.Errorf("Handler didn't catch high voltage failure:\n %v", err)
 	}
 
-	cleanTest(killServicesCmd)
+	cleanTest()
 
 	err = cmdRunHandler.Wait()
 	if err != nil && err.Error() != "exit status 1"{

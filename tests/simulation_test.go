@@ -17,7 +17,6 @@ import (
 )
 
 func TestRunSimulation(t *testing.T) {
-	killServicesCmd := exec.Command("Taskkill", "/IM", "main.exe", "/F")
 
 	cmdRunStorage := exec.Command("go", "run", "../cmd/bitStorageAccess/main.go", "-config-file", ConfigPath)
 
@@ -38,11 +37,11 @@ func TestRunSimulation(t *testing.T) {
 		log.Fatalln("Couldn't start bitStorageAccess service", err)
 	}
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	err = cmdRunConfig.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitConfig service", err)
 	}
 
@@ -50,23 +49,23 @@ func TestRunSimulation(t *testing.T) {
 
 	err = cmdRunHandler.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitHandler service\n", err)
 	}
 
 	err = cmdRunIndexer.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitIndexer service", err)
 	}
 
 	err = cmdRunExporter.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitTestResultsExporter service", err)
 	}
 
-	time.Sleep(time.Second)
+	time.Sleep(3 * time.Second)
 
 	ticker := time.NewTicker(200 * time.Millisecond)
 	stopTicker := make(chan struct{})
@@ -91,14 +90,14 @@ func TestRunSimulation(t *testing.T) {
 
 				reportsMarshaled, err := json.MarshalIndent(sentReports, "", " ")
 				if err != nil {
-					cleanTest(killServicesCmd)
+					cleanTest()
 					log.Fatalln("Error marshaling sent reports:\n", err)
 				}
 
 				body := bytes.NewBuffer(reportsMarshaled)
 				exporterRes, err := http.Post("http://localhost:8087/report/raw", "application/json; charset=UTF-8", body)
 				if err != nil || exporterRes.StatusCode != http.StatusOK {
-					cleanTest(killServicesCmd)
+					cleanTest()
 					log.Fatalln("Reports couldn't reach exporter\n", err)
 				}
 				time.Sleep(time.Second)
@@ -111,14 +110,14 @@ func TestRunSimulation(t *testing.T) {
 
 	err = cmdRunQuery.Start()
 	if err != nil {
-		cleanTest(killServicesCmd)
+		cleanTest()
 		log.Fatalln("Couldn't start bitQuery service:\n", err)
 	}
 
 	time.Sleep(10 * time.Second)
 
+	fmt.Println("Press any key to stop simulation:")
 	for {
-		fmt.Println("Press any key to stop simulation:")
 		input := bufio.NewScanner(os.Stdin)
 		input.Scan()
 		if len(input.Text()) > 0 {
@@ -128,7 +127,7 @@ func TestRunSimulation(t *testing.T) {
 	}
 
 
-	cleanTest(killServicesCmd)
+	cleanTest()
 
 	err = cmdRunHandler.Wait()
 	if err != nil && err.Error() != "exit status 1"{

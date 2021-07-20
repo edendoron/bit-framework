@@ -2,7 +2,7 @@ package bithandler
 
 import (
 	"github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
@@ -42,10 +42,12 @@ func FailureToExtendedFailure(failure bit.Failure) ExtendedFailure {
 	}
 }
 
-// function to support protobuf
+// function to support protobuf (will not be used, because ExtendedFailure does not being decoded
+
+func (e *ExtendedFailure) ProtoReflect() protoreflect.Message { panic("implement me") }
 
 func (e *ExtendedFailure) Reset() { *e = ExtendedFailure{} }
 
-func (e *ExtendedFailure) String() string { return proto.CompactTextString(e) }
+func (e *ExtendedFailure) String() string { return "" }
 
 func (e *ExtendedFailure) ProtoMessage() {}

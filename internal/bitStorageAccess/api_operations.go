@@ -6,13 +6,14 @@ import (
 	"github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
 	rh "github.com/edendoron/bit-framework/internal/apiResponseHandlers"
 	"github.com/edendoron/bit-framework/internal/models"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 )
 
+// GetDataRead chooses the correct helper function to call based on the received parameters.
 func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	query := r.URL.Query()
@@ -31,6 +32,7 @@ func GetDataRead(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// PostDataWrite chooses the correct helper function to call based on the received parameters.
 func PostDataWrite(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	requestBody := models.KeyValue{}
@@ -116,6 +118,7 @@ func PutDataWrite(w http.ResponseWriter, r *http.Request) {
 	rh.ApiResponseHandler(w, http.StatusOK, "Report received!", nil)
 }
 
+// DeleteData receives a timestamp and calls the deletion function for both test reports and bit statuses.
 func DeleteData(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	timestamp := r.URL.Query()["timestamp"][0]

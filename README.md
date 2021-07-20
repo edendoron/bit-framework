@@ -1,4 +1,4 @@
-# BIT framework
+# BIT framework [![Go Report Card Section](https://goreportcard.com/badge/github.com/gojp/goreportcard)](#report-card) [![Build Status](https://travis-ci.com/edendoron/bit-framework.svg?token=LMzLzW9wnH2JEso22JCy&branch=master)](https://travis-ci.com/edendoron/bit-framework)
 
 ## Description
 
@@ -8,18 +8,45 @@ Our goal was to build each service as simple and independent as we can. Each ser
 The main goal of the system is to collect reports, analyze them and produce a "BIT status report" that reflects potential failures and vulnerabilities of the reporting clients.
 
 ## Installation and Usage
+
+### User Installation
+
 Assuming "go" is installed on the machine and the environment variables `$GOPATH`, `$GOROOT` is set properly (happens part of the default installation of golang) we can fetch a service's modules and dependencies, build and run it in a simple go instruction.
 
 To install a service, From the machine shell (or cmd prompt in Windows) use the command:
 ```
-> go install github.com/edendoron/bit-framework/cmd/<service-name>@v1.0.3
+> go install github.com/edendoron/bit-framework/cmd/<service-name>@<version>
 ```
-after the `@` write the specific version you want to install. Currently, the latest version is v1.0.3, you can also write `@latest`
+After the `@` write the specific version you want to install. Currently, the latest version is v1.0.3, you can also write `@latest`.
 
 The `go install` command will automatically compile the program in your current directory. The command will include all your `*.go` files in the directory. It will also build all of the supporting code needed to be able to execute the binary on any computer with the same system architecture, regardless of whether that system has the `.go` source files, or even a Go installation. The executable is placed into the `$GOPATH/bin` directory.
 
+### Developer Installation
+
+To clone the repository use the `git clone` command (followed by the repo url) inside your `$GOPATH/src` directory. You can now skip to the next level in order to build and run services.
+
+### Building executables
+
+We provided a cross compilation bash script that builds services for different OS and Architectures located in `./scripts/cross_compilation.sh`. Running it with the addition of a service `main.go` path as argument, will produce executable for 5 combinations of OS and Architectures. You can edit those combinations in the script.
+
+For example, to only build bitQuery executable for all combinations, from the project main path run:
+```
+./scripts/cross_compilation.sh ./cmd/bitQuery
+```
+
+This result in creating a `bin/` directory containing the following executable files:
+- `bitQuery-darwin-amd64`
+- `bitQuery-linux-386`
+- `bitQuery-linux-amd64`
+- `bitQuery-windows-amd64.exe`
+- `bitQuery-windows-386.exe`
+
+You can also use the Makefile with `make` command to build all executables under `/bin`.
+
+### Running the services
+
 Then, to run it, change your working directory to the project path inside GOPATH
-(`$GOPATH/pkg/github.com/edendoron/bit-framework`) and run the following command:
+(`$GOPATH/pkg/github.com/edendoron/bit-framework` or wherever you cloned the project to) and run the following command:
 
 ```
 > go run ./cmd/<service-name> -config-file ./configs/prog_configs/configs.yml
@@ -33,6 +60,8 @@ And for windows:
 ```
 > scripts\run_<service-name>.cmd
 ```
+Or use the Makefile `make run_<servic-name>` commands.
+
 To run all services together (one by one) you can use `run_all` script.
 
 For linux:
@@ -183,7 +212,7 @@ When the current time matches the provided timestamp, the 'Handler' will identif
 You can run the client (explained in the corresponding web-UI service section) in order to experience the BIT status report (or address the 'Query' service directly).
 Here is an example screenshot of how this data will appear in the Web-UI:
 
-![img.png](usageExample/img.png)
+![img.png](usageExample/UI.png)
 
 ### Testing
 
@@ -235,33 +264,65 @@ User should place the configurations under the appropriate path in order for the
 - User groups filtering rules under `./configs/config_user_groups_filtering`.
 - SSH configurations (certificate and key for https configurations) under `./configs/prog_configs/sshConfigs`.
 
-## Resources
+## Report card
 
+We used 'Go Report Card' (Apache-2.0 License) - a web application that generates a report on the quality of an open source Go project.
+It uses several measures, including `gofmt`, `go vet`, `go lint` and `gocyclo`.
 
+You can find further information on: https://github.com/gojp/goreportcard.
+
+Because our repo is currently private, we had to clone the 'goreportcard' repository, and install it manually. If you wish to reproduce our results, run:
+```
+git clone https://github.com/gojp/goreportcard.git
+cd goreportcard
+```
+Then run the `install` script with:
+```
+make install
+```
+Or manually:
+```
+go install ./vendor/github.com/alecthomas/gometalinter
+go install ./vendor/golang.org/x/lint/golint
+go install ./vendor/github.com/alecthomas/gocyclo
+go install ./vendor/github.com/gordonklaus/ineffassign
+go install ./vendor/github.com/client9/misspell
+```
+Then, in order to produce the report card results run:
+```
+go install ./cmd/goreportcard-cli
+goreportcard-cli
+```
+Screenshot of the results:
+
+![img.png](usageExample/reportcard.png)
+
+Although two of the measures were disabled (due to large repo). BIT framework got an excellent score of A+.
 
 ## Open source packages
 
-Open source packages used in the project can be found in the go.mod file:
-```
-Libraries for the go backend:
+Open source packages used in the project can be found in the go.mod file. Here are the direct open source packages we used:
 
-github.com/coraxster/PriorityQueue                  | (MIT License)
-github.com/go-playground/universal-translator       | (MIT License)
-github.com/go-playground/validator                  | (MIT License)
-github.com/golang/protobuf                          | (BSD-3-Clause License)
-github.com/gorilla/mux                              | (BSD-3-Clause License)
-github.com/leodido/go-urn                           | (MIT License)
-github.com/magiconair/properties                    | (BSD-2-Clause License)
-github.com/segmentio/conf                           | (MIT License)
+For the go backend:
+
+Package | License
+------------ | -------------
+github.com/bgadrian/data-structures                 | MIT License
+github.com/go-playground/validator                  | MIT License
+github.com/golang/protobuf                          | BSD-3-Clause License
+github.com/gorilla/mux                              | BSD-3-Clause License
+github.com/segmentio/conf                           | MIT License
+github.com/gojp/goreportcard                        | Apache-2.0 License
 
 And for the web-UI frontend:
 
-react
-typescript
-material-ui
-axios
-date-fns
-dayjs
-react-dom
-web-vitals
-```
+Package | License
+------------ | -------------
+react        | MIT License
+typescript   | Apache License 2.0
+material-ui  | MIT License
+axios        | MIT License
+date-fns     | MIT License
+dayjs        | MIT License
+react-dom    | MIT License
+web-vitals   | Apache License 2.0

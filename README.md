@@ -1,4 +1,4 @@
-# BIT framework [![Go Report Card Section](https://goreportcard.com/badge/github.com/gojp/goreportcard)](#-report-card)
+# BIT framework [![Go Report Card Section](https://goreportcard.com/badge/github.com/gojp/goreportcard)](#-report-card) [![Travis CI](https://travis-ci.com/edendoron/bit-framework.svg?token=LMzLzW9wnH2JEso22JCy&branch=master)]()
 
 ## Description
 

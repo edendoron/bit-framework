@@ -102,7 +102,7 @@ func TestRunSimulation(t *testing.T) {
 	fmt.Println("Press ctrl+c to stop simulation:")
 	startTime := time.Now()
 	for range time.Tick(30 * time.Second){
-		fmt.Println("time elapsed: " + time.Now().Sub(startTime).Round(time.Second).String())
+		fmt.Println("time elapsed: " + time.Since(startTime).Round(time.Second).String())
 	}
 
 	cleanTest()

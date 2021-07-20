@@ -3,6 +3,7 @@ package bithandler
 import (
 	"github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/runtime/protoimpl"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
@@ -15,6 +16,7 @@ type ExtendedFailure struct {
 	startReportId float64
 	endReportId   float64
 }
+
 
 func (e *ExtendedFailure) ExtendedFailureToBitStatusReportedFailure() bit.BitStatus_RportedFailure {
 	return bit.BitStatus_RportedFailure{
@@ -44,10 +46,16 @@ func FailureToExtendedFailure(failure bit.Failure) ExtendedFailure {
 
 // function to support protobuf (will not be used, because ExtendedFailure does not being decoded
 
-func (e *ExtendedFailure) ProtoReflect() protoreflect.Message { panic("implement me") }
+var fileBitProtoMsgTypes = make([]protoimpl.MessageInfo, 17)
+func (e *ExtendedFailure) ProtoReflect() protoreflect.Message {
+	mi := &fileBitProtoMsgTypes[7]
+	if protoimpl.UnsafeEnabled && e != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(e))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(e)
+}
 
-func (e *ExtendedFailure) Reset() { *e = ExtendedFailure{} }
-
-func (e *ExtendedFailure) String() string { return "" }
-
-func (e *ExtendedFailure) ProtoMessage() {}

@@ -15,19 +15,17 @@ import (
 	"time"
 )
 
-var configPath = "./configs/prog_configs/configs.yml"
-
 //test the normal flow of the framework
 func TestSystemFlow(t *testing.T) {
 	killServicesCmd := exec.Command("Taskkill", "/IM", "main.exe", "/F")
 
-	cmdRunStorage := exec.Command("go", "run", "../cmd/bitStorageAccess/main.go", "-config-file", configPath)
+	cmdRunStorage := exec.Command("go", "run", "../cmd/bitStorageAccess/main.go", "-config-file", ConfigPath)
 
-	cmdRunConfig := exec.Command("go", "run", "../cmd/bitConfig/main.go", "-config-file", configPath)
+	cmdRunConfig := exec.Command("go", "run", "../cmd/bitConfig/main.go", "-config-file", ConfigPath)
 
-	cmdRunExporter := exec.Command("go", "run", "../cmd/bitTestResultsExporter/main.go", "-config-file", configPath)
+	cmdRunExporter := exec.Command("go", "run", "../cmd/bitTestResultsExporter/main.go", "-config-file", ConfigPath)
 
-	cmdRunIndexer := exec.Command("go", "run", "../cmd/bitIndexer/main.go", "-config-file", configPath)
+	cmdRunIndexer := exec.Command("go", "run", "../cmd/bitIndexer/main.go", "-config-file", ConfigPath)
 
 	cleanTestStorageConfigDirs() //clean test environment storage before test start
 
@@ -134,17 +132,17 @@ func TestSystemFlow(t *testing.T) {
 func TestSystemFlowWithHandler(t *testing.T) {
 	killServicesCmd := exec.Command("Taskkill", "/IM", "main.exe", "/F")
 
-	cmdRunStorage := exec.Command("go", "run", "../cmd/bitStorageAccess/main.go", "-config-file", configPath)
+	cmdRunStorage := exec.Command("go", "run", "../cmd/bitStorageAccess/main.go", "-config-file", ConfigPath)
 
-	cmdRunConfig := exec.Command("go", "run", "../cmd/bitConfig/main.go", "-config-file", configPath)
+	cmdRunConfig := exec.Command("go", "run", "../cmd/bitConfig/main.go", "-config-file", ConfigPath)
 
-	cmdRunExporter := exec.Command("go", "run", "../cmd/bitTestResultsExporter/main.go", "-config-file", configPath)
+	cmdRunExporter := exec.Command("go", "run", "../cmd/bitTestResultsExporter/main.go", "-config-file", ConfigPath)
 
-	cmdRunIndexer := exec.Command("go", "run", "../cmd/bitIndexer/main.go", "-config-file", configPath)
+	cmdRunIndexer := exec.Command("go", "run", "../cmd/bitIndexer/main.go", "-config-file", ConfigPath)
 
-	cmdRunHandler := exec.Command("go", "run", "../cmd/bitHandler/main.go", "-config-file", configPath)
+	cmdRunHandler := exec.Command("go", "run", "../cmd/bitHandler/main.go", "-config-file", ConfigPath)
 
-	cmdRunQuery := exec.Command("go", "run", "../cmd/bitQuery/main.go", "-config-file", configPath)
+	cmdRunQuery := exec.Command("go", "run", "../cmd/bitQuery/main.go", "-config-file", ConfigPath)
 
 	cleanTestStorageConfigDirs() // clean test environment storage before test start
 

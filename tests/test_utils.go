@@ -12,6 +12,7 @@ import (
 )
 
 const layout = "2006-January-02 15:4:5"
+const ConfigPath = "./configs/prog_configs/configs.yml"
 
 func fetchConfigFailuresFromStorage() []Failure{
 	req, err := http.NewRequest(http.MethodGet, "http://localhost:8082/data/read", nil)

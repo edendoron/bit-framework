@@ -94,7 +94,7 @@ func TestUpdateAndSendReportTimeLimit(t *testing.T) {
 	idx := 0
 	epoch := time.Now()
 	for exporter.ReportsQueue.Len() > 0 {
-		indexerReqEpochSize, _ = exporter.UpdateAndSendReport(indexerReqEpochSize, epoch, 50*time.Nanosecond)
+		indexerReqEpochSize, _ = exporter.UpdateAndSendReport(indexerReqEpochSize, epoch, 100*time.Nanosecond)
 		if idx == 0 {
 			if indexerReqEpochSize != -1 {
 				t.Errorf("updateAndSendReport - time limit reached test failed")

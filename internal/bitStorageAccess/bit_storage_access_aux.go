@@ -21,6 +21,7 @@ import (
 	"time"
 )
 
+// Receives a string containing an array of reports and writes each one to their appropriate location (by timestamp).
 func writeReports(w http.ResponseWriter, testReports *string) {
 	reports := models.ReportBody{}
 	if err := json.Unmarshal([]byte(*testReports), &reports); err != nil {
@@ -28,7 +29,7 @@ func writeReports(w http.ResponseWriter, testReports *string) {
 		return
 	}
 	for _, report := range reports.Reports {
-		if time.Since(report.Timestamp).Seconds() >= Configs.BitHandlerTriggerPeriod {
+		if time.Since(report.Timestamp).Seconds() >= Configs.BitHandlerTriggerPeriod { //reports received too late won't get picked up by handler but will still be written to storage.
 			log.Printf("Report %v: Timestamp is too late and bitHandler will ignore this report!", report.TestId)
 		}
 		reportToWrite := testReportToTestResult(report)
@@ -75,6 +76,7 @@ func writeReports(w http.ResponseWriter, testReports *string) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Receives a failure examination rule and writes it to storage. Also, calls writeUserGroups to extract user groups from failure.
 func writeConfigFailures(w http.ResponseWriter, failureToWrite *string) {
 	failure := bit.Failure{}
 	if err := json.Unmarshal([]byte(*failureToWrite), &failure); err != nil {
@@ -101,6 +103,7 @@ func writeConfigFailures(w http.ResponseWriter, failureToWrite *string) {
 	writeUserGroups(w, failure)
 }
 
+// Receives a failure examination rule, extracts the user groups mentioned in it and adds it to the system's user groups file.
 func writeUserGroups(w http.ResponseWriter, failure bit.Failure) {
 	var content []byte
 	if _, err := os.Stat("storage/config/user_groups/user_groups.txt"); err == nil {
@@ -147,6 +150,7 @@ func writeUserGroups(w http.ResponseWriter, failure bit.Failure) {
 	}
 }
 
+// Receives an extended failure examination rule and writes it to storage.
 func writeExtendedFailures(w http.ResponseWriter, failureToWrite *string) {
 	failure := handler.ExtendedFailure{}
 	if err := json.Unmarshal([]byte(*failureToWrite), &failure); err != nil {
@@ -170,6 +174,7 @@ func writeExtendedFailures(w http.ResponseWriter, failureToWrite *string) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Receives a string representing a user group filtering struct which indicates what groups a specific group masks.
 func writeUserGroupFiltering(w http.ResponseWriter, userGroupConfig *string) {
 	userGroupsFilters := bit.UserGroupsFiltering_FilteredFailures{}
 	if err := json.Unmarshal([]byte(*userGroupConfig), &userGroupsFilters); err != nil {
@@ -194,6 +199,7 @@ func writeUserGroupFiltering(w http.ResponseWriter, userGroupConfig *string) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Receives a bit statues string from BIT handler and writes it to storage in a similar fasion to 'writeReports'.
 func writeBitStatus(w http.ResponseWriter, bitStatus *string) {
 	status := bit.BitStatus{}
 	if err := json.Unmarshal([]byte(*bitStatus), &status); err != nil {
@@ -227,6 +233,7 @@ func writeBitStatus(w http.ResponseWriter, bitStatus *string) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Receives a start & end timestamps and returns all the reports that fall in that period(start <= reportTime <= end).
 func readReports(w http.ResponseWriter, start string, end string) {
 	var reports bit.TestResultsSet
 	const layout = "2006-January-02 15:4:5"
@@ -277,6 +284,7 @@ func readReports(w http.ResponseWriter, start string, end string) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Reads all files in 'filtering_rules" and sends them back.
 func readConfigFailures(w http.ResponseWriter) {
 	var configFailures []bit.Failure
 	files, err := ioutil.ReadDir("storage/config/filtering_rules")
@@ -311,6 +319,7 @@ func readConfigFailures(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Reads all files in 'perm_filtering_rules" and sends them back.
 func readExtendedFailures(w http.ResponseWriter) {
 	var foreverFailures []handler.ExtendedFailure
 	files, err := ioutil.ReadDir("storage/config/perm_filtering_rules")
@@ -343,6 +352,7 @@ func readExtendedFailures(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Same as readReports but for status files.
 func readBitStatus(w http.ResponseWriter, start string, end string) {
 	var statuses []bit.BitStatus
 	const layout = "2006-January-02 15:4:5"
@@ -389,6 +399,7 @@ func readBitStatus(w http.ResponseWriter, start string, end string) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Receives a user group and returns all the IDs it masks.
 func readUserGroupMaskedTestIds(w http.ResponseWriter, userGroup string) {
 	content, err := ioutil.ReadFile("storage/config/user_groups_masks/" + userGroup + ".txt")
 	if err != nil {
@@ -409,6 +420,7 @@ func readUserGroupMaskedTestIds(w http.ResponseWriter, userGroup string) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Returns all the user groups written in user_groups/user_groups.txt
 func readUserGroups(w http.ResponseWriter) {
 	content, err := ioutil.ReadFile("storage/config/user_groups/user_groups.txt")
 	if err != nil {
@@ -424,8 +436,9 @@ func readUserGroups(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// receives a file type (test_reports or bit_status) and deletes all the files older than the receieved timestamp.
+// Leaves dangling empty folders which are handled with deleteEmptyDirectories.
 func deleteAgedData(w http.ResponseWriter, fileType string, timestamp string) {
-
 	const layout = "2006-January-02 15:4:5"
 	threshold, err := time.Parse(layout, timestamp)
 	if err != nil {
@@ -453,6 +466,7 @@ func deleteAgedData(w http.ResponseWriter, fileType string, timestamp string) {
 	deleteEmptyDirectories(w, "storage/"+fileType, 0, fileType)
 }
 
+// Recursive function which deletes all empty folders in the received path and it's children.
 func deleteEmptyDirectories(w http.ResponseWriter, path string, depth int, fileType string) {
 	if depth == 3 {
 		return
@@ -474,6 +488,7 @@ func deleteEmptyDirectories(w http.ResponseWriter, path string, depth int, fileT
 	}
 }
 
+// IsEmpty Recieves a directory path and determines if it's empty or not.
 func IsEmpty(name string) bool {
 	f, err := os.Open(name)
 	if err != nil {
@@ -485,6 +500,7 @@ func IsEmpty(name string) bool {
 	return err == io.EOF
 }
 
+// Receives an array of KeyValue objects and converts to an array of the protobuf generated struct KeyValuePair.
 func convertToKeyValuePair(arr []models.KeyValue) []*bit.KeyValuePair {
 	copyArr := make([]*bit.KeyValuePair, len(arr))
 	for k, v := range arr {
@@ -494,6 +510,7 @@ func convertToKeyValuePair(arr []models.KeyValue) []*bit.KeyValuePair {
 	return copyArr
 }
 
+// Receives an array of protobuf generated struct KeyValuePair and converts to an array of KeyValue objects
 func convertToKeyValue(arr []*bit.KeyValuePair) []models.KeyValue {
 	copyArr := make([]models.KeyValue, len(arr))
 	for k, v := range arr {
@@ -503,6 +520,7 @@ func convertToKeyValue(arr []*bit.KeyValuePair) []models.KeyValue {
 	return copyArr
 }
 
+// Receives a TestReport object and converts it to the protobuf generated struct TestResult.
 func testReportToTestResult(tr models.TestReport) bit.TestResult {
 	return bit.TestResult{
 		TestId:         uint64(tr.TestId),
@@ -513,6 +531,7 @@ func testReportToTestResult(tr models.TestReport) bit.TestResult {
 	}
 }
 
+// Receives a protobuf generated struct TestResult object and converts it to TestReport object.
 func testResultToTestReport(tr bit.TestResult) models.TestReport {
 	return models.TestReport{
 		TestId:         float64(tr.TestId),

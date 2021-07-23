@@ -62,8 +62,11 @@ const compareDate = (failure1: failureObject, failure2: failureObject) => {
     return Date1 > Date2 ? 1 : -1;
 }
 
+interface FailureRowProps {
+    failure: failureObject
+}
 
-const FailureRow = (failure: failureObject) => {
+const FailureRow: FC<FailureRowProps> = ({failure}) => {
     const [open, setOpen] = React.useState(false);
     const classes = useRowStyles();
 
@@ -116,11 +119,11 @@ const FailureRow = (failure: failureObject) => {
 }
 
 const StatusRow = (props: { status: statusObject, index: number, time: number }) => {
-    const {status, index} = props;
+    const {status, index, time} = props;
     const [open, setOpen] = React.useState(false);
     const classes = useRowStyles();
 
-    const timestamp = new Date(props.time).toLocaleString()
+    const timestamp = new Date(time).toLocaleString()
 
     return (
         <React.Fragment>
@@ -155,7 +158,7 @@ const StatusRow = (props: { status: statusObject, index: number, time: number })
                                     </TableHead>
                                     <TableBody>
                                         {status.failures.sort(compareDate).map((failure) => (
-                                            FailureRow(failure)
+                                            <FailureRow failure={failure}/>
                                         ))}
 
                                     </TableBody>
@@ -170,8 +173,8 @@ const StatusRow = (props: { status: statusObject, index: number, time: number })
 }
 
 const compareStatusDate = (status1: statusObject, status2: statusObject) => {
-    const Date1 = new Date(status1.failures[0].timestamp.seconds * 1000).getTime();
-    const Date2 = new Date(status2.failures[0].timestamp.seconds * 1000).getTime();
+    const Date1 = new Date(status1.failures[status1?.failures?.length-1].timestamp.seconds * 1000).getTime();
+    const Date2 = new Date(status2.failures[status2?.failures?.length-1].timestamp.seconds * 1000).getTime();
     return Date1 > Date2 ? 1 : -1;
 }
 
@@ -249,14 +252,14 @@ export const StatusTable: FC<StatusTableProps> = ({data}) => {
                             align="center"
                             sortDirection={false}>
                             <TableSortLabel
-                                active={orderByField === "# of failures"}
+                                active={orderByField === "# of Failures"}
                                 direction={orderByDirection}
                                 onClick={() => {
                                     if (orderByDirection === "asc")
                                         setOrderDirection("desc")
                                     else
                                         setOrderDirection("asc")
-                                    setOrderField("# of failures")
+                                    setOrderField("# of Failures")
                                 }}>
                                 # of failures
                             </TableSortLabel>
@@ -265,7 +268,7 @@ export const StatusTable: FC<StatusTableProps> = ({data}) => {
                 </TableHead>
                 <TableBody>
                     {stableSort(data, getComparator(orderByField), orderByDirection).map((status, index) =>
-                    <StatusRow status={status} index={index} time={status.failures[0].timestamp.seconds * 1000}/>
+                    <StatusRow status={status} index={index} time={status.failures[status.failures.length-1].timestamp.seconds * 1000}/>
                     )}
                 </TableBody>
             </Table>

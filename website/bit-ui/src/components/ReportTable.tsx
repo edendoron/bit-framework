@@ -46,8 +46,11 @@ const useRowStyles = makeStyles({
     }
 });
 
+interface SubtableProps {
+    arr: Array<{ key: string, value: string }>
+}
 
-const SubTable = (arr: Array<{ key: string, value: string }>) => {
+const SubTable: FC<SubtableProps> = ({arr}) => {
     const classes = useRowStyles();
 
     return (
@@ -98,11 +101,11 @@ const Row = (props: { row: reportObject }) => {
                             <Typography variant="h6" gutterBottom component="div">
                                 Fields
                             </Typography>
-                            {SubTable(row.fieldSet)}
+                            <SubTable arr={row.fieldSet}/>
                             <Typography variant="h6" gutterBottom component="div">
                                 Tags
                             </Typography>
-                            {SubTable(row.tagSet)}
+                            <SubTable arr={row.tagSet}/>
                         </Box>
                     </Collapse>
                 </TableCell>

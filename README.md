@@ -228,12 +228,7 @@ The command runs every go tests found in the working directory with the `_test.g
 
 #### Integration tests
 
-Integration tests can be found under `./tests`
-
-You can also run all tests found in the repo from the repo main directory by running:
-```
-> go test ./...
-```
+Integration tests can be found under `./tests`. You can find integration tests there as well as runnable simulation of the framework. Please see further details in the README file in this folder.
 
 ## API
 

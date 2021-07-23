@@ -249,7 +249,7 @@ func readReports(w http.ResponseWriter, start string, end string) {
 	}
 	err = filepath.Walk("storage/test_reports/",
 		func(path string, info os.FileInfo, err error) error {
-			pathToTime := strings.Split(path, "\\")
+			pathToTime := strings.Split(path, string(os.PathSeparator))
 			if len(pathToTime) >= 2 {
 				timeToCmp := strings.ReplaceAll(pathToTime[2], " ", "-") + " " + strings.Join(pathToTime[3:], ":")
 				reportTime, err := time.Parse(layout, timeToCmp)
@@ -368,7 +368,7 @@ func readBitStatus(w http.ResponseWriter, start string, end string) {
 	}
 	err = filepath.Walk("storage/bit_status/",
 		func(path string, info os.FileInfo, err error) error {
-			pathToTime := strings.Split(path, "\\")
+			pathToTime := strings.Split(path, string(os.PathSeparator))
 			if len(pathToTime) >= 2 {
 				timeToCmp := strings.ReplaceAll(pathToTime[2], " ", "-") + " " + strings.Join(pathToTime[3:], ":")
 				reportTime, err := time.Parse(layout, timeToCmp)
@@ -446,7 +446,7 @@ func deleteAgedData(w http.ResponseWriter, fileType string, timestamp string) {
 	}
 	err = filepath.Walk("storage/"+fileType,
 		func(path string, info os.FileInfo, err error) error {
-			pathToTime := strings.Split(path, "\\")
+			pathToTime := strings.Split(path, string(os.PathSeparator))
 			if len(pathToTime) >= 2 {
 				timeToCmp := strings.ReplaceAll(pathToTime[2], " ", "-") + " " + strings.Join(pathToTime[3:], ":")
 				reportTime, err := time.Parse(layout, timeToCmp)

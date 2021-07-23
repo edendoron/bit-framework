@@ -30,6 +30,7 @@ func main() {
 		}
 	}()
 
+	// choose http or https according to config file
 	if config.Configs.UseHTTPS {
 		err := srv.ListenAndServeTLS(config.Configs.SSHCertPath, config.Configs.SSHKeyPath)
 		if err != nil {

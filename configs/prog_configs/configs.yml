@@ -1,5 +1,5 @@
 ---
-version: "1.0.1"
+version: "1.0.4"
 host: "localhost"
 api_version: "1.0.1"
 bit_config_port: ":8084"

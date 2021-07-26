@@ -1,3 +1,3 @@
 echo Running WEB UI client...
-call npm install website\bit-ui
+call npm install cwd website\bit-ui
 call npm start --prefix website\bit-ui

@@ -13,3 +13,4 @@ sleep 2
 sleep 2
 ./scripts/run_query.sh &
 sleep 2
+./scripts/run_client.sh

@@ -216,6 +216,8 @@ Here is an example screenshot of how this data will appear in the Web-UI:
 
 ### Testing
 
+To run all tests, you can use the command `go test ./...` that runs all tests in every sub-folders of current directory. Note that simulation test will not be running because we wish to ignore it for internal testing.
+
 #### Unit tests
 
 Unit tests can be found under `./internal/<service-name>/tests`.
@@ -225,6 +227,14 @@ Unit tests can be found under `./internal/<service-name>/tests`.
 > go test
 ```
 The command runs every go tests found in the working directory with the `_test.go` suffix.
+
+#### Code coverage
+In order to see code coverage, you can run following commands:
+```
+> go test ./... -v -coverpkg=./... -coverprofile=cover.txt
+> go tool cover -html=cover.txt -o cover.html
+```
+This will generate a `cover.txt` and a `cover.html` files that you can open and see visualization of services coverage.
 
 #### Integration tests
 

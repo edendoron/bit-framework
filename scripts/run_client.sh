@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
 echo Running WEB UI client...
-npm install ./website/bit-ui
-npm start ./website/bit-ui
+npm install --prefix ./website/bit-ui
+npm start --prefix ./website/bit-ui

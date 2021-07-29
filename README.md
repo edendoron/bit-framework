@@ -216,7 +216,7 @@ Here is an example screenshot of how this data will appear in the Web-UI:
 
 ### Testing
 
-To run all tests, you can use the command `go test ./...` that runs all tests in every sub-folders of current directory. Note that simulation test will not be running because we wish to ignore it for internal testing.
+To run all tests, you can use the command `go test ./... -short` that runs all tests in every sub-folders of current directory. Note that simulation test will not be running because we wish to ignore it for internal testing.
 
 #### Unit tests
 

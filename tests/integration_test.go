@@ -3,6 +3,7 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	. "github.com/edendoron/bit-framework/configs/rafael.com/bina/bit"
 	. "github.com/edendoron/bit-framework/internal/bitHandler"
 	. "github.com/edendoron/bit-framework/internal/models"
@@ -17,6 +18,7 @@ import (
 
 //test the normal flow of the framework
 func TestSystemFlow(t *testing.T) {
+	fmt.Println("---------Starting TestSystemFlow---------")
 
 	cmdRunStorage := exec.Command("go", "run", "../cmd/bitStorageAccess/main.go", "-config-file", ConfigPath)
 
@@ -25,6 +27,9 @@ func TestSystemFlow(t *testing.T) {
 	cmdRunExporter := exec.Command("go", "run", "../cmd/bitTestResultsExporter/main.go", "-config-file", ConfigPath)
 
 	cmdRunIndexer := exec.Command("go", "run", "../cmd/bitIndexer/main.go", "-config-file", ConfigPath)
+
+	services = append(services, cmdRunStorage, cmdRunExporter, cmdRunIndexer)
+
 
 	err := cmdRunStorage.Start()
 	if err != nil {
@@ -106,30 +111,11 @@ func TestSystemFlow(t *testing.T) {
 	}
 
 	cleanTest()
-
-	err = cmdRunIndexer.Wait()
-	if err != nil && err.Error() != "exit status 1"{
-		log.Fatalln("Error waiting on cmdRunIndexer:\n", err)
-	}
-
-	err = cmdRunExporter.Wait()
-	if err != nil && err.Error() != "exit status 1" {
-		log.Fatalln("Error waiting on cmdRunExporter:\n", err)
-	}
-
-	err = cmdRunConfig.Wait()
-	if err != nil && err.Error() != "exit status 1" {
-		log.Fatalln("Error waiting on cmdRunConfig:\n", err)
-	}
-
-	err = cmdRunStorage.Wait()
-	if err != nil && err.Error() != "exit status 1" {
-		log.Fatalln("Error waiting on cmdRunStorage:\n", err)
-	}
 }
 
 // test the normal flow of the framework with bitHandler
 func TestSystemFlowWithHandler(t *testing.T) {
+	fmt.Println("---------Starting TestSystemFlowWithHandler---------")
 
 	cmdRunStorage := exec.Command("go", "run", "../cmd/bitStorageAccess/main.go", "-config-file", ConfigPath)
 
@@ -142,6 +128,8 @@ func TestSystemFlowWithHandler(t *testing.T) {
 	cmdRunHandler := exec.Command("go", "run", "../cmd/bitHandler/main.go", "-config-file", ConfigPath)
 
 	cmdRunQuery := exec.Command("go", "run", "../cmd/bitQuery/main.go", "-config-file", ConfigPath)
+
+	services = append(services, cmdRunStorage, cmdRunExporter, cmdRunIndexer, cmdRunHandler, cmdRunQuery)
 
 	err := cmdRunStorage.Start()
 	if err != nil {
@@ -229,31 +217,6 @@ func TestSystemFlowWithHandler(t *testing.T) {
 	}
 
 	cleanTest()
-
-	err = cmdRunHandler.Wait()
-	if err != nil && err.Error() != "exit status 1"{
-		log.Fatalln("Error waiting on cmdRunHandler:\n", err)
-	}
-
-	err = cmdRunIndexer.Wait()
-	if err != nil && err.Error() != "exit status 1" {
-		log.Fatalln("Error waiting on cmdRunIndexer:\n", err)
-	}
-
-	err = cmdRunExporter.Wait()
-	if err != nil && err.Error() != "exit status 1"{
-		log.Fatalln("Error waiting on cmdRunExporter:\n", err)
-	}
-
-	err = cmdRunConfig.Wait()
-	if err != nil && err.Error() != "exit status 1"{
-		log.Fatalln("Error waiting on cmdRunConfig:\n", err)
-	}
-
-	err = cmdRunStorage.Wait()
-	if err != nil && err.Error() != "exit status 1"{
-		log.Fatalln("Error waiting on cmdRunStorage:\n", err)
-	}
 }
 
 // temp variables for tests

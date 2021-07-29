@@ -13,6 +13,11 @@ import (
 )
 
 func TestRunSimulation(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping simulation")
+	}
+
+	fmt.Println("---------Starting simulation---------")
 
 	cmdRunStorage := exec.Command("go", "run", "../cmd/bitStorageAccess/main.go", "-config-file", ConfigPath)
 
@@ -25,6 +30,8 @@ func TestRunSimulation(t *testing.T) {
 	cmdRunHandler := exec.Command("go", "run", "../cmd/bitHandler/main.go", "-config-file", ConfigPath)
 
 	cmdRunQuery := exec.Command("go", "run", "../cmd/bitQuery/main.go", "-config-file", ConfigPath)
+
+	services = append(services, cmdRunStorage, cmdRunExporter, cmdRunIndexer, cmdRunHandler, cmdRunQuery)
 
 	cleanTestStorageConfigDirs() // clean test environment storage before test start
 
@@ -106,29 +113,4 @@ func TestRunSimulation(t *testing.T) {
 	}
 
 	cleanTest()
-
-	err = cmdRunHandler.Wait()
-	if err != nil && err.Error() != "exit status 1"{
-		log.Fatalln("Error waiting on cmdRunHandler:\n", err)
-	}
-
-	err = cmdRunIndexer.Wait()
-	if err != nil && err.Error() != "exit status 1" {
-		log.Fatalln("Error waiting on cmdRunIndexer:\n", err)
-	}
-
-	err = cmdRunExporter.Wait()
-	if err != nil && err.Error() != "exit status 1"{
-		log.Fatalln("Error waiting on cmdRunExporter:\n", err)
-	}
-
-	err = cmdRunConfig.Wait()
-	if err != nil && err.Error() != "exit status 1"{
-		log.Fatalln("Error waiting on cmdRunConfig:\n", err)
-	}
-
-	err = cmdRunStorage.Wait()
-	if err != nil && err.Error() != "exit status 1"{
-		log.Fatalln("Error waiting on cmdRunStorage:\n", err)
-	}
 }

@@ -12,3 +12,4 @@ start /b scripts\run_handler.cmd
 timeout 2
 start /b scripts\run_query.cmd
 timeout 2
+scripts\run_client.cmd
